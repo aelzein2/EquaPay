@@ -1,0 +1,17 @@
+{
+  "name": "equapay",
+  "version": "1.0.0",
+  "description": "SE 4450 Capstone by Group 12",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "mysql": "^2.18.1",
+    "nodemon": "^3.0.1",
+    "react-native": "^0.72.7"
+  }
+}
