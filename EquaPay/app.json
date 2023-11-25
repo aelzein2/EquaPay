@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "EquaPay",
-    "slug": "EquaPay",
+    "name": "equapay",
+    "slug": "equapay",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -25,6 +25,12 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "fc895cdd-6e3c-4c66-a6be-f949763cb410"
+      }
+    },
+    "owner": "ahmad.elzein"
   }
 }
