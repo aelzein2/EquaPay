@@ -81,7 +81,11 @@ const Login = () => {
                     <Text style={styles.buttonText}>Login</Text>
                 </TouchableOpacity>
 
-                
+                <TouchableOpacity
+                    //onPress={handleLogin}
+                >
+                    <Text style={styles.forgotPasswordText}>Forgot your password?</Text>
+                </TouchableOpacity>
 
             </View>
 
@@ -140,6 +144,13 @@ const styles = StyleSheet.create({
         alignItems: "center",
         marginTop: 10,
     },
+
+    forgotPasswordText : {
+        color: '#40a7c3', // You can adjust the color
+        marginTop: 20,
+        fontSize: 16,
+    },
+    
 
     buttonOutline: {
         backgroundColor: 'white',
