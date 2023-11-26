@@ -1,8 +1,9 @@
 // Imports necessary libraries and components
 import React, {useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native' // used to navigate between screens
-import { auth } from '../firebase' // used for authentication
+import { auth, firestore } from '../firebase' // used for authentication
 import { createUserWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth' // used for authentication
+import { addDoc, collection, doc, setDoc } from 'firebase/firestore'; // used for firestore
 
 import { 
     StyleSheet, 
@@ -37,15 +38,29 @@ const Signup = () => {
 
 
 
-  const handleSignup = () => {
-    createUserWithEmailAndPassword(auth, email, password) // sign in with email and password
-    .then((userCredentials) => {
-        
-        const user = userCredentials.user; // after signing in, assign the user to the userCredential
-        console.log("User has signed up! Details are: " , user)
-    })
-    .catch(error => alert(error.message))
-  };
+    const handleSignup = () => {
+        createUserWithEmailAndPassword(auth, email, password)
+          .then((userCredentials) => {
+            const user = userCredentials.user; // after signing in, assign the user to the userCredential
+            console.log("User has signed up! Details are: ", user.email);
+      
+            // Adding user information to Firestore
+            const usersCollectionRef = collection(firestore, "users"); // reference to the users collection
+            setDoc(doc(usersCollectionRef), {
+              fullName: fullName,
+              email: email
+            })
+            .then(() => {
+              console.log("User information added to Firestore");
+            })
+            .catch((error) => {
+              console.error("Error adding user information to Firestore", error);
+            });
+      
+          })
+          .catch(error => alert(error.message))
+      };
+      
 
   return (
     <KeyboardAvoidingView style={styles.container} behavior="padding">
