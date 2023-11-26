@@ -1,3 +1,4 @@
+// Imports necessary libraries and components
 import {
     KeyboardAvoidingView,
     StyleSheet,
@@ -9,15 +10,43 @@ import {
 }
     from 'react-native'
 
-import React from 'react'
+import React, { useEffect, useState } from 'react' // states is used which is from react
+import { useNavigation } from '@react-navigation/native' // used to navigate between screens
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth' // used for authentication
 
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get('window'); // gets the width of the screen
 
-
+// Login function that returns the login page
 const Login = () => {
-    return (
 
+    const [email, setEmail] = useState(''); // states for email
+    const [password, setPassword] = useState(''); // states for password
+    const navigation = useNavigation(); // used to navigate between screens
+    const auth = getAuth(); // gets the authentication from firebase
+    
+    useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, user => {
+        if (user) {
+            navigation.navigate("Homepage") // when logged in, navigate to the homepage
+        }
+    }
+    )
+    return unsubscribe //leaves the listener so it stops executing or checking if its logged in. this just makes sure that logged in is checked once
+    }, [])
+
+    const handleLogin = () => {
+        signInWithEmailAndPassword(auth, email, password) // sign in with email and password
+        .then((userCredential) => {
+            
+            const user = userCredential.user; // after signing in, assign the user to the userCredential
+            console.log("User signed in with email: " , user.email)
+        })
+        .catch(error => alert(error.message)) // error handling
+    }
+    
+    // returns the login page structure
+    return (
         <KeyboardAvoidingView
             style={styles.container}
             behavior="padding"
@@ -27,16 +56,16 @@ const Login = () => {
 
                 <TextInput
                     placeholder="Email"
-                    //value = {email}
-                    //onChangeText={(text) => setEmail(text)}
+                    value = {email}
+                    onChangeText={text => setEmail(text)}
                     style={styles.input}
 
                 />
 
                 <TextInput
                     placeholder="Password"
-                    //value = {password}
-                    //onChangeText={(text) => setEmail(text)}
+                    value = {password}
+                    onChangeText={text => setPassword(text)}
                     style={styles.input}
                     secureTextEntry
 
@@ -46,19 +75,13 @@ const Login = () => {
             <View style={styles.buttonContainer}>
 
                 <TouchableOpacity
-                    onPress={() => { }}
+                    onPress={handleLogin}
                     style={styles.button}
                 >
                     <Text style={styles.buttonText}>Login</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity
-                    onPress={() => { }}
-                    style={[styles.button, styles.buttonOutline]}
-                >
-                    <Text style={styles.buttonOutlineText}>Register</Text>
-                </TouchableOpacity>
-
+                
 
             </View>
 
@@ -68,6 +91,8 @@ const Login = () => {
 
 export default Login
 
+
+// Styling for the Login page
 const styles = StyleSheet.create({
     container: {
         flex: 1,
