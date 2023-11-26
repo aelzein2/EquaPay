@@ -19,8 +19,10 @@ import {
 
 const { width } = Dimensions.get('window');
 
+// Function that returns the signup page
 const Signup = () => {
   
+    // states for email, password and full name
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -37,31 +39,34 @@ const Signup = () => {
     }, [])
 
 
-
+    // Function that handles the signup
     const handleSignup = () => {
-        createUserWithEmailAndPassword(auth, email, password)
+        
+        createUserWithEmailAndPassword(auth, email, password) // creates user with email and password with authentication
           .then((userCredentials) => {
             const user = userCredentials.user; // after signing in, assign the user to the userCredential
-            console.log("User has signed up! Details are: ", user.email);
+            console.log("User has signed up! Details are: ", user.email); // logs the user email
       
-            // Adding user information to Firestore
+            // Adding user information to database
             const usersCollectionRef = collection(firestore, "users"); // reference to the users collection
-            setDoc(doc(usersCollectionRef), {
-              fullName: fullName,
-              email: email
+            setDoc(doc(usersCollectionRef), { // sets the document to the users collection
+              
+                fullName: fullName, // adds the full name to the database
+                email: email // adds the email to the database
+            
             })
             .then(() => {
-              console.log("User information added to Firestore");
+              console.log("User information added to Firestore"); // logs that the user information has been added to the database
             })
             .catch((error) => {
-              console.error("Error adding user information to Firestore", error);
+              console.error("Error adding user information to Firestore", error); // logs the error if there is one
             });
       
           })
           .catch(error => alert(error.message))
       };
       
-
+// returns the structure of the signup page
   return (
     <KeyboardAvoidingView style={styles.container} behavior="padding">
       <View style={styles.inputContainer}>
