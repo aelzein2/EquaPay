@@ -12,7 +12,8 @@ import {
 
 import React, { useEffect, useState } from 'react' // states is used which is from react
 import { useNavigation } from '@react-navigation/native' // used to navigate between screens
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth' // used for authentication
+import { auth } from '../firebase' // used for authentication
+import { signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth' // used for authentication
 
 
 const { width } = Dimensions.get('window'); // gets the width of the screen
@@ -23,8 +24,7 @@ const Login = () => {
     const [email, setEmail] = useState(''); // states for email
     const [password, setPassword] = useState(''); // states for password
     const navigation = useNavigation(); // used to navigate between screens
-    const auth = getAuth(); // gets the authentication from firebase
-    
+   
     useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, user => {
         if (user) {
@@ -37,16 +37,16 @@ const Login = () => {
 
     const handleLogin = () => {
         signInWithEmailAndPassword(auth, email, password) // sign in with email and password
-        .then((userCredential) => {
+        .then((userCredentials) => {
             
-            const user = userCredential.user; // after signing in, assign the user to the userCredential
+            const user = userCredentials.user; // after signing in, assign the user to the userCredential
             console.log("User signed in with email: " , user.email)
         })
-        .catch(error => alert(error.message)) // error handling
+        .catch(error => alert(error.message))
     }
     
-    // returns the login page structure
     return (
+
         <KeyboardAvoidingView
             style={styles.container}
             behavior="padding"
