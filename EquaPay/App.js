@@ -13,12 +13,12 @@ export default function App() {
   /* as of right now, you have to manually order the stack screens to test functionalities.
     testing signup requires signup screen to be first. testing login/forgot password requires
     login scren to be first. */
-    
+
   return (
     <NavigationContainer>
       <Stack.Navigator>
-      <Stack.Screen options = {{headerShown : false}} name="Login" component={Login} />
       <Stack.Screen options = {{headerShown : false}} name="Signup" component={Signup} />
+      <Stack.Screen options = {{headerShown : false}} name="Login" component={Login} />
       <Stack.Screen name = "Homepage" component={HomePage} />
     </Stack.Navigator>
   </NavigationContainer>
