@@ -44,11 +44,11 @@ const LoadingScreen= ({ navigation }) => {
         }}/>
       <Union/>
         <TouchableOpacity style={[styles.buttonLogin]} onPress={() => navigation.navigate('Login')}>
-          <Text style={[styles.baseText]} >Login</Text>
+          <Text style={[styles.baseText]} >log in</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={[styles.buttonSignup]} >
-          <Text style={[styles.baseText]} >SignUp</Text>
+          <Text style={[styles.baseText]} >sign up</Text>
         </TouchableOpacity>
     </View>
   )
@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
       height: 52,
       alignItems:'center',
       position:'absolute', 
-      marginTop:600,
+      marginTop:570,
       justifyContent:'center',
       alignItems:'center'
     },
