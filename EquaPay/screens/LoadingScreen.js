@@ -1,7 +1,9 @@
-import { StyleSheet, Text, View, Image, Button } from 'react-native'
+import { StyleSheet, Text, View, Image, Button, Pressable, TouchableOpacity } from 'react-native'
 import * as React from "react"
+import { useCallback } from 'react';
 
 import Logo from "../assets/img/logo-removebg.png";
+import Union from "../assets/img/Union.svg";
 import { LinearGradient as Gradient } from 'expo-linear-gradient';
 import Svg, {
   Path,
@@ -9,13 +11,19 @@ import Svg, {
   LinearGradient,
   Stop,
 } from "react-native-svg"
+
 import { useFonts } from 'expo-font';
 
-const LoadingScreen= () => {
-
+const LoadingScreen= ({ navigation }) => {
   const [fontsLoaded] = useFonts({
-    'Varela-Round': 'https://fonts.googleapis.com/css2?family=Varela+Round&display=swap',
+    'Varela-Round': require('../assets/font/Varela-Round.ttf'),
   });
+
+  const onLayoutRootView = useCallback(async () => {
+    if (fontsLoaded) {
+      await SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded]);
 
   if (!fontsLoaded) {
     return null;
@@ -24,7 +32,8 @@ const LoadingScreen= () => {
     <View style={[styles.container]}>
       <Gradient
         // Background Linear Gradient
-        colors={['rgba(231, 239, 246, 1)', 'transparent']}
+        colors={['rgba(246, 249, 251, 0.45)', 'transparent']}
+        style={styles.background}
       />
     
       <Image source={Logo} 
@@ -33,39 +42,14 @@ const LoadingScreen= () => {
           width: 150,
           height: 150,
         }}/>
+      <Union/>
+        <TouchableOpacity style={[styles.buttonLogin]} onPress={() => navigation.navigate('Login')}>
+          <Text style={[styles.baseText]} >Login</Text>
+        </TouchableOpacity>
 
-    
-      <Svg
-        style={[styles.curve]}
-        xmlns="http://www.w3.org/2000/svg"
-        width={420}
-        height={478}
-        fill="none"
-        
-      >
-        <Path
-          fill="url(#a)"
-          fillRule="evenodd"
-          d="M420 202.829c8.369-14.964 13-30.683 13-46.54C433 79.355 323.98 0 208 0S-17 73.693-17 150.626c0 18.227 6.119 36.59 17 54.001v359.614h420V202.829Z"
-          clipRule="evenodd"
-        />
-        <Defs>
-          <LinearGradient
-            id="a"
-            x1={208}
-            x2={208}
-            y1={0}
-            y2={564}
-            gradientUnits="userSpaceOnUse"
-          >
-            <Stop stopColor="#32DDAD" />
-            <Stop offset={1} stopColor="#D9D9D9" stopOpacity={0} />
-          </LinearGradient>
-        </Defs>
-
-        <Button title='Login' style={[styles.button]}>Login</Button>
-        <Button title='SignUp' style={[styles.button]}></Button>
-      </Svg>
+        <TouchableOpacity style={[styles.buttonSignup]} >
+          <Text style={[styles.baseText]} >SignUp</Text>
+        </TouchableOpacity>
     </View>
   )
 }
@@ -74,25 +58,66 @@ export default LoadingScreen
 
 const styles = StyleSheet.create({
     container: {
-      display: 'flex',
+      flex:1,
       flexDirection: 'column',
       justifyContent:'space-between',
       alignItems:'center',
-      gap:'120vh',
       height:'100%',
       width:'100%',
-      overflow:'none'
+      overflow:'none',
+      backgroundColor:'E7EFF6',
+      paddingTop:100,
+      position:'relative'
+    },
+
+    background: {
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      top: 0,
+      height: 400,
     },
 
     curve: {
       width: '100%',
       height: '100%',
-      marginTop: 50
+      marginTop: 80,
+      alignItems:'center',
+      justifyContent:'center',
+      padding:'auto',
     },
 
-    button: {
-      fontFamily: 'Varela Round'
-    }
+    buttonLogin: {
+      borderRadius: 50,
+      backgroundColor:'#173A5A',
+      width: 211,
+      height: 52,
+      alignItems:'center',
+      position:'absolute', 
+      marginTop:500,
+      justifyContent:'center',
+      alignItems:'center'
+    },
+
+    buttonSignup: {
+      borderRadius: 50,
+      backgroundColor:'#173A5A',
+      width: 211,
+      height: 52,
+      alignItems:'center',
+      position:'absolute', 
+      marginTop:600,
+      justifyContent:'center',
+      alignItems:'center'
+    },
+    baseText: {
+      fontFamily: 'Varela-Round',
+      color:'white',
+      fontSize: 30,
+      fontWeight: 400
+    },
+
+
 
     
 })
