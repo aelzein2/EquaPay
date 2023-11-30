@@ -1,11 +1,10 @@
-import { StyleSheet, Text, View, Alert, Button } from "react-native";
+import { StyleSheet, Text, View, Alert, TouchableOpacity } from "react-native";
 import { useState } from "react";
 import { useActionSheet } from "@expo/react-native-action-sheet";
-import { auth } from "../../firebase-config";
+import { auth } from "../firebase.js";
 import { signOut } from "firebase/auth";
 
 const HomePage = () => {
-  const bottomInset = useSafeAreaInsets().bottom;
   const { showActionSheetWithOptions } = useActionSheet();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
@@ -39,10 +38,11 @@ const HomePage = () => {
       {isLoggingOut ? (
         <Text>Logging Out</Text>
       ) : (
-        <Button 
-          text="Logout"
-          onPress={handleLogout}
-        />
+        <TouchableOpacity onPress={handleLogout}>
+          <Text>Logout</Text>
+        </TouchableOpacity>
+          
+          
       )}
     </View>
   );
