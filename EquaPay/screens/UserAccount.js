@@ -1,23 +1,52 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Dimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { AntDesign } from '@expo/vector-icons'; // used for the icons
 import { auth, firestore } from '../firebase' // used for authentication
-const { width } = Dimensions.get('window');
 import { Alert } from 'react-native';
+import { doc, getDoc, getFirestore } from 'firebase/firestore';
 
+const { width } = Dimensions.get('window');
+const db = getFirestore();
 
 const UserAccount = () => {
  
     const navigation = useNavigation();
+    const [userFullName, setUserFullName] = useState('Loading...'); // State to store the user's full name
+
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (auth.currentUser) { // If the user is logged in
+        const userDocRef = doc(db, 'users', auth.currentUser.uid); // Reference to the user stored in the database.
+
+        try {
+          const docSnap = await getDoc(userDocRef); // fetches the user's data from the database
+          if (docSnap.exists()) { // if the user exists
+            setUserFullName(docSnap.data().fullName); // get the users name and sets it to the state
+            console.log("User's full name is: ", userFullName);
+        } 
+          else { // if the user does not exist
+            console.log("User record not found");
+            setUserFullName("Name not found"); 
+          }
+        } catch (error) {
+          console.error("Error fetching user data: ", error);
+          setUserFullName("Error Loading Name"); 
+        }
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
 
   // function that handles the press of the users name/avatar block. this will be pressed so a user can change account details.
   const handlePressAccountSection = () => {
   };
 
 
-
-// function that handles uder log out. session ends
+// function that handles user log out. session ends
 // ** Need to add some async storage stuff
 const handleLogout = () => {
     Alert.alert(
@@ -47,8 +76,6 @@ const handleLogout = () => {
       { cancelable: false }
     );
   }
-  
-
 
   // back button redirects back to the homepage
   const backToPreviousScreen = () => {
@@ -63,7 +90,7 @@ const handleLogout = () => {
       
       <TouchableOpacity style={styles.accountSection} onPress={handlePressAccountSection}>
         <View style={styles.avatarPlaceholder} />
-        <Text style={styles.accountText}>User's Name</Text>
+        <Text style={styles.accountText}>{userFullName}</Text>
       </TouchableOpacity>
       
       <TouchableOpacity onPress={backToPreviousScreen} style={styles.backButton}>
