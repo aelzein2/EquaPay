@@ -2,6 +2,7 @@
 import React, {useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native' // used to navigate between screens
 import { auth, firestore } from '../firebase' // used for authentication
+import { AntDesign } from '@expo/vector-icons'; // used for the icons
 import { createUserWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth' // used for authentication
 import { addDoc, collection, doc, setDoc } from 'firebase/firestore'; // used for firestore
 
@@ -39,36 +40,47 @@ const Signup = () => {
     }, [])
 
 
-    // Function that handles the signup
     const handleSignup = () => {
-        
-        createUserWithEmailAndPassword(auth, email, password) // creates user with email and password with authentication
-          .then((userCredentials) => {
-            const user = userCredentials.user; // after signing in, assign the user to the userCredential
-            console.log("User has signed up! Details are: ", user.email); // logs the user email
-      
-            // Adding user information to database
-            const usersCollectionRef = collection(firestore, "users"); // reference to the users collection
-            setDoc(doc(usersCollectionRef), { // sets the document to the users collection
-              
-                fullName: fullName, // adds the full name to the database
-                email: email // adds the email to the database
-            
-            })
-            .then(() => {
-              console.log("User information added to Firestore"); // logs that the user information has been added to the database
-            })
-            .catch((error) => {
-              console.error("Error adding user information to Firestore", error); // logs the error if there is one
-            });
-      
+      createUserWithEmailAndPassword(auth, email, password)
+        .then((userCredentials) => {
+          const user = userCredentials.user;
+          console.log("User has signed up! Details are: ", user.email);
+  
+          // Adding user information to database
+          const usersCollectionRef = collection(firestore, "users");
+          setDoc(doc(usersCollectionRef, user.uid), { // assigns the document ID to user ID for better security
+            fullName: fullName,
+            email: email
           })
-          .catch(error => alert(error.message))
-      };
+          .then(() => {
+            console.log("User information added to Firestore");
+          })
+          .catch((error) => {
+            console.error("Error adding user information to Firestore", error);
+          });
+        })
+        .catch(error => {
+          if (error.code === 'auth/email-already-in-use') {
+            alert('An account is already associated with that email. Please log in.');
+          } else {
+            alert(error.message);
+          }
+        });
+  };
+  
+
+      const backToPreviousScreen = () => {
+        navigation.navigate("LoadingScreen");
+    }
       
 // returns the structure of the signup page
   return (
     <KeyboardAvoidingView style={styles.container} behavior="padding">
+      
+      <TouchableOpacity onPress={backToPreviousScreen} style={styles.backButton}>
+          <AntDesign name="arrowleft" size={24} color="black" />
+      </TouchableOpacity>
+      
       <View style={styles.inputContainer}>
       <TextInput
           placeholder="Full Name"
@@ -156,6 +168,12 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
     fontSize: 18,
+  },
+  backButton: {
+    position: 'absolute',
+    top: 100, // Adjust based on your header height
+    left: 30, // Safe area padding
+    zIndex: 10, // Ensures that the touchable is clickable above all other elements
   },
 
 });
