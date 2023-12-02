@@ -48,7 +48,7 @@ const Signup = () => {
   
           // Adding user information to database
           const usersCollectionRef = collection(firestore, "users");
-          setDoc(doc(usersCollectionRef), {
+          setDoc(doc(usersCollectionRef, user.uid), { // assigns the document ID to user ID for better security
             fullName: fullName,
             email: email
           })
