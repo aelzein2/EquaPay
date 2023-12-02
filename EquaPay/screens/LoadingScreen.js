@@ -44,11 +44,11 @@ const LoadingScreen= ({ navigation }) => {
         }}/>
       <Union/>
         <TouchableOpacity style={[styles.buttonLogin]} onPress={() => navigation.navigate('Login')}>
-          <Text style={[styles.baseText]} >log in</Text>
+          <Text style={[styles.baseText]} >Log in</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.buttonSignup]} >
-          <Text style={[styles.baseText]} >sign up</Text>
+        <TouchableOpacity style={[styles.buttonSignup]} onPress={() => navigation.navigate('Signup')} >
+          <Text style={[styles.baseText]} >Sign up</Text>
         </TouchableOpacity>
     </View>
   )
