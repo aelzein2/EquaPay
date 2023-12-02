@@ -44,17 +44,23 @@ const Login = () => {
 
     // handles login to homepage
     const handleLogin = () => {
-        signInWithEmailAndPassword(auth, email, password) // sign in with email and password
+        signInWithEmailAndPassword(auth, email, password) // sign in with email and password using authentication. will automa
             .then((userCredentials) => {
                 // Successfully signed in
                 const user = userCredentials.user; // after signing in, assign the user to the userCredential
-                console.log("User signed in with email: ", user.email);
+                console.log("User signed in with email: ", user.email, user.uid); // user ID is automatically and uniquely generated for each user
+
             })
             .catch(error => {
                 // Handling different types of authentication errors
                 if (error.code === 'auth/invalid-login-credentials') { // if the email is invalid
                     // When the password is incorrect
                     alert('Invalid details. Please check your email or password.');
+                }
+
+                else if (email || password === '') { // if the email is empty
+                    // When the email is empty
+                    alert('Please enter your login details.');
                 }
             });
     };
@@ -69,7 +75,7 @@ const Login = () => {
 
         const usersRef = collection(db, 'users'); // reference to the users collection
         const queryDatabase = query(usersRef, where("email", "==", resetEmail)); // query to check if the email is registered in the database
-
+        
         if (resetEmail === '') { // if nothing is entered, an alert is displayed
             alert('Please enter your email.');
         }
@@ -99,6 +105,11 @@ const Login = () => {
             alert('An error occurred while checking the email: ' + error.message);
         });
     };
+
+    const backToPreviousScreen = () => {
+        navigation.navigate("LoadingScreen");
+    }
+
     // returns the structure of the login page
     return (
 
@@ -106,6 +117,9 @@ const Login = () => {
             style={styles.container}
             behavior="padding"
         >
+            <TouchableOpacity onPress={backToPreviousScreen} style={styles.backButton}>
+                <AntDesign name="arrowleft" size={24} color="black" />
+            </TouchableOpacity>
 
             <View style={styles.inputContainer}>
 
@@ -125,6 +139,7 @@ const Login = () => {
                     secureTextEntry
 
                 />
+
             </View>
 
             <Modal isVisible={isModalVisible} style={styles.modal}>
@@ -292,6 +307,12 @@ const styles = StyleSheet.create({
     iconButton: {
         alignSelf: 'flex-start',
     },
+    backButton: {
+        position: 'absolute',
+        top: 100, // Adjust based on your header height
+        left: 30, // Safe area padding
+        zIndex: 10, // Ensures that the touchable is clickable above all other elements
+      },
 });
 
 
