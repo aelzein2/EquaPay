@@ -3,7 +3,7 @@ import React from 'react'
 
 const HomePage = () => {
   return (
-    <View>
+    <View style={[styles.container]}>
       <Text>HomePage</Text>
     </View>
   )
@@ -11,4 +11,10 @@ const HomePage = () => {
 
 export default HomePage
 
-const styles = StyleSheet.create({})
+const styles = StyleSheet.create({
+
+  container:{
+    backgroundColor:'#153A59',
+    flex: 1
+  }
+})

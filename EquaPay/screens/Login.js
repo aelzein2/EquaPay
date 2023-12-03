@@ -103,31 +103,44 @@ const Login = () => {
     return (
 
         <KeyboardAvoidingView
-            style={styles.container}
+            style={[styles.container]}
             behavior="padding"
         >
-
-            <View style={styles.inputContainer}>
-
-                <TextInput
-                    placeholder="Email"
-                    value={email}
-                    onChangeText={text => setEmail(text)}
-                    style={styles.input}
-
-                />
-
-                <TextInput
-                    placeholder="Password"
-                    value={password}
-                    onChangeText={text => setPassword(text)}
-                    style={styles.input}
-                    secureTextEntry
-
-                />
+            <View>
+                <Text style={[styles.titleText]}>Welcome Back</Text>
+                <Text style={[styles.headingText]}>Please Login to Coninue</Text>
             </View>
 
-            <Modal isVisible={isModalVisible} style={styles.modal}>
+            <View style={[styles.bodyContainer]}>
+                <View style={[styles.inputContainer]}>
+
+            <TextInput
+                placeholder="Email Address"
+                placeholderTextColor="white"
+                value={email}
+                onChangeText={text => setEmail(text)}
+                style={styles.input}
+
+            />
+
+            <TextInput
+                placeholder="Password"
+                placeholderTextColor="white"
+                value={password}
+                onChangeText={text => setPassword(text)}
+                style={styles.input}
+                secureTextEntry
+
+            />
+                </View>
+
+                <View style={[styles.forgotPasswordContainer]}>
+                    <TouchableOpacity onPress={handleForgotPassword}>
+                        <Text style={[styles.forgotPasswordText]}>Forgot password</Text>
+                    </TouchableOpacity>
+                </View>
+
+                <Modal isVisible={isModalVisible} style={styles.modal}>
                 <View style={styles.modalContainer}>
                     <TouchableOpacity style={styles.iconButton} onPress={() => setModalVisible(false)}>
                         <AntDesign name="close" size={24} color="black" />
@@ -148,23 +161,22 @@ const Login = () => {
                     </TouchableOpacity>
 
                 </View>
-            </Modal>
+                </Modal>
 
-            <View style={styles.buttonContainer}>
-
-                <TouchableOpacity
-                    onPress={handleLogin}
+                <View style={styles.buttonContainer}>
+                    <TouchableOpacity
+                    onPress={() =>{handleLogin(), navigation.navigate('BottomTab', {screen:'Login'})}}
                     style={styles.button}
                 >
-                    <Text style={styles.buttonText}>Login</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity onPress={handleForgotPassword}>
-                    <Text style={styles.forgotPasswordText}>Forgot your password?</Text>
-                </TouchableOpacity>
-
+                    <Text style={[styles.buttonText]}>Login</Text>
+                    </TouchableOpacity>
+                    <View style={{display:"flex", flexDirection:"row",gap:"3%"}}>
+                        <Text style={{color:"white", fontSize: 15}}>Don't have an account?</Text>
+                        <Text style={{color:"#85E5CA", fontSize: 15}}>Sign up</Text>
+                    </View>
+                       
+                </View>
             </View>
-
         </KeyboardAvoidingView>
     )
 }
@@ -176,51 +188,67 @@ export default Login
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        backgroundColor: '#e0f4f1', // Light greenish background
+        paddingTop:"30%",
+        paddingLeft: "10%",
+        paddingRight:"10%",
+        backgroundColor: '#153A59', // Light greenish background
+    },
+
+    titleText:{
+        color:"white",
+        fontSize: 40,
+        fontWeight: 400
+    },
+
+    headingText:{
+        color:"white",
+        fontSize: 15,
+        fontWeight: 400
+    },
+
+    bodyContainer:{
+        paddingLeft:"2.5%",
+        paddingRight:"2.5%",
     },
 
     inputContainer: {
-        width: width * 0.8, // Responsive width
-        backgroundColor: '#ffffff', // White background for input container
-        borderRadius: 20,
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-        elevation: 5,
-        padding: 20,
+        marginTop: "35%",
+        gap: 51
+        
     },
 
-    input: {
-        backgroundColor: "#d0f0e8", // Light greenish for inputs
-        paddingHorizontal: 15,
+    input: { 
         paddingVertical: 10,
-        borderRadius: 10,
-        marginTop: 10,
-        fontSize: 16,
+        borderBottomColor:"white",
+        borderBottomWidth: 1,
+        fontSize: 20,
         width: '100%',
+        color:"white",
     },
 
     buttonContainer: {
-        width: width * 0.6, // Responsive width
         justifyContent: "center",
         alignItems: "center",
         marginTop: 40,
+        gap:"8%"
     },
 
     button: {
-        backgroundColor: '#40a7c3', // Light blue
+        backgroundColor: '#85E5CA',
         width: '100%',
         padding: 15,
-        borderRadius: 15,
+        borderRadius: 5,
         alignItems: "center",
         marginTop: 10,
     },
+
+    buttonText:{
+        color: "#153A59",
+        fontSize: 25,
+        fontWeight: 600
+    },
+
+    
 
     sendButton: {
         backgroundColor: '#40a7c3', // Light blue
@@ -231,10 +259,16 @@ const styles = StyleSheet.create({
         marginTop: 10,
 
     },
+
+    forgotPasswordContainer:{
+        justifyContent:"flex-end",
+        alignItems:'flex-end'
+    },
+
     forgotPasswordText: {
         color: '#40a7c3', // You can adjust the color
         marginTop: 20,
-        fontSize: 16,
+        fontSize: 15,
     },
 
 
@@ -242,12 +276,6 @@ const styles = StyleSheet.create({
         backgroundColor: 'white',
         borderColor: '#40a7c3', // Light blue border
         borderWidth: 2,
-    },
-
-    buttonText: {
-        color: 'white',
-        fontWeight: 'bold',
-        fontSize: 18,
     },
 
     buttonOutlineText: {
