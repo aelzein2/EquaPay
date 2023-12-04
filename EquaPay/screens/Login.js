@@ -63,6 +63,9 @@ const Login = () => {
                     alert('Please enter your login details.');
                 }
             });
+
+        //navigate to next screen
+        navigation.navigate("BottomTab",{screen:'Home'}) 
     };
 
     // function that is used to display the forgot password popup
@@ -179,7 +182,7 @@ const Login = () => {
 
                 <View style={styles.buttonContainer}>
                     <TouchableOpacity
-                    onPress={() =>{handleLogin(), navigation.navigate('BottomTab', {screen:'Home'})}}
+                    onPress={handleLogin}
                     style={styles.button}
                 >
                     <Text style={[styles.buttonText]}>Login</Text>
