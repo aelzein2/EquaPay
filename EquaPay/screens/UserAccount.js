@@ -45,38 +45,6 @@ const UserAccount = () => {
   const handlePressAccountSection = () => {
   };
 
-
-// function that handles user log out. session ends
-// ** Need to add some async storage stuff
-const handleLogout = () => {
-    Alert.alert(
-      "Logout",
-      "Are you sure you want to log out?",
-      [
-        {
-        /* User given two options to confirm logging out */
-          text: "No",
-          onPress: () => console.log("Logout Cancelled"),
-          style: "cancel"
-        },
-        { 
-          text: "Yes", onPress: () => {
-            console.log("Logging out");
-            auth.signOut()
-              .then(() => {
-                console.log("User has signed out");
-                navigation.navigate("LoadingScreen")
-              })
-              .catch((error) => {
-                console.log("An error occurred while signing out");
-              });
-          }
-        }
-      ],
-      { cancelable: false }
-    );
-  }
-
   // back button redirects back to the homepage
   const backToPreviousScreen = () => {
     navigation.navigate("Homepage");
@@ -87,7 +55,6 @@ const handleLogout = () => {
     <View style={styles.container}>
       <Text style = {styles.screenTitle} >Account Details</Text>
       
-      
       <TouchableOpacity style={styles.accountSection} onPress={handlePressAccountSection}>
         <View style={styles.avatarPlaceholder} />
         <Text style={styles.accountText}>{userFullName}</Text>
@@ -95,13 +62,11 @@ const handleLogout = () => {
       
       <TouchableOpacity onPress={backToPreviousScreen} style={styles.backButton}>
           <AntDesign name="arrowleft" size={24} color="black" />
+      </TouchableOpacity>      
+
+      <TouchableOpacity onPress={() => {navigation.navigate("Settings")}} style={styles.settings}>
+          <AntDesign name="setting" size={24} color="black" />
       </TouchableOpacity>
-
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.buttonText}>Logout</Text>
-        </TouchableOpacity>
-
-      
       
     </View>
   );
@@ -146,6 +111,12 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 80, 
         left: 20, // Safe area padding
+        zIndex: 10, // Ensures that the touchable is clickable above all other elements
+      },
+      settings: {
+        position: 'absolute',
+        top: 80, 
+        right: 20, // Safe area padding
         zIndex: 10, // Ensures that the touchable is clickable above all other elements
       },
 
