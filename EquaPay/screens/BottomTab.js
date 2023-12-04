@@ -8,6 +8,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 // // Screens
 import Login from './Login';
 import HomePage from './HomePage';
+import UserAccount from './UserAccount';
 
 
 const Tab = createBottomTabNavigator();
@@ -26,10 +27,10 @@ const BottomTab = () =>{
         }}>
 
         <Tab.Screen options={{headerShown: false, tabBarIcon: ({ color, size }) => (<Ionicons name="home" color={color} size={size} />)}} name={"Home"} component={HomePage}/>
-        <Tab.Screen options={{headerShown: false, tabBarIcon: ({ color, size }) => (<Ionicons name="people" color={color} size={size} />)}} name={"Friends"} component={HomePage} Ionicons={'home-outline'} />
-        <Tab.Screen options={{headerShown: false, tabBarIcon: ({ color, size }) => (<Ionicons name="add-circle" color={color} size={size} />)}} name={"Add Bills"} component={HomePage} Ionicons={'home-outline'} />
-        <Tab.Screen options={{headerShown: false, tabBarIcon: ({ color, size }) => (<Ionicons name="notifications" color={color} size={size} />)}} name={"Notification"} component={HomePage} Ionicons={'home-outline'} />
-        <Tab.Screen options={{headerShown: false, tabBarIcon: ({ color, size }) => (<Ionicons name="person-circle" color={color} size={size} />)}} name={"Account"} component={HomePage} Ionicons={'home-outline'} />
+        <Tab.Screen options={{headerShown: false, tabBarIcon: ({ color, size }) => (<Ionicons name="people" color={color} size={size} />)}} name={"Friends"} component={HomePage} />
+        <Tab.Screen options={{headerShown: false, tabBarIcon: ({ color, size }) => (<Ionicons name="add-circle" color={color} size={size} />)}} name={"Add Bills"} component={HomePage}/>
+        <Tab.Screen options={{headerShown: false, tabBarIcon: ({ color, size }) => (<Ionicons name="notifications" color={color} size={size} />)}} name={"Notification"} component={HomePage}/>
+        <Tab.Screen options={{headerShown: false, tabBarIcon: ({ color, size }) => (<Ionicons name="person-circle" color={color} size={size} />)}} name={"Account"} component={UserAccount}/>
         {/* <Tab.Screen options={{headerShown: false,}} name={logIn} component={Login}/> */}
         {/* <Tab.Screen name={detailsName} component={DetailsScreen} />
         <Tab.Screen name={settingsName} component={SettingsScreen} /> */}

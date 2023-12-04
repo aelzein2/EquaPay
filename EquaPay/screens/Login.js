@@ -179,7 +179,7 @@ const Login = () => {
 
                 <View style={styles.buttonContainer}>
                     <TouchableOpacity
-                    onPress={() =>{handleLogin(), navigation.navigate('BottomTab', {screen:'Login'})}}
+                    onPress={() =>{handleLogin(), navigation.navigate('BottomTab', {screen:'Home'})}}
                     style={styles.button}
                 >
                     <Text style={[styles.buttonText]}>Login</Text>
