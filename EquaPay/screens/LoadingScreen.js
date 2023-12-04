@@ -31,7 +31,7 @@ const LoadingScreen= ({ navigation }) => {
           <Text style={[styles.baseText]} >Login</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.button]} >
+        <TouchableOpacity style={[styles.button]} onPress={() => navigation.navigate('Signup')}>
           <Text style={[styles.baseText]} >Sign up</Text>
         </TouchableOpacity>
       </View>
@@ -53,7 +53,8 @@ const styles = StyleSheet.create({
       overflow:'none',
       backgroundColor:'FFFBFB',
       paddingTop:100,
-      position:'relative'
+      position:'relative',
+      overflow:"scroll"
     },
 
     curve: {
