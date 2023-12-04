@@ -8,6 +8,7 @@ import HomePage from './screens/HomePage';
 import LoadingScreen from './screens/LoadingScreen';
 import BottomTab from './screens/BottomTab';
 import UserAccount from './screens/UserAccount';
+import EditProfile from './screens/EditProfile'; //TESTING PAGE !!!!!!!!!!!!!!!!!
 
 const Stack = createNativeStackNavigator();
 
@@ -24,6 +25,7 @@ export default function App() {
   return (
     <NavigationContainer>
     <Stack.Navigator>
+      
       
       <Stack.Screen options={{headerShown: false,}} name = "LoadingScreen" component={LoadingScreen} />
       <Stack.Screen options = {{headerShown : false}} name="Login" component={Login} />
