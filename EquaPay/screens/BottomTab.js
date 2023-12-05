@@ -20,7 +20,7 @@ const BottomTab = () =>{
   return(
     <Tab.Navigator
         screenOptions={{
-          tabBarActiveTintColor:"#44AFFB",
+          tabBarActiveTintColor:"#85E5CA",
           tabBarInactiveTintColor: "#FFFBFB",
           labelStyle: {fontSize: 10 },
           tabBarStyle:{
