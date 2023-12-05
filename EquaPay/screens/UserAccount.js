@@ -24,7 +24,7 @@ const UserAccount = () => {
           const docSnap = await getDoc(userDocRef); // fetches the user's data from the database
           if (docSnap.exists()) { // if the user exists
             setUserFullName(docSnap.data().fullName); // get the users name and sets it to the state
-            console.log("User's full name is: ", userFullName);
+            console.log(docSnap.data().fullName);
         } 
           else { // if the user does not exist
             console.log("User record not found");

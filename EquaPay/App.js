@@ -26,10 +26,10 @@ export default function App() {
     <NavigationContainer>
     <Stack.Navigator>
       
-      
       <Stack.Screen options={{headerShown: false,}} name = "LoadingScreen" component={LoadingScreen} />
       <Stack.Screen options = {{headerShown : false}} name="Login" component={Login} />
       <Stack.Screen options = {{headerShown : false}} name="Signup" component={Signup} />
+      <Stack.Screen options={{headerShown: false,}} name = "EditProfile" component={EditProfile} />
       <Stack.Screen options={{headerShown: false,}} name = "BottomTab" component={BottomTab} />
       
       {/* <Stack.Screen name = "Homepage" component={HomePage} /> */}
