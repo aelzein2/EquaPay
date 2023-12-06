@@ -14,30 +14,42 @@ import Svg, {
 
 import { useFonts } from 'expo-font';
 
-
 const LoadingScreen= ({ navigation }) => {
+  const [fontsLoaded] = useFonts({
+    'Varela-Round': require('../assets/font/Varela-Round.ttf'),
+  });
+
+  const onLayoutRootView = useCallback(async () => {
+    if (fontsLoaded) {
+      await SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded]);
+
+  if (!fontsLoaded) {
+    return null;
+  }
   return (
     <View style={[styles.container]}>
+      <Gradient
+        // Background Linear Gradient
+        colors={['rgba(246, 249, 251, 0.45)', 'transparent']}
+        style={styles.background}
+      />
+    
       <Image source={Logo} 
         style={{
           resizeMode:'contain',
-          width: 200,
-          height: 200,
+          width: 150,
+          height: 150,
         }}/>
       <Union/>
-      
-      <View style={[styles.buttonContainer]}>
-        <TouchableOpacity style={[styles.button]} onPress={() => navigation.navigate('Login')}>
-          <Text style={[styles.baseText]} >Login</Text>
+        <TouchableOpacity style={[styles.buttonLogin]} onPress={() => navigation.navigate('Login')}>
+          <Text style={[styles.baseText]} >Log in</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.button]} onPress={() => navigation.navigate('Signup')}>
+        <TouchableOpacity style={[styles.buttonSignup]} onPress={() => navigation.navigate('Signup')} >
           <Text style={[styles.baseText]} >Sign up</Text>
         </TouchableOpacity>
-      </View>
-      
-      
-      
     </View>
   )
 }
@@ -50,11 +62,20 @@ const styles = StyleSheet.create({
       flexDirection: 'column',
       justifyContent:'space-between',
       alignItems:'center',
+      height:'100%',
+      width:'100%',
       overflow:'none',
-      backgroundColor:'FFFBFB',
+      backgroundColor:'E7EFF6',
       paddingTop:100,
-      position:'relative',
-      overflow:"scroll"
+      position:'relative'
+    },
+
+    background: {
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      top: 0,
+      height: 400,
     },
 
     curve: {
@@ -66,28 +87,34 @@ const styles = StyleSheet.create({
       padding:'auto',
     },
 
-    buttonContainer:{
-      position:"absolute",
-      display:"flex",
-      alignItems:'center',
-      margin: "135%",
-      justifyContent:'space-between',
-      gap: 48
-    },
-    button:{
-      borderRadius: 15,
-      backgroundColor:'#85E5CA',
+    buttonLogin: {
+      borderRadius: 50,
+      backgroundColor:'#173A5A',
       width: 211,
-      height: 45,
+      height: 52,
       alignItems:'center',
+      position:'absolute', 
+      marginTop:500,
       justifyContent:'center',
-      alignItems:'center',
+      alignItems:'center'
     },
 
+    buttonSignup: {
+      borderRadius: 50,
+      backgroundColor:'#173A5A',
+      width: 211,
+      height: 52,
+      alignItems:'center',
+      position:'absolute', 
+      marginTop:570,
+      justifyContent:'center',
+      alignItems:'center'
+    },
     baseText: {
-      color:'#153A59',
-      fontSize: 25,
-      fontWeight: 500
+      fontFamily: 'Varela-Round',
+      color:'white',
+      fontSize: 30,
+      fontWeight: 400
     },
 
 

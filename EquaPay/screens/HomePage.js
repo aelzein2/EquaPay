@@ -9,7 +9,7 @@ const HomePage = () => {
  
 // temporary function to redirect to account detail page for testing purposes.
   const redirectAccountDetail = () => {
-    navigation.navigate("BottomTab",{screen:'Account'})
+    navigation.navigate("UserAccount")
   }
 
 
@@ -34,16 +34,12 @@ const HomePage = () => {
 export default HomePage;
 
 const styles = StyleSheet.create({
-
-  container:{
-    backgroundColor:'#153A59',
-    flex: 1,
+  container: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: '#e0f4f1', // Light greenish background
   },
-
-  
   button: {
     backgroundColor: '#40a7c3', // Light blue
     padding: 15,
