@@ -2,7 +2,7 @@
 import React, {useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native' // used to navigate between screens
 import { auth, firestore } from '../firebase' // used for authentication
-import { AntDesign } from '@expo/vector-icons'; // used for the icons
+import Ionicons from 'react-native-vector-icons/Ionicons'; // used for the icons
 import { createUserWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth' // used for authentication
 import { addDoc, collection, doc, setDoc } from 'firebase/firestore'; // used for firestore
 
@@ -11,11 +11,10 @@ import {
     Text, 
     View, 
     TextInput, 
-    TouchableOpacity, 
-    KeyboardAvoidingView, 
+    TouchableOpacity,  
     Dimensions, 
-}        
-    from 'react-native';
+}from 'react-native';
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 
 
 const { width } = Dimensions.get('window');
@@ -45,6 +44,8 @@ const Signup = () => {
         .then((userCredentials) => {
           const user = userCredentials.user;
           console.log("User has signed up! Details are: ", user.email);
+          alert('Thanks for signing up');
+          navigation.navigate('Login')
   
           // Adding user information to database
           const usersCollectionRef = collection(firestore, "users");
@@ -63,6 +64,7 @@ const Signup = () => {
         .catch(error => {
           if (error.code === 'auth/email-already-in-use') {
             alert('An account is already associated with that email. Please log in.');
+            navigation.navigate('Login');
           } else {
             alert(error.message);
           }
@@ -76,44 +78,56 @@ const Signup = () => {
       
 // returns the structure of the signup page
   return (
-    <KeyboardAvoidingView style={styles.container} behavior="padding">
+    <KeyboardAwareScrollView style={[styles.container]}>
       
-      <TouchableOpacity onPress={backToPreviousScreen} style={styles.backButton}>
-          <AntDesign name="arrowleft" size={24} color="black" />
+      <TouchableOpacity onPress={backToPreviousScreen} style={[styles.backButton]}>
+        <Ionicons name='chevron-back' size={24} color={'white'}/>
       </TouchableOpacity>
-      
-      <View style={styles.inputContainer}>
-      <TextInput
-          placeholder="Full Name"
-          value={fullName}
-          onChangeText={setFullName}
-          style={styles.input}
-        />
-        
-        <TextInput
-          placeholder="Email"
-          value={email}
-          onChangeText={setEmail}
-          style={styles.input}
-          keyboardType="email-address"
-        />
-        <TextInput
-          placeholder="Password"
-          value={password}
-          onChangeText={setPassword}
-          style={styles.input}
-          secureTextEntry
-        />
-        
-        
+
+      <View>
+        <Text style={[styles.titleText]}>Create Account</Text>
       </View>
-      
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity onPress={handleSignup} style={styles.button}>
-          <Text style={styles.buttonText}>Sign Up</Text>
-        </TouchableOpacity>
+
+     
+      <View style={[styles.bodyContainer]}>
+        <View style={[styles.inputContainer]}>
+          <TextInput
+              placeholder="Full Name"
+              placeholderTextColor="white"
+              value={fullName}
+              onChangeText={setFullName}
+              style={[styles.input]}
+            />
+            
+            <TextInput
+              placeholder="Email"
+              placeholderTextColor="white"
+              value={email}
+              onChangeText={setEmail}
+              style={[styles.input]}
+              keyboardType="email-address"
+            />
+
+            <TextInput
+              placeholder="Password"
+              placeholderTextColor="white"
+              value={password}
+              onChangeText={setPassword}
+              style={[styles.input]}
+              secureTextEntry
+            />
+        </View>
+    
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity onPress={handleSignup} style={styles.button}>
+            <Text style={styles.buttonText}>Sign Up</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </KeyboardAvoidingView>
+    
+      
+      
+    </KeyboardAwareScrollView>
   );
 };
 
@@ -123,58 +137,67 @@ const styles = StyleSheet.create({
   
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#e0f4f1',
+    paddingTop:"20%",
+    paddingLeft: "10%",
+    paddingRight:"10%",
+    backgroundColor: '#153A59'
+  },
+
+  titleText:{
+    color:"white",
+    fontSize: 40,
+    fontWeight: 400
+  },
+
+  bodyContainer:{
+    paddingLeft:"2.5%",
+    paddingRight:"2.5%",
   },
 
   inputContainer: {
-    width: width * 0.8,
-    backgroundColor: '#ffffff',
-    borderRadius: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-    padding: 20,
+    marginTop: "35%",
+    gap: 51  
   },
 
   input: {
-    backgroundColor: '#d0f0e8',
-    paddingHorizontal: 15,
     paddingVertical: 10,
-    borderRadius: 10,
-    marginTop: 10,
-    fontSize: 16,
+    borderBottomColor:"white",
+    borderBottomWidth: 1,
+    fontSize: 20,
+    width: '100%',
+    color:"white",
   },
 
   buttonContainer: {
-    width: width * 0.6,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginTop: 40,
+    gap:"8%"
   },
 
   button: {
-    backgroundColor: '#40a7c3',
+    backgroundColor: '#85E5CA',
     width: '100%',
     padding: 15,
-    borderRadius: 15,
-    alignItems: 'center',
+    borderRadius: 10,
+    alignItems: "center",
     marginTop: 10,
   },
 
   buttonText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 18,
+    color: "#153A59",
+    fontSize: 25,
+    fontWeight: 600
   },
+
   backButton: {
-    position: 'absolute',
-    top: 100, // Adjust based on your header height
-    left: 30, // Safe area padding
-    zIndex: 10, // Ensures that the touchable is clickable above all other elements
+    justifyContent:'center',
+    alignItems:'center',       
+    marginBottom:"10%",
+    backgroundColor:"#366B7C",
+    borderRadius:"100%",
+    width: 35,
+    height: 35
   },
 
 });

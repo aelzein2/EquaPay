@@ -1,19 +1,19 @@
 // Imports necessary libraries and components
 import {
-    KeyboardAvoidingView,
     StyleSheet,
     Text,
     TextInput,
     View,
+    ScrollView,
     TouchableOpacity,
     Dimensions
-}
-    from 'react-native'
+}from 'react-native'
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 
 import React, { useEffect, useState } from 'react' // states is used which is from react
 import { useNavigation } from '@react-navigation/native' // used to navigate between screens
 import Modal from 'react-native-modal'; // used for the modal
-import { AntDesign } from '@expo/vector-icons'; // used for the icons
+import Ionicons from 'react-native-vector-icons/Ionicons'; // used for the icons
 import { auth } from '../firebase' // used for authentication
 import { signInWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail } from 'firebase/auth' // used for authentication
 import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore';
@@ -49,6 +49,7 @@ const Login = () => {
                 // Successfully signed in
                 const user = userCredentials.user; // after signing in, assign the user to the userCredential
                 console.log("User signed in with email: ", user.email, user.uid); // user ID is automatically and uniquely generated for each user
+                navigation.navigate("BottomTab",{screen:'Home'}) //navigate to next screen
 
             })
             .catch(error => {
@@ -63,6 +64,8 @@ const Login = () => {
                     alert('Please enter your login details.');
                 }
             });
+            //navigation.navigate("BottomTab",{screen:'Home'}) //TESTINGG ONLY WILL REMOVE LATER
+         
     };
 
     // function that is used to display the forgot password popup
@@ -113,74 +116,78 @@ const Login = () => {
     // returns the structure of the login page
     return (
 
-        <KeyboardAvoidingView
-            style={styles.container}
-            behavior="padding"
-        >
-            <TouchableOpacity onPress={backToPreviousScreen} style={styles.backButton}>
-                <AntDesign name="arrowleft" size={24} color="black" />
+        <KeyboardAwareScrollView style={[styles.container]} behavior="padding">
+            <TouchableOpacity onPress={backToPreviousScreen} style={[styles.backButton]}>
+                <Ionicons name='chevron-back' size={24} color={'white'}/>
             </TouchableOpacity>
-
-            <View style={styles.inputContainer}>
-
-                <TextInput
-                    placeholder="Email"
-                    value={email}
-                    onChangeText={text => setEmail(text)}
-                    style={styles.input}
-
-                />
-
-                <TextInput
-                    placeholder="Password"
-                    value={password}
-                    onChangeText={text => setPassword(text)}
-                    style={styles.input}
-                    secureTextEntry
-
-                />
-
+            <View>
+                <Text style={[styles.titleText]}>Welcome Back</Text>
+                <Text style={[styles.headingText]}>Please Login to Coninue</Text>
             </View>
 
-            <Modal isVisible={isModalVisible} style={styles.modal}>
-                <View style={styles.modalContainer}>
-                    <TouchableOpacity style={styles.iconButton} onPress={() => setModalVisible(false)}>
-                        <AntDesign name="close" size={24} color="black" />
-                    </TouchableOpacity>
-
-                    <Text style={styles.modalTitle}>Forgot Password</Text>
-                    <Text style={styles.forgotText}>Enter your email to reset your password. We'll send a link if the account is currently registered.</Text>
+            <View style={[styles.bodyContainer]}>
+                <View style={[styles.inputContainer]}>
+                    <TextInput
+                        placeholder="Email Address"
+                        placeholderTextColor="white"
+                        value={email}
+                        onChangeText={text => setEmail(text)}
+                        style={[styles.input]}
+                    />
 
                     <TextInput
-                        placeholder="Enter your email"
-                        value={resetEmail}
-                        onChangeText={setResetEmail}
-                        style={styles.input}
-                        autoFocus
+                        placeholder="Password"
+                        placeholderTextColor="white"
+                        value={password}
+                        onChangeText={text => setPassword(text)}
+                        style={[styles.input]}
+                        secureTextEntry
                     />
-                    <TouchableOpacity onPress={sendResetEmail} style={styles.sendButton}>
-                        <Text style={styles.buttonText}>Send</Text>
-                    </TouchableOpacity>
-
                 </View>
-            </Modal>
 
-            <View style={styles.buttonContainer}>
+                <View style={[styles.forgotPasswordContainer]}>
+                    <TouchableOpacity onPress={handleForgotPassword}>
+                        <Text style={[styles.forgotPasswordText]}>Forgot password</Text>
+                    </TouchableOpacity>
+                </View>
 
-                <TouchableOpacity
+                <Modal isVisible={isModalVisible} style={styles.modal}>
+                    <View style={styles.modalContainer}>
+                        <TouchableOpacity style={styles.iconButton} onPress={() => setModalVisible(false)}>
+                            <Ionicons name="close" size={24} color="black" />
+                        </TouchableOpacity>
+
+                        <Text style={styles.modalTitle}>Forgot Password</Text>
+                        <Text style={styles.forgotText}>Enter your email to reset your password. We'll send a link if the account is currently registered.</Text>
+
+                        <TextInput
+                            value={resetEmail}
+                            onChangeText={setResetEmail}
+                            style={[styles.modalInput]}
+                            
+                        />
+                        <TouchableOpacity onPress={sendResetEmail} style={styles.sendButton}>
+                            <Text style={[styles.buttonText]}>Send</Text>
+                        </TouchableOpacity>
+
+                    </View>
+                </Modal>
+
+                <View style={styles.buttonContainer}>
+                    <TouchableOpacity
                     onPress={handleLogin}
                     style={styles.button}
                 >
-                    <Text style={styles.buttonText}>Login</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity onPress={handleForgotPassword}>
-                    <Text style={styles.forgotPasswordText}>Forgot your password?</Text>
-                </TouchableOpacity>
-
+                    <Text style={[styles.buttonText]}>Login</Text>
+                    </TouchableOpacity>
+                    <View style={{display:"flex", flexDirection:"row",gap:"3%"}}>
+                        <Text style={{color:"white", fontSize: 15}}>Don't have an account?</Text>
+                        <Text style={{color:"#85E5CA", fontSize: 15}} onPress={()=> navigation.navigate('Signup')}>Sign up</Text>
+                    </View>
+                       
+                </View>
             </View>
-
-        </KeyboardAvoidingView>
+        </KeyboardAwareScrollView>
     )
 }
 
@@ -191,65 +198,92 @@ export default Login
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        backgroundColor: '#e0f4f1', // Light greenish background
+        paddingTop:"20%",
+        paddingLeft: "10%",
+        paddingRight:"10%",
+        backgroundColor: '#153A59',
+        overflow:'scroll'
+    },
+
+    titleText:{
+        color:"white",
+        fontSize: 40,
+        fontWeight: 400
+    },
+
+    headingText:{
+        color:"white",
+        fontSize: 15,
+        fontWeight: 400
+    },
+
+    bodyContainer:{
+        paddingLeft:"2.5%",
+        paddingRight:"2.5%",
     },
 
     inputContainer: {
-        width: width * 0.8, // Responsive width
-        backgroundColor: '#ffffff', // White background for input container
-        borderRadius: 20,
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-        elevation: 5,
-        padding: 20,
+        marginTop: "35%",
+        gap: 51  
     },
 
-    input: {
-        backgroundColor: "#d0f0e8", // Light greenish for inputs
-        paddingHorizontal: 15,
+    input: { 
         paddingVertical: 10,
-        borderRadius: 10,
-        marginTop: 10,
-        fontSize: 16,
+        borderBottomColor:"white",
+        borderBottomWidth: 1,
+        fontSize: 20,
         width: '100%',
+        color:"white",
+    },
+
+    modalInput:{
+        borderBottomColor:"black",
+        borderBottomWidth: 1,
+        width:'100%',
+        fontSize: 15,
     },
 
     buttonContainer: {
-        width: width * 0.6, // Responsive width
         justifyContent: "center",
         alignItems: "center",
         marginTop: 40,
+        gap:"8%"
     },
 
     button: {
-        backgroundColor: '#40a7c3', // Light blue
+        backgroundColor: '#85E5CA',
         width: '100%',
         padding: 15,
-        borderRadius: 15,
+        borderRadius: 10,
         alignItems: "center",
         marginTop: 10,
     },
 
+    buttonText:{
+        color: "#153A59",
+        fontSize: 25,
+        fontWeight: 600
+    },
+
     sendButton: {
-        backgroundColor: '#40a7c3', // Light blue
+        backgroundColor: '#85E5CA', // Light blue
         width: '40%',
         padding: 15,
         borderRadius: 15,
         alignItems: "center",
-        marginTop: 10,
+        marginTop: "10%",
 
     },
+
+    forgotPasswordContainer:{
+        justifyContent:"flex-end",
+        alignItems:'flex-end'
+    },
+
     forgotPasswordText: {
         color: '#40a7c3', // You can adjust the color
         marginTop: 20,
-        fontSize: 16,
+        fontSize: 15,
     },
 
 
@@ -257,12 +291,6 @@ const styles = StyleSheet.create({
         backgroundColor: 'white',
         borderColor: '#40a7c3', // Light blue border
         borderWidth: 2,
-    },
-
-    buttonText: {
-        color: 'white',
-        fontWeight: 'bold',
-        fontSize: 18,
     },
 
     buttonOutlineText: {
@@ -308,10 +336,14 @@ const styles = StyleSheet.create({
         alignSelf: 'flex-start',
     },
     backButton: {
-        position: 'absolute',
-        top: 100, // Adjust based on your header height
-        left: 30, // Safe area padding
-        zIndex: 10, // Ensures that the touchable is clickable above all other elements
+        justifyContent:'center',
+        alignItems:'center',
+        marginBottom:"10%",
+        backgroundColor:"#366B7C",
+        borderRadius:"100%",
+        width: 35,
+        height: 35
+      
       },
 });
 

@@ -2,7 +2,7 @@ import { StyleSheet, Text, View, Alert, TouchableOpacity } from "react-native";
 import { useState } from "react";
 import { useNavigation } from '@react-navigation/native' // used to navigate between screens
 
-const HomePage = () => {
+const AddBillsPage = () => {
   
   const navigation = useNavigation(); // used to navigate between screens
  
@@ -12,7 +12,7 @@ const HomePage = () => {
     navigation.navigate("BottomTab",{screen:'Account'})
   }
 
- 
+
 
 
 
@@ -22,6 +22,7 @@ const HomePage = () => {
 
   return (
     <View style={styles.container}>
+        <Text> Add Bills </Text>
 
         <TouchableOpacity style={styles.button} onPress={redirectAccountDetail}>
           <Text style={styles.buttonText}>Account Details</Text>
@@ -31,7 +32,7 @@ const HomePage = () => {
   );
 };
 
-export default HomePage;
+export default AddBillsPage;
 
 const styles = StyleSheet.create({
 
