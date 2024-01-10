@@ -66,48 +66,32 @@ const UserAccount = () => {
   const handlePressAccountSection = () => {
   };
 
-
-// function that handles user log out. session ends
-// ** Need to add some async storage stuff
-const handleLogout = () => {
-    Alert.alert(
-      "Logout",
-      "Are you sure you want to log out?",
-      [
-        {
-        /* User given two options to confirm logging out */
-          text: "No",
-          onPress: () => console.log("Logout Cancelled"),
-          style: "cancel"
-        },
-        { 
-          text: "Yes", onPress: () => {
-            console.log("Logging out");
-            auth.signOut()
-              .then(() => {
-                console.log("User has signed out");
-                navigation.navigate("LoadingScreen")
-              })
-              .catch((error) => {
-                console.log("An error occurred while signing out");
-              });
-          }
-        }
-      ],
-      { cancelable: false }
-    );
-  }
+  // back button redirects back to the homepage
+  const backToPreviousScreen = () => {
+    navigation.navigate("Homepage");
+}
 
 const userOptions=[
   {id:'0', name:'Profile Settings', icon:<MaterialCommunityIcons name="account-settings-outline" size={30} color={'#EDEDED'}/>},
   {id:'1', name:'Activities History', icon:<MaterialIcons name="history" size={30} color={'#EDEDED'}/>},
-  {id:'2', name:'Logout', icon:<MaterialIcons name="logout" size={28} color={'#EDEDED'}/>, onPress: handleLogout}
+  // {id:'2', name:'Logout', icon:<MaterialIcons name="logout" size={28} color={'#EDEDED'}/>, onPress: handleLogout}
 ]
-
   return (
     
     <View style={[styles.container]}>
       <Text style = {[styles.titleText]} >Account</Text>
+      <TouchableOpacity style={styles.accountSection} onPress={handlePressAccountSection}>
+        <View style={styles.avatarPlaceholder} />
+        <Text style={styles.accountText}>{userFullName}</Text>
+      </TouchableOpacity>
+      
+      <TouchableOpacity onPress={backToPreviousScreen} style={styles.backButton}>
+          <AntDesign name="arrowleft" size={24} color="black" />
+      </TouchableOpacity>      
+
+      <TouchableOpacity onPress={() => {navigation.navigate("Settings")}} style={styles.settings}>
+          <AntDesign name="setting" size={24} color="black" />
+      </TouchableOpacity>
       
       <View style={[styles.profilePictureContainer]}>
         <Image source={Avatar}
@@ -169,6 +153,44 @@ const styles = StyleSheet.create({
       paddingRight:"10%",
       backgroundColor: '#153A59'
     },
+    accountSection: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 12,
+      paddingHorizontal: 15,
+      backgroundColor: 'rgba(190, 234, 241, 0.9)', 
+      marginTop: 40, 
+      width: width * 0.9, 
+      borderRadius: 20, 
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+      elevation: 5,
+    },
+    avatarPlaceholder: {
+      width: 50,
+      height: 50,
+      borderRadius: 25,
+      backgroundColor: '#d0d0d0', 
+      marginRight: 10,
+    },
+    accountText: {
+      fontSize: 18,
+      color: '#000',
+    },
+    backButton: {
+        position: 'absolute',
+        top: 80, 
+        left: 20, // Safe area padding
+        zIndex: 10, // Ensures that the touchable is clickable above all other elements
+      },
+      settings: {
+        position: 'absolute',
+        top: 80, 
+        right: 20, // Safe area padding
+        zIndex: 10, // Ensures that the touchable is clickable above all other elements
+      },
 
     bodyContainer:{
       marginTop: 15
