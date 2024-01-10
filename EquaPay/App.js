@@ -6,6 +6,7 @@ import Login from './screens/Login';
 import Signup from './screens/Signup';
 import HomePage from './screens/HomePage';
 import LoadingScreen from './screens/LoadingScreen';
+import BottomTab from './screens/BottomTab';
 import UserAccount from './screens/UserAccount';
 import Settings from './screens/Settings';
 import Reauthentication from './constants/Reauthentication';
@@ -21,11 +22,14 @@ export default function App() {
     testing signup requires signup screen to be first. testing login/forgot password requires
     login scren to be first. */
 
+  /* All main pages are inside the "BottomTab  nested stack screens, 
+    therefore you don't need to call new screen inside the Stack Navigator" */
+
   return (
     <NavigationContainer>
     <Stack.Navigator>
+      
       <Stack.Screen options={{headerShown: false,}} name = "LoadingScreen" component={LoadingScreen} />
-      <Stack.Screen options = {{headerShown : false}} name="Signup" component={Signup} />
       <Stack.Screen options = {{headerShown : false}} name="Login" component={Login} />
       <Stack.Screen options = {{headerShown : false}} name = "Homepage" component={HomePage} />
       <Stack.Screen options={{headerShown: false,}} name = "UserAccount" component={UserAccount} />
@@ -33,6 +37,11 @@ export default function App() {
       <Stack.Screen options = {{headerShown: false,}} name = "Reauthentication" component={Reauthentication} />
       <Stack.Screen options = {{headerShown: false,}} name = "ChangePassword" component={ChangePassword} />
       <Stack.Screen options = {{headerShown: false,}} name = "ChangeEmail" component={ChangeEmail} />
+      <Stack.Screen options = {{headerShown : false}} name="Signup" component={Signup} />
+      <Stack.Screen options={{headerShown: false,}} name = "BottomTab" component={BottomTab} />
+      {/* <Stack.Screen name = "Homepage" component={HomePage} /> */}
+      {/* <Stack.Screen options = {{headerShown : false}} name = "Homepage" component={HomePage} />
+      <Stack.Screen options={{headerShown: false,}} name = "UserAccount" component={UserAccount} /> */}
     </Stack.Navigator>
   </NavigationContainer>
   );
