@@ -43,7 +43,6 @@ const UserAccount = () => {
           if (docSnap.exists()) { // if the user exists
             setUserFullName(docSnap.data().fullName); // get the users name and sets it to the state
             console.log("User's full name is: ", userFullName);
-
             setUserEmail(docSnap.data().email); // get the users email
             console.log("User's email is: ", userEmail);
         } 

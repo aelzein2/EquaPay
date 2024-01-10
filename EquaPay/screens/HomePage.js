@@ -9,7 +9,7 @@ const HomePage = () => {
  
 // temporary function to redirect to account detail page for testing purposes.
   const redirectAccountDetail = () => {
-    navigation.navigate("BottomTab",{screen:'Account'})
+    navigation.navigate("EditProfile",{screen:'EditProfile'})
   }
 
  
