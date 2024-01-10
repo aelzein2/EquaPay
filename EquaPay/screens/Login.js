@@ -1,19 +1,19 @@
 // Imports necessary libraries and components
 import {
-    KeyboardAvoidingView,
     StyleSheet,
     Text,
     TextInput,
     View,
+    ScrollView,
     TouchableOpacity,
     Dimensions
-}
-    from 'react-native'
+}from 'react-native'
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 
 import React, { useEffect, useState } from 'react' // states is used which is from react
 import { useNavigation } from '@react-navigation/native' // used to navigate between screens
 import Modal from 'react-native-modal'; // used for the modal
-import { AntDesign } from '@expo/vector-icons'; // used for the icons
+import Ionicons from 'react-native-vector-icons/Ionicons'; // used for the icons
 import { auth } from '../firebase' // used for authentication
 import { signInWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail } from 'firebase/auth' // used for authentication
 import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore';
@@ -49,6 +49,7 @@ const Login = () => {
                 // Successfully signed in
                 const user = userCredentials.user; // after signing in, assign the user to the userCredential
                 console.log("User signed in with email: ", user.email, user.uid); // user ID is automatically and uniquely generated for each user
+                navigation.navigate("BottomTab",{screen:'Home'}) //navigate to next screen
 
             })
             .catch(error => {
@@ -63,9 +64,8 @@ const Login = () => {
                     alert('Please enter your login details.');
                 }
             });
-
-        //navigate to next screen
-        navigation.navigate("BottomTab",{screen:'Home'}) 
+            //navigation.navigate("BottomTab",{screen:'Home'}) //TESTINGG ONLY WILL REMOVE LATER
+         
     };
 
     // function that is used to display the forgot password popup
@@ -116,12 +116,9 @@ const Login = () => {
     // returns the structure of the login page
     return (
 
-        <KeyboardAvoidingView
-            style={[styles.container]}
-            behavior="padding"
-        >
-            <TouchableOpacity onPress={backToPreviousScreen} style={styles.backButton}>
-                <AntDesign name="arrowleft" size={24} color="black" />
+        <KeyboardAwareScrollView style={[styles.container]} behavior="padding">
+            <TouchableOpacity onPress={backToPreviousScreen} style={[styles.backButton]}>
+                <Ionicons name='chevron-back' size={24} color={'white'}/>
             </TouchableOpacity>
             <View>
                 <Text style={[styles.titleText]}>Welcome Back</Text>
@@ -130,25 +127,22 @@ const Login = () => {
 
             <View style={[styles.bodyContainer]}>
                 <View style={[styles.inputContainer]}>
+                    <TextInput
+                        placeholder="Email Address"
+                        placeholderTextColor="white"
+                        value={email}
+                        onChangeText={text => setEmail(text)}
+                        style={[styles.input]}
+                    />
 
-            <TextInput
-                placeholder="Email Address"
-                placeholderTextColor="white"
-                value={email}
-                onChangeText={text => setEmail(text)}
-                style={styles.input}
-
-            />
-
-            <TextInput
-                placeholder="Password"
-                placeholderTextColor="white"
-                value={password}
-                onChangeText={text => setPassword(text)}
-                style={styles.input}
-                secureTextEntry
-
-            />
+                    <TextInput
+                        placeholder="Password"
+                        placeholderTextColor="white"
+                        value={password}
+                        onChangeText={text => setPassword(text)}
+                        style={[styles.input]}
+                        secureTextEntry
+                    />
                 </View>
 
                 <View style={[styles.forgotPasswordContainer]}>
@@ -158,26 +152,25 @@ const Login = () => {
                 </View>
 
                 <Modal isVisible={isModalVisible} style={styles.modal}>
-                <View style={styles.modalContainer}>
-                    <TouchableOpacity style={styles.iconButton} onPress={() => setModalVisible(false)}>
-                        <AntDesign name="close" size={24} color="black" />
-                    </TouchableOpacity>
+                    <View style={styles.modalContainer}>
+                        <TouchableOpacity style={styles.iconButton} onPress={() => setModalVisible(false)}>
+                            <Ionicons name="close" size={24} color="black" />
+                        </TouchableOpacity>
 
-                    <Text style={styles.modalTitle}>Forgot Password</Text>
-                    <Text style={styles.forgotText}>Enter your email to reset your password. We'll send a link if the account is currently registered.</Text>
+                        <Text style={styles.modalTitle}>Forgot Password</Text>
+                        <Text style={styles.forgotText}>Enter your email to reset your password. We'll send a link if the account is currently registered.</Text>
 
-                    <TextInput
-                        placeholder="Enter your email"
-                        value={resetEmail}
-                        onChangeText={setResetEmail}
-                        style={styles.input}
-                        autoFocus
-                    />
-                    <TouchableOpacity onPress={sendResetEmail} style={styles.sendButton}>
-                        <Text style={styles.buttonText}>Send</Text>
-                    </TouchableOpacity>
+                        <TextInput
+                            value={resetEmail}
+                            onChangeText={setResetEmail}
+                            style={[styles.modalInput]}
+                            
+                        />
+                        <TouchableOpacity onPress={sendResetEmail} style={styles.sendButton}>
+                            <Text style={[styles.buttonText]}>Send</Text>
+                        </TouchableOpacity>
 
-                </View>
+                    </View>
                 </Modal>
 
                 <View style={styles.buttonContainer}>
@@ -189,12 +182,12 @@ const Login = () => {
                     </TouchableOpacity>
                     <View style={{display:"flex", flexDirection:"row",gap:"3%"}}>
                         <Text style={{color:"white", fontSize: 15}}>Don't have an account?</Text>
-                        <Text style={{color:"#85E5CA", fontSize: 15}}>Sign up</Text>
+                        <Text style={{color:"#85E5CA", fontSize: 15}} onPress={()=> navigation.navigate('Signup')}>Sign up</Text>
                     </View>
                        
                 </View>
             </View>
-        </KeyboardAvoidingView>
+        </KeyboardAwareScrollView>
     )
 }
 
@@ -205,10 +198,11 @@ export default Login
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        paddingTop:"30%",
+        paddingTop:"20%",
         paddingLeft: "10%",
         paddingRight:"10%",
-        backgroundColor: '#153A59', // Light greenish background
+        backgroundColor: '#153A59',
+        overflow:'scroll'
     },
 
     titleText:{
@@ -230,8 +224,7 @@ const styles = StyleSheet.create({
 
     inputContainer: {
         marginTop: "35%",
-        gap: 51
-        
+        gap: 51  
     },
 
     input: { 
@@ -241,6 +234,13 @@ const styles = StyleSheet.create({
         fontSize: 20,
         width: '100%',
         color:"white",
+    },
+
+    modalInput:{
+        borderBottomColor:"black",
+        borderBottomWidth: 1,
+        width:'100%',
+        fontSize: 15,
     },
 
     buttonContainer: {
@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#85E5CA',
         width: '100%',
         padding: 15,
-        borderRadius: 5,
+        borderRadius: 10,
         alignItems: "center",
         marginTop: 10,
     },
@@ -265,15 +265,13 @@ const styles = StyleSheet.create({
         fontWeight: 600
     },
 
-    
-
     sendButton: {
-        backgroundColor: '#40a7c3', // Light blue
+        backgroundColor: '#85E5CA', // Light blue
         width: '40%',
         padding: 15,
         borderRadius: 15,
         alignItems: "center",
-        marginTop: 10,
+        marginTop: "10%",
 
     },
 
@@ -338,10 +336,14 @@ const styles = StyleSheet.create({
         alignSelf: 'flex-start',
     },
     backButton: {
-        position: 'absolute',
-        top: 100, // Adjust based on your header height
-        left: 30, // Safe area padding
-        zIndex: 10, // Ensures that the touchable is clickable above all other elements
+        justifyContent:'center',
+        alignItems:'center',
+        marginBottom:"10%",
+        backgroundColor:"#366B7C",
+        borderRadius:"100%",
+        width: 35,
+        height: 35
+      
       },
 });
 

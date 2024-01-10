@@ -20,7 +20,7 @@ const BottomTab = () =>{
   return(
     <Tab.Navigator
         screenOptions={{
-          tabBarActiveTintColor:"#44AFFB",
+          tabBarActiveTintColor:"#85E5CA",
           tabBarInactiveTintColor: "#FFFBFB",
           labelStyle: {fontSize: 10 },
           tabBarStyle:{
@@ -29,15 +29,11 @@ const BottomTab = () =>{
           }
         }}>
 
-        <Tab.Screen options={{headerShown: false, tabBarIcon: ({ color, size }) => (<Ionicons name="home" color={color} size={size} />)}} name={"Home"} component={HomePage}/>
-        <Tab.Screen options={{headerShown: false, tabBarIcon: ({ color, size }) => (<Ionicons name="people" color={color} size={size} />)}} name={"Friends"} component={FriendsPage} />
-        <Tab.Screen options={{headerShown: false, tabBarIcon: ({ color, size }) => (<Ionicons name="add-circle" color={color} size={size} />)}} name={"Add Bills"} component={AddBillsPage}/>
-        <Tab.Screen options={{headerShown: false, tabBarIcon: ({ color, size }) => (<Ionicons name="notifications" color={color} size={size} />)}} name={"Notification"} component={NotificationPage}/>
-        <Tab.Screen options={{headerShown: false, tabBarIcon: ({ color, size }) => (<Ionicons name="person-circle" color={color} size={size} />)}} name={"Account"} component={UserAccount}/>
-        {/* <Tab.Screen options={{headerShown: false,}} name={logIn} component={Login}/> */}
-        {/* <Tab.Screen name={detailsName} component={DetailsScreen} />
-        <Tab.Screen name={settingsName} component={SettingsScreen} /> */}
-
+        <Tab.Screen options={{headerShown: false, tabBarIcon: ({ color, size }) => (<Ionicons name="home" color={color} size={30} />)}} name={"Home"} component={HomePage}/>
+        <Tab.Screen options={{headerShown: false, tabBarIcon: ({ color, size }) => (<Ionicons name="people" color={color} size={30} />)}} name={"Friends"} component={FriendsPage} />
+        <Tab.Screen options={{headerShown: false, tabBarIcon: ({ color, size }) => (<Ionicons name="add-circle" color={color} size={30} />)}} name={"Add Bills"} component={AddBillsPage}/>
+        <Tab.Screen options={{headerShown: false, tabBarIcon: ({ color, size }) => (<Ionicons name="notifications" color={color} size={30} />)}} name={"Notification"} component={NotificationPage}/>
+        <Tab.Screen options={{headerShown: false, tabBarIcon: ({ color, size }) => (<Ionicons name="person-circle" color={color} size={30} />)}} name={"Account"} component={UserAccount}/>
       </Tab.Navigator>
   )
 }

@@ -9,6 +9,11 @@ import LoadingScreen from './screens/LoadingScreen';
 import BottomTab from './screens/BottomTab';
 import UserAccount from './screens/UserAccount';
 import EditProfile from './screens/EditProfile'; //TESTING PAGE !!!!!!!!!!!!!!!!!
+import Settings from './screens/Settings';
+import Reauthentication from './constants/Reauthentication';
+import ChangeEmail from './screens/ChangeEmail';
+import ChangePassword from './screens/ChangePassword';
+
 
 const Stack = createNativeStackNavigator();
 
@@ -28,10 +33,15 @@ export default function App() {
       
       <Stack.Screen options={{headerShown: false,}} name = "LoadingScreen" component={LoadingScreen} />
       <Stack.Screen options = {{headerShown : false}} name="Login" component={Login} />
+      <Stack.Screen options = {{headerShown : false}} name = "Homepage" component={HomePage} />
+      <Stack.Screen options={{headerShown: false,}} name = "UserAccount" component={UserAccount} />
+      <Stack.Screen options = {{headerShown: false,}} name = "Settings" component={Settings} />
+      <Stack.Screen options = {{headerShown: false,}} name = "Reauthentication" component={Reauthentication} />
+      <Stack.Screen options = {{headerShown: false,}} name = "ChangePassword" component={ChangePassword} />
+      <Stack.Screen options = {{headerShown: false,}} name = "ChangeEmail" component={ChangeEmail} />
       <Stack.Screen options = {{headerShown : false}} name="Signup" component={Signup} />
       <Stack.Screen options={{headerShown: false,}} name = "EditProfile" component={EditProfile} />
       <Stack.Screen options={{headerShown: false,}} name = "BottomTab" component={BottomTab} />
-      
       {/* <Stack.Screen name = "Homepage" component={HomePage} /> */}
       {/* <Stack.Screen options = {{headerShown : false}} name = "Homepage" component={HomePage} />
       <Stack.Screen options={{headerShown: false,}} name = "UserAccount" component={UserAccount} /> */}

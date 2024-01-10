@@ -12,7 +12,7 @@ const HomePage = () => {
     navigation.navigate("EditProfile",{screen:'EditProfile'})
   }
 
-
+ 
 
 
 
