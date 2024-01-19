@@ -13,19 +13,15 @@ import Settings from './screens/Settings';
 import Reauthentication from './constants/Reauthentication';
 import ChangeEmail from './screens/ChangeEmail';
 import ChangePassword from './screens/ChangePassword';
+import AddBillsPage from './screens/AddBillsPage';
+import BillDetails from './screens/BillDetails';
 
 
 const Stack = createNativeStackNavigator();
 
 
 export default function App() {
-  
-  /* as of right now, you have to manually order the stack screens to test functionalities.
-    testing signup requires signup screen to be first. testing login/forgot password requires
-    login scren to be first. */
 
-  /* All main pages are inside the "BottomTab  nested stack screens, 
-    therefore you don't need to call new screen inside the Stack Navigator" */
 
   return (
     <NavigationContainer>
@@ -42,6 +38,8 @@ export default function App() {
       <Stack.Screen options = {{headerShown : false}} name="Signup" component={Signup} />
       <Stack.Screen options={{headerShown: false,}} name = "EditProfile" component={EditProfile} />
       <Stack.Screen options={{headerShown: false,}} name = "BottomTab" component={BottomTab} />
+      <Stack.Screen options={{headerShown: false,}} name = "AddBillsPage" component={AddBillsPage} />
+      <Stack.Screen options={{headerShown: false,}} name = "BillDetails" component={BillDetails} />
       {/* <Stack.Screen name = "Homepage" component={HomePage} /> */}
       {/* <Stack.Screen options = {{headerShown : false}} name = "Homepage" component={HomePage} />
       <Stack.Screen options={{headerShown: false,}} name = "UserAccount" component={UserAccount} /> */}
