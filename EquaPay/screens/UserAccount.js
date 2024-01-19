@@ -198,7 +198,8 @@ const styles = StyleSheet.create({
     titleText:{
       color:"white",
       fontSize: 40,
-      fontWeight: 400
+      fontWeight: 400,
+      alignSelf: 'center',
     },
 
     profilePictureContainer:{
