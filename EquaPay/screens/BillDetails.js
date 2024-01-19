@@ -5,14 +5,13 @@ import { AntDesign, MaterialIcons } from '@expo/vector-icons'; // used for the i
 import { useNavigation } from '@react-navigation/native';
 import { Dropdown } from 'react-native-element-dropdown';
 import DateTimePicker from '@react-native-community/datetimepicker';
-
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const db = getFirestore();
 
-// Bill details that fetches this information from the database
+// Bill details that fetches this information from async storage
 const BillDetails = ({ route }) => {
-  const { billId } = route.params;
+  const { billId } = route.params; // Fetch the bill ID from the route params from the previous screen. This will be used to detect the corresponding data that is stored in Async Storage
   const [billName, setBillName] = useState('');
   const [currency, setBillCurrency] = useState('');
   const [participants, setParticipants] = useState([]);
@@ -39,19 +38,17 @@ const BillDetails = ({ route }) => {
     // Implement save functionality
   };
   
-  // deletes the current bill and redirects back to the homepage. bill gets deleted from the database
+  // deletes the current bill and redirects back to the homepage. bill gets deleted from AsyncStorage
   const handleDelete = async () => {
+   
     try {
-    
-      const billRef = doc(db, 'billsCreated', billId); // reference to the bill in the database
- 
-    await deleteDoc(billRef); // deletes the bill in the database
-    console.log('Bill deleted successfully!'); 
-    navigation.navigate("Homepage"); // redirects back to the homepage
-
-    } catch (error) {
-      // Handles any errors in the deletion process
+      await AsyncStorage.removeItem(billId);
+      console.log('Bill deleted successfully!');
+      navigation.navigate("Homepage"); // Redirect to the desired screen after deletion
+    } 
+    catch (error) {
       console.error('Error deleting bill: ', error);
+      Alert.alert('Error', 'Error deleting bill.'); // Show an error message if deletion fails
     }
   };
 
@@ -71,43 +68,41 @@ const BillDetails = ({ route }) => {
   };
 
 
-
-  // uses a useEffect hook to fetch the bill data from the database
+  // uses a useEffect hook to fetch the bill data from Async Storage. It references the bill ID that was created in the previous screen to determine which bill data to fetch
   useEffect(() => {
     const fetchBillData = async () => {
-      setIsLoading(true); // initially, its null so we have to wait for the data to load
+      setIsLoading(true);
+      
       try {
-        const billRef = doc(db, 'billsCreated', billId); // reference to the bill in the database
-        const billSnap = await getDoc(billRef); // takes a "snapshot" of the bill data
-        console.log('Bill ID: ', billId);
-
-        // if the bill exists, grab the information and store it in the states
-        if (billSnap.exists()) {
-
-          const data = billSnap.data(); // stores the data in a variable
-          setBillName(data.groupName); // set the bill name
-          setBillCurrency(data.currency); // set the bill currency
-          setParticipants(data.participants); // set the participants
-          setIsLoading(false); // Data fetched, stop loading
-        }
+        const storedBillData = await AsyncStorage.getItem(billId); // Fetch the bill data from AsyncStorage
+        console.log('Bill ID: ', billId)
+       
+        if (storedBillData !== null) { // if the bill data exists
+          const data = JSON.parse(storedBillData); // Parse the JSON data
+          // sets all the data to the corresponding states
+          setBillName(data.groupName); 
+          setBillCurrency(data.currency);
+          setParticipants(data.participants);
+          setIsLoading(false);
+        } 
         else {
-          console.log('No such document!');
-          setIsLoading(false); // Document not found, stop loading
+          console.log('No data available!'); // cant find or fetch the data from async storage
+          setIsLoading(false);
         }
       } catch (error) {
         console.error('Error fetching bill data: ', error);
-        setIsLoading(false); // Error occurred, stop loading
+        setIsLoading(false);
       }
     };
-
-    fetchBillData(); 
-  }, [billId]); 
-
+  
+    fetchBillData();
+  }, [billId]);
+  
 
   // Maps the participants to the structure of the drop down menu
   const participantOptions = participants.map((participant, index) => ({
     label: participant, 
-    value: index.toString(), // participant field in the database is just a string, so we have to convert it to a string
+    value: index.toString(), 
   }));
 
   // used to select participants on who the bill is paid for
@@ -241,7 +236,7 @@ const handleDropdownChange = (item) => {
       </View>
 
       <View style={styles.paidForContainer}>
-         <Text style={styles.subContainerTitleTwo}>Paid For</Text>
+         <Text style={styles.subContainerTitleTwo}>Bill Distribution</Text>
             {participants.map((participant, index) => (
                   <View key={index} style={styles.participantContainer}>
                     <TouchableOpacity
