@@ -8,11 +8,15 @@ import firebase from 'firebase/app';
 import {firestore } from '../firebase'
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { Alert } from 'react-native';
+import { useNavigation } from '@react-navigation/native' // used to navigate between screens
+
 
 const AddBillsPage = () => {
   const [groupName, setGroupName] = useState('');
   const [currency, setCurrency] = useState(null);
   const [participants, setParticipants] = useState(['']);
+
+  const navigation = useNavigation(); // used to navigate between screens
 
   // currencies available. may add more later, but for now we'll just use these three for now. 
   const currencyData = [
@@ -57,13 +61,16 @@ const AddBillsPage = () => {
   
       console.log('Document written with ID: ', docRef.id);
       Alert.alert('Success', 'Bill created successfully.'); // displays alert if bill was actually created and stored in the backend. 
-  
-     
+      navigation.navigate('BillDetails', { billId: docRef.id });
+      
+
     } catch (error) { // bill wasnt created. 
       console.error("Error adding document: ", error);
       Alert.alert('Error', 'Error creating bill.');
     }
   };
+
+ 
 
 // structure of the add bill page. 
   return (
