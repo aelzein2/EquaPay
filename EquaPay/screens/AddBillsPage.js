@@ -9,6 +9,7 @@ import {firestore } from '../firebase'
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native' // used to navigate between screens
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 const AddBillsPage = () => {
@@ -42,36 +43,33 @@ const AddBillsPage = () => {
     setParticipants(participants.filter((_, idx) => idx !== index));
   };
 
-  // function that handles creating the bill and storing it in the backend database.
   const handleCreateBill = async () => {
-    if (!groupName || !currency || participants.length === 0) { // if any of the fields are empty
-      Alert.alert('Error', 'Please complete all fields.'); // show an error message
+    if (!groupName || !currency || participants.length === 0) {
+      Alert.alert('Error', 'Please complete all fields.');
       return;
     }
   
     try {
-      // Creates a new document in the 'billsCreated' collection
-      const docRef = await addDoc(collection(firestore, 'billsCreated'), { // adds a new document to the billsCreated collection
-        // these are the fields that will be stored in the bills table in the database. 
+      const billData = {
         groupName,
         currency,
         participants,
-        timeCreated: serverTimestamp(),
-      });
+        timeCreated: new Date().toISOString(),
+      };
+      const billId = 'bill_' + new Date().getTime(); //  unique ID for the bill
+      await AsyncStorage.setItem(billId, JSON.stringify(billData)); // saves the bill data to Async Storage
   
-      console.log('Document written with ID: ', docRef.id);
-      Alert.alert('Success', 'Bill created successfully.'); // displays alert if bill was actually created and stored in the backend. 
-      navigation.navigate('BillDetails', { billId: docRef.id });
-      
+     
+      navigation.navigate('BillDetails', { billId: billId }); // navigates to the bill details page and passes the bill ID as a parameter
+    } 
+     catch (error) {
 
-    } catch (error) { // bill wasnt created. 
-      console.error("Error adding document: ", error);
+      console.error("Error saving data: ", error); // logs the error to the console if data cannot be saved to Async Storage
       Alert.alert('Error', 'Error creating bill.');
     }
   };
-
+  
  
-
 // structure of the add bill page. 
   return (
     <ScrollView style={styles.container}>
