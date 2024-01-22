@@ -59,7 +59,7 @@ const AddBillsPage = () => {
       const billId = 'bill_' + new Date().getTime(); //  unique ID for the bill
       await AsyncStorage.setItem(billId, JSON.stringify(billData)); // saves the bill data to Async Storage
   
-      Alert.alert('Success', 'Bill created successfully.');
+     
       navigation.navigate('BillDetails', { billId: billId }); // navigates to the bill details page and passes the bill ID as a parameter
     } 
      catch (error) {
