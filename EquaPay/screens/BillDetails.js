@@ -30,6 +30,10 @@ const BillDetails = ({ route }) => {
   const [splitType, setSplitType] = useState('');
   const [showValidationMessage, setShowValidationMessage] = useState(false);
   const navigation = useNavigation();
+  const [amountValidationMessage, setAmountValidationMessage] = useState('');
+  const [hasInteracted, setHasInteracted] = useState(false);
+
+
 
   // navigate back to the previous screen
   const backToPreviousScreen = () => {
@@ -71,6 +75,58 @@ const BillDetails = ({ route }) => {
     );
   };
 
+// Used to validate the bill amount and the total amount of the participants
+  useEffect(() => {
+    
+    if (splitType === 'equal') {
+      setAmountValidationMessage(''); // Clear the amount validation message if the split type is equal
+      return;
+    }
+    
+    const calculateTotalParticipantAmounts = () => {
+      
+      return selectedParticipants.reduce((total, participant) => { // reduce function to sum the amounts of the selected participants only
+        const amount = parseFloat(participantAmounts[participant] || 0); // if the amount is not a number, it is set to 0
+        return total + amount; // returns the total amount of the selected participants
+      }, 0);
+    };
+  
+    const totalParticipantAmounts = calculateTotalParticipantAmounts(); // total amount of the selected participants
+    const billAmount = parseFloat(billTotalAmount); // total amount of the bill itself
+  
+    // Update validation message condition
+    if (selectedParticipants.length > 0) { // if there are participants selected
+      if (!isNaN(billAmount) && billAmount > 0 && totalParticipantAmounts !== billAmount) { // if the bill amount is a number and greater than 0 and the total amount of the participants does not match the bill amount
+        setAmountValidationMessage(`The sum of selected participant amounts $${totalParticipantAmounts.toFixed(2)} does not match the total bill amount $${billTotalAmount}.`); // set the amount validation message. indicates that that there is no match between the bill amount and the participant amounts
+      } else {
+        setAmountValidationMessage(''); // Clear the amount validation message if the amounts match
+      }
+    } else {
+      setAmountValidationMessage(''); // Clear the amount validation message if no participants are selected
+    }
+  }, [participantAmounts, selectedParticipants, billTotalAmount]);
+  
+
+// Use effect to deal with EQUAL splits. I used this instead of a function as useEffects just work better with automatic changes
+// and it minimizes the need for more function references if a seperate function was used. again, a seperate function can be used, but this is just a more efficient way to do it
+  useEffect(() => {
+    if (splitType === 'equal' && selectedParticipants.length > 0 && billTotalAmount) {
+      const totalAmount = parseFloat(billTotalAmount); // gets the total amount
+      const equalAmount = totalAmount / selectedParticipants.length; // divides the total amount of the bill by how many participants are selected
+      const updatedAmounts = {}; // used to store the updated amounts
+  
+      selectedParticipants.forEach(participant => { 
+        updatedAmounts[participant] = equalAmount.toFixed(2); // Keeping two decimal places for currency
+      });
+  
+      setParticipantAmounts(updatedAmounts); // Update the participant amounts with the equal split amounts
+      
+      // Console log to test the split amounts for EQUAL SPLIT
+    console.log("Updated participant amounts for 'Equal Split':", updatedAmounts);
+    }
+  }, [splitType, selectedParticipants, billTotalAmount]); // React to changes in these values
+  
+  
 
   // uses a useEffect hook to fetch the bill data from Async Storage. It references the bill ID that was created in the previous screen to determine which bill data to fetch
   useEffect(() => {
@@ -115,6 +171,7 @@ const BillDetails = ({ route }) => {
 
   // Function that toggles the selection of participants for the bill in the "Paid For section"
   const toggleParticipantSelection = (participant) => {
+    setHasInteracted(true);
     const updatedSelectedParticipants = selectedParticipants.includes(participant) // if the participant is already selected
       ? selectedParticipants.filter(p => p !== participant) // remove the participant from the selected participants
       : [...selectedParticipants, participant]; // if not, participant is added to the selected participants
@@ -159,12 +216,32 @@ const BillDetails = ({ route }) => {
     return <Text>Loading...</Text>; // Display loading message --> can delete later, was just added for debugging
   }
 
+
   // function that handles the date picker
   const onChangeDate = (event, selectedDate) => {
     const currentDate = selectedDate || date;
     setShowDatePicker(Platform.OS === 'ios')
     setDate(currentDate);
   };
+
+
+// Function to update the amount for a participant
+const handleAmountChange = (participant, amount) => {
+  setParticipantAmounts(prevAmounts => { // sets the participant amounts
+    const updatedAmounts = { ...prevAmounts };  // updates the amounts
+    updatedAmounts[participant] = amount;
+    return updatedAmounts;
+  });
+};
+
+// Function to calculate the total of participant amounts
+const calculateTotalParticipantAmounts = () => {
+  return selectedParticipants.reduce((total, participant) => { // reduce function to sum the amounts of the selected participants
+    const amount = parseFloat(participantAmounts[participant] || 0); // if the amount is not a number, it is set to 0
+    return total + amount;
+  }, 0);
+};
+
 
   // Function that stores the entered bill details into the database. Function will need to be editied once amount distribution is properly implemented
   const handleSubmitBill = async () => {
@@ -192,6 +269,14 @@ const BillDetails = ({ route }) => {
         
       });
 
+  const totalParticipantAmounts = calculateTotalParticipantAmounts(); // reference to the function that calculates the total amount of the participants
+
+  // Checks if the total matches the bill total amount
+  if (parseFloat(billTotalAmount) !== totalParticipantAmounts) {
+    Alert.alert('Error', 'Please adjust the participant amounts to match the total bill amount.'); // displays an error message if the total amount of the participants does not match the bill amount
+    return;
+  }
+      // Bill was submitted successfully and stored in the database
       console.log('Bill stored in database', docRef.id);
       Alert.alert('Success', 'Bill submitted successfully.');
       navigation.navigate("Homepage"); // Redirects to homepage after submission and alert is displayed
@@ -203,7 +288,7 @@ const BillDetails = ({ route }) => {
     }
   };
 
-
+// Renders the bill details form
   return (
     <ScrollView style={styles.container}>
 
@@ -284,43 +369,56 @@ const BillDetails = ({ route }) => {
       <View style={styles.paidForContainer}>
         <Text style={styles.subContainerTitleTwo}>Bill Distribution</Text>
         {participants.map((participant, index) => (
-          <View key={index} style={styles.participantContainer}>
-            <TouchableOpacity
-              style={[
-                styles.participantRow,
-                selectedParticipants.includes(participant) ? styles.selectedParticipantRow : null
-              ]}
-              onPress={() => toggleParticipantSelection(participant)}
-              activeOpacity={0.6}
-            >
-              <Text style={styles.participantName}>{participant}</Text>
-              {selectedParticipants.includes(participant) && (
-                <MaterialIcons name="check-circle" size={24} color="green" style={styles.checkmarkIcon} />
-              )}
-            </TouchableOpacity>
+  <View key={index} style={styles.participantContainer}>
+    <TouchableOpacity
+      style={[
+        styles.participantRow,
+        selectedParticipants.includes(participant) ? styles.selectedParticipantRow : null
+      ]}
+      onPress={() => {
+        toggleParticipantSelection(participant);
+        setHasInteracted(true); // Ensure interaction state is updated here as well
+      }}
+      activeOpacity={0.6}
+    >
+      <Text style={styles.participantName}>{participant}</Text>
+      {selectedParticipants.includes(participant) && (
+        <MaterialIcons name="check-circle" size={24} color="green" style={styles.checkmarkIcon} />
+      )}
+    </TouchableOpacity>
 
+    {/* Update this condition to also check for splitType */}
+    {splitType !== 'equal' && (
+      <TextInput
+        style={[
+          styles.amountInput,
+          selectedParticipants.includes(participant) ? styles.activeAmountInput : styles.inactiveAmountInput
+        ]}
+        onChangeText={(amount) => handleAmountChange(participant, amount)}
+        value={participantAmounts[participant] || ''} // Ensure the value is a string
+        editable={selectedParticipants.includes(participant)}
+        placeholder="Amount"
+        keyboardType="numeric"
+      />
+    )}
+  </View>
+))}
 
-            {splitType !== 'equal' && (
-              <TextInput
-                style={[
-                  styles.amountInput,
-                  selectedParticipants.includes(participant) ? styles.activeAmountInput : styles.inactiveAmountInput
-                ]}
-                onChangeText={(amount) => handleAmountChange(participant, amount)}
-                value={participantAmounts[participant]}
-                editable={selectedParticipants.includes(participant)}
-                placeholder="Amount"
-                keyboardType="numeric"
-              />
-            )}
-          </View>
-        ))}
+  {
+    hasInteracted && selectedParticipants.length === 0 && (
+      <Text style={styles.validationMessage}>
+        The expense must be paid for at least one participant.
+      </Text>
+    )
+  }
 
-        {showValidationMessage && (
-          <Text style={styles.validationMessage}>
-            The expense must be paid for at least one participant.
-          </Text>
-        )}
+  {
+    amountValidationMessage && (
+      <Text style={styles.validationMessage}>
+      {amountValidationMessage}
+      </Text>
+    )
+  }
 
         <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.splitOptionsButton}>
           <Text style={styles.splitOptionsText}>Split Options</Text>
