@@ -40,10 +40,11 @@ const BillDetails = ({ route }) => {
     navigation.navigate("AddBillsPage");
   }
 
+
   // saves the bill so it can be reached later
   const handleSave = () => {
-    // Implement save functionality
   };
+
 
   // deletes the current bill and redirects back to the homepage. bill gets deleted from AsyncStorage
   const handleDelete = async () => {
@@ -75,25 +76,25 @@ const BillDetails = ({ route }) => {
     );
   };
 
-// Used to validate the bill amount and the total amount of the participants
+  // Used to validate the bill amount and the total amount of the participants
   useEffect(() => {
-    
+
     if (splitType === 'equal') {
       setAmountValidationMessage(''); // Clear the amount validation message if the split type is equal
       return;
     }
-    
+
     const calculateTotalParticipantAmounts = () => {
-      
+
       return selectedParticipants.reduce((total, participant) => { // reduce function to sum the amounts of the selected participants only
         const amount = parseFloat(participantAmounts[participant] || 0); // if the amount is not a number, it is set to 0
         return total + amount; // returns the total amount of the selected participants
       }, 0);
     };
-  
+
     const totalParticipantAmounts = calculateTotalParticipantAmounts(); // total amount of the selected participants
     const billAmount = parseFloat(billTotalAmount); // total amount of the bill itself
-  
+
     // Update validation message condition
     if (selectedParticipants.length > 0) { // if there are participants selected
       if (!isNaN(billAmount) && billAmount > 0 && totalParticipantAmounts !== billAmount) { // if the bill amount is a number and greater than 0 and the total amount of the participants does not match the bill amount
@@ -105,28 +106,102 @@ const BillDetails = ({ route }) => {
       setAmountValidationMessage(''); // Clear the amount validation message if no participants are selected
     }
   }, [participantAmounts, selectedParticipants, billTotalAmount]);
-  
 
-// Use effect to deal with EQUAL splits. I used this instead of a function as useEffects just work better with automatic changes
-// and it minimizes the need for more function references if a seperate function was used. again, a seperate function can be used, but this is just a more efficient way to do it
+
+
+  // Use effect to deal with EQUAL splits. I used this instead of a function as useEffects just work better with automatic changes
+  // and it minimizes the need for more function references if a seperate function was used. again, a seperate function can be used, but this is just a more efficient way to do it
   useEffect(() => {
     if (splitType === 'equal' && selectedParticipants.length > 0 && billTotalAmount) {
       const totalAmount = parseFloat(billTotalAmount); // gets the total amount
       const equalAmount = totalAmount / selectedParticipants.length; // divides the total amount of the bill by how many participants are selected
       const updatedAmounts = {}; // used to store the updated amounts
-  
-      selectedParticipants.forEach(participant => { 
+
+      selectedParticipants.forEach(participant => {
         updatedAmounts[participant] = equalAmount.toFixed(2); // Keeping two decimal places for currency
       });
-  
+
       setParticipantAmounts(updatedAmounts); // Update the participant amounts with the equal split amounts
-      
+
       // Console log to test the split amounts for EQUAL SPLIT
-    console.log("Updated participant amounts for 'Equal Split':", updatedAmounts);
+      console.log("Updated participant amounts for 'Equal Split':", updatedAmounts);
     }
   }, [splitType, selectedParticipants, billTotalAmount]); // React to changes in these values
-  
-  
+
+
+
+  // use Effect used to deal with PERCENTAGE splits
+  useEffect(() => {
+    if (splitType === 'percentage' && selectedParticipants.length > 0 && billTotalAmount) {
+      const totalAmount = parseFloat(billTotalAmount); // gets the total amount
+      let totalPercentage = 0;
+
+      // Calculates the total percentage based on user inputs
+      selectedParticipants.forEach(participant => {
+        const percentage = parseFloat(participantAmounts[participant] || 0);
+        totalPercentage += percentage;
+      });
+
+      // Checks if the total percentage equals 100
+      if (totalPercentage !== 100) {
+        setAmountValidationMessage(`Total percentage must equal 100%. Current total: ${totalPercentage}%`); // percentage doesnt add up to 100%
+      } else {
+        setAmountValidationMessage(''); // if it does add up to 100%, clear the message
+      }
+
+      let calculatedAmounts = {}; // stores the calculated amounts
+      if (totalPercentage === 100) { // if the total percentage equals 100%
+        selectedParticipants.forEach(participant => { // for every participant, calculate the amount based on the percentage
+          const percentage = parseFloat(participantAmounts[participant] || 0); // if the percentage is not a number, it is set to 0
+          const amount = (totalAmount * percentage) / 100; // calculates the amount based on the percentage
+          calculatedAmounts[participant] = amount.toFixed(2); // Keeping two decimal places for currency
+        });
+        console.log("Calculated amounts based on percentages:", calculatedAmounts); // console log to see the amount distributed based on percentages
+      }
+    }
+  }, [splitType, selectedParticipants, billTotalAmount, participantAmounts]); // React to changes in these values
+
+
+
+  // functionality used to distribute the amount based on CUSTOM AMOUNT SPLIT type.
+  useEffect(() => {
+    if (splitType === 'amount' && selectedParticipants.length > 0 && billTotalAmount) {
+      const totalBillAmount = parseFloat(billTotalAmount); // gets the total bill amount
+
+      // Initialize variables for calculations and validation
+      let totalEnteredAmounts = 0;
+      let calculatedAmounts = {}; // To store entered amounts for logging
+      let allParticipantsHaveAmount = true; // Flag to check if all participants have an amount greater than 0
+
+      selectedParticipants.forEach(participant => {
+        const amount = parseFloat(participantAmounts[participant] || 0);
+        totalEnteredAmounts += amount;
+        calculatedAmounts[participant] = amount.toFixed(2); // Store for logging
+
+        // Check if any participant's amount is 0 or not entered
+        if (amount <= 0) {
+          allParticipantsHaveAmount = false; // Set flag to false if any participant has no amount entered
+        }
+      });
+
+      // Handle validation based on total amounts and individual participant contributions
+      if (!allParticipantsHaveAmount) {
+        // If any participant has an amount of 0 or not entered
+        setAmountValidationMessage('Every selected participant must have an amount greater than 0.');
+      } else if (totalEnteredAmounts !== totalBillAmount) {
+        // If the total of entered amounts doesn't match the total bill amount
+        setAmountValidationMessage(`The total of entered amounts $${totalEnteredAmounts.toFixed(2)} does not match the total bill amount $${totalBillAmount.toFixed(2)}.`);
+      } else {
+        // If all validations pass
+        setAmountValidationMessage('');
+      }
+
+      // Log the entire calculatedAmounts object to see the distribution
+      console.log("Updated participant amounts for 'Amount Split':", calculatedAmounts);
+    }
+  }, [splitType, selectedParticipants, billTotalAmount, participantAmounts]);
+
+
 
   // uses a useEffect hook to fetch the bill data from Async Storage. It references the bill ID that was created in the previous screen to determine which bill data to fetch
   useEffect(() => {
@@ -159,6 +234,7 @@ const BillDetails = ({ route }) => {
   }, [billId]);
 
 
+
   // Maps the participants to the structure of the drop down menu
   const participantOptions = participants.map((participant) => ({
     label: participant,
@@ -183,20 +259,21 @@ const BillDetails = ({ route }) => {
 
   // Function that stores and updates the amount of the total bill.
   const handleBillAmountChange = (amount) => {
-    
+
     if (isNaN(amount) || amount.trim() === '') {
       alert('Please enter a valid number.');
       setBillTotalAmount(''); // clears the box to an empty string so the user can just enter a new value
-    } 
+    }
     else {
       setBillTotalAmount(amount); // Update with the valid amount
     }
   };
 
 
-  // Function that stores and updates the amount of the total bill.
+  // Function that handles the split type dropdown and clears amounts to start fresh
   const handleDropdownChange = (item) => {
     setSplitType(item.value);
+    setParticipantAmounts({}); // clears the amounts when the split type is changed
     forceUpdate(); // Force the component to re-render
   };
 
@@ -225,27 +302,18 @@ const BillDetails = ({ route }) => {
   };
 
 
-// Function to update the amount for a participant
-const handleAmountChange = (participant, amount) => {
-  setParticipantAmounts(prevAmounts => { // sets the participant amounts
-    const updatedAmounts = { ...prevAmounts };  // updates the amounts
-    updatedAmounts[participant] = amount;
-    return updatedAmounts;
-  });
-};
-
-// Function to calculate the total of participant amounts
-const calculateTotalParticipantAmounts = () => {
-  return selectedParticipants.reduce((total, participant) => { // reduce function to sum the amounts of the selected participants
-    const amount = parseFloat(participantAmounts[participant] || 0); // if the amount is not a number, it is set to 0
-    return total + amount;
-  }, 0);
-};
+  // Function to update the amount for a participant that is selected
+  const handleAmountChange = (participant, amount) => {
+    setParticipantAmounts(prevAmounts => { // sets the participant amounts
+      const updatedAmounts = { ...prevAmounts };  // updates the amounts
+      updatedAmounts[participant] = amount;
+      return updatedAmounts;
+    });
+  };
 
 
-  // Function that stores the entered bill details into the database. Function will need to be editied once amount distribution is properly implemented
+  // Function that stores the entered bill details into the database. Probably the most important function here.
   const handleSubmitBill = async () => {
-
     // Validation to ensure all required fields are filled out
     if (!description || !billTotalAmount || !billName || selectedParticipants.length === 0) {
       Alert.alert('Error', 'Please complete all required fields.');
@@ -254,41 +322,48 @@ const calculateTotalParticipantAmounts = () => {
 
     const billDeadlineTimestamp = Timestamp.fromDate(date); // deadline converted to a timestamp type since database field stores it in this type
 
+    // this is to make sure it will store the correct amounts for any split type for each participant
+    let participantsWithAmounts = selectedParticipants.map(participant => {
+      let amount = parseFloat(participantAmounts[participant] || 0);
+
+      // If the split type is 'percentage', convert the percentage to dollar amount ---> can also have it so it stores the percentage instead 
+      if (splitType === 'percentage') {
+        amount = parseFloat(billTotalAmount) * (amount / 100); // converts the percentage to a dollar amount. Every other split type stores the $ amount so its better to keep it consistent.
+      }
+
+      return { // returns the participant and the amount they were assigned
+        id: participant,
+        amount: amount.toFixed(2) // Ensuring amount is formatted as currency
+      };
+    });
+
+    // attempts to store the bill details in the database, with all details needed
     try {
 
-      const docRef = await addDoc(collection(db, 'billsCreated'), { // adds entry into the database
-
-        // all bill form data is stored in the database in 'billsCreated' table. will need to be updated once bill distributions are added among the selected participants
+      // all bill form data is stored in the database in 'billsCreated' table. 
+      const docRef = await addDoc(collection(db, 'billsCreated'), {
         description: description,
         billName: billName,
-        billTotalAmount: parseFloat(billTotalAmount), 
+        billTotalAmount: parseFloat(billTotalAmount),
         currency: currency,
-        participants: selectedParticipants,
+        participants: participantsWithAmounts, // stores selected participants with their amounts
         paidBy: selectedParticipant,
         billDeadline: billDeadlineTimestamp,
-        
+        billSplitType: splitType
       });
 
-  const totalParticipantAmounts = calculateTotalParticipantAmounts(); // reference to the function that calculates the total amount of the participants
-
-  // Checks if the total matches the bill total amount
-  if (parseFloat(billTotalAmount) !== totalParticipantAmounts) {
-    Alert.alert('Error', 'Please adjust the participant amounts to match the total bill amount.'); // displays an error message if the total amount of the participants does not match the bill amount
-    return;
-  }
-      // Bill was submitted successfully and stored in the database
-      console.log('Bill stored in database', docRef.id);
+      console.log('Bill stored in database', docRef.id); // test to see if it was stored in the database
       Alert.alert('Success', 'Bill submitted successfully.');
-      navigation.navigate("Homepage"); // Redirects to homepage after submission and alert is displayed
+      navigation.navigate("Homepage");
     }
-    catch (error) {
-      // cannot add entry into database
+    catch (error) { // bill cant be submitted and stored
       console.error("Error submitting bill: ", error);
       Alert.alert('Error', 'Error submitting bill.');
     }
   };
 
-// Renders the bill details form
+
+  // Renders the bill details form page
   return (
     <ScrollView style={styles.container}>
 
@@ -369,56 +444,56 @@ const calculateTotalParticipantAmounts = () => {
       <View style={styles.paidForContainer}>
         <Text style={styles.subContainerTitleTwo}>Bill Distribution</Text>
         {participants.map((participant, index) => (
-  <View key={index} style={styles.participantContainer}>
-    <TouchableOpacity
-      style={[
-        styles.participantRow,
-        selectedParticipants.includes(participant) ? styles.selectedParticipantRow : null
-      ]}
-      onPress={() => {
-        toggleParticipantSelection(participant);
-        setHasInteracted(true); // Ensure interaction state is updated here as well
-      }}
-      activeOpacity={0.6}
-    >
-      <Text style={styles.participantName}>{participant}</Text>
-      {selectedParticipants.includes(participant) && (
-        <MaterialIcons name="check-circle" size={24} color="green" style={styles.checkmarkIcon} />
-      )}
-    </TouchableOpacity>
+          <View key={index} style={styles.participantContainer}>
+            <TouchableOpacity
+              style={[
+                styles.participantRow,
+                selectedParticipants.includes(participant) ? styles.selectedParticipantRow : null
+              ]}
+              onPress={() => {
+                toggleParticipantSelection(participant);
+                setHasInteracted(true); // Ensure interaction state is updated here as well
+              }}
+              activeOpacity={0.6}
+            >
+              <Text style={styles.participantName}>{participant}</Text>
+              {selectedParticipants.includes(participant) && (
+                <MaterialIcons name="check-circle" size={24} color="green" style={styles.checkmarkIcon} />
+              )}
+            </TouchableOpacity>
 
-    {/* Update this condition to also check for splitType */}
-    {splitType !== 'equal' && (
-      <TextInput
-        style={[
-          styles.amountInput,
-          selectedParticipants.includes(participant) ? styles.activeAmountInput : styles.inactiveAmountInput
-        ]}
-        onChangeText={(amount) => handleAmountChange(participant, amount)}
-        value={participantAmounts[participant] || ''} // Ensure the value is a string
-        editable={selectedParticipants.includes(participant)}
-        placeholder="Amount"
-        keyboardType="numeric"
-      />
-    )}
-  </View>
-))}
+            {/* Update this condition to also check for splitType */}
+            {splitType !== 'equal' && (
+              <TextInput
+                style={[
+                  styles.amountInput,
+                  selectedParticipants.includes(participant) ? styles.activeAmountInput : styles.inactiveAmountInput
+                ]}
+                onChangeText={(amount) => handleAmountChange(participant, amount)}
+                value={participantAmounts[participant] || ''} // Ensure the value is a string
+                editable={selectedParticipants.includes(participant)}
+                placeholder="Amount"
+                keyboardType="numeric"
+              />
+            )}
+          </View>
+        ))}
 
-  {
-    hasInteracted && selectedParticipants.length === 0 && (
-      <Text style={styles.validationMessage}>
-        The expense must be paid for at least one participant.
-      </Text>
-    )
-  }
+        {
+          hasInteracted && selectedParticipants.length === 0 && (
+            <Text style={styles.validationMessage}>
+              The expense must be paid for at least one participant.
+            </Text>
+          )
+        }
 
-  {
-    amountValidationMessage && (
-      <Text style={styles.validationMessage}>
-      {amountValidationMessage}
-      </Text>
-    )
-  }
+        {
+          amountValidationMessage && (
+            <Text style={styles.validationMessage}>
+              {amountValidationMessage}
+            </Text>
+          )
+        }
 
         <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.splitOptionsButton}>
           <Text style={styles.splitOptionsText}>Split Options</Text>
@@ -449,8 +524,8 @@ const calculateTotalParticipantAmounts = () => {
                 data={[
                   { label: 'Equal Split', value: 'equal' },
                   { label: 'By Percentage', value: 'percentage' },
-                  { label: 'By Amount', value: 'amount' },
-                  { label: 'Custom Split', value: 'custom' }
+                  { label: 'By Custom Amount', value: 'amount' },
+
                 ]}
                 labelField="label"
                 valueField="value"
