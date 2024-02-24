@@ -122,7 +122,7 @@ const Login = () => {
             </TouchableOpacity>
             <View>
                 <Text style={[styles.titleText]}>Welcome Back</Text>
-                <Text style={[styles.headingText]}>Please Login to Coninue</Text>
+                <Text style={[styles.headingText]}>Please Login to Continue</Text>
             </View>
 
             <View style={[styles.bodyContainer]}>

@@ -40,16 +40,19 @@ const UserAccount = () => {
 
         try {
           const docSnap = await getDoc(userDocRef); // fetches the user's data from the database
-          if (docSnap.exists()) { // if the user exists
-            setUserFullName(docSnap.data().fullName); // get the users name and sets it to the state
-            console.log("User's full name is: ", userFullName);
-            setUserEmail(docSnap.data().email); // get the users email
-            console.log("User's email is: ", userEmail);
-        } 
-          else { // if the user does not exist
+          if (docSnap.exists()) {
+            const userData = docSnap.data(); // Get the user's data
+            console.log("User's full name is: ", userData.fullName); // Log the user's full name
+            console.log("User's email is: ", userData.email); // Log the user's email
+          
+            setUserFullName(userData.fullName); // Set the user's full name state
+            setUserEmail(userData.email); // Set the user's email state
+          } else {
             console.log("User record not found");
-            setUserFullName("Name not found"); 
+            setUserFullName("Name not found");
+            setUserEmail("Email not found");
           }
+          
         } catch (error) {
           console.error("Error fetching user data: ", error);
           setUserFullName("Error Loading Name"); 
@@ -198,7 +201,8 @@ const styles = StyleSheet.create({
     titleText:{
       color:"white",
       fontSize: 40,
-      fontWeight: 400
+      fontWeight: 400,
+      alignSelf: 'center',
     },
 
     profilePictureContainer:{
