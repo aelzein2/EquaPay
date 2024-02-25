@@ -7,7 +7,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 
 // // Screens
 import Login from './Login';
-import HomePage from './HomePage';
+import ViewBills from './ViewBills';
 import UserAccount from './UserAccount';
 import FriendsPage from './FriendsPage';
 import AddBillsPage from './AddBillsPage';
@@ -29,7 +29,7 @@ const BottomTab = () =>{
           }
         }}>
 
-        <Tab.Screen options={{headerShown: false, tabBarIcon: ({ color, size }) => (<Ionicons name="home" color={color} size={30} />)}} name={"Home"} component={HomePage}/>
+        <Tab.Screen options={{headerShown: false, tabBarIcon: ({ color, size }) => (<Ionicons name="receipt" color={color} size={30} />)}} name={"View Bills"} component={ViewBills}/>
         <Tab.Screen options={{headerShown: false, tabBarIcon: ({ color, size }) => (<Ionicons name="people" color={color} size={30} />)}} name={"Friends"} component={FriendsPage} />
         <Tab.Screen options={{headerShown: false, tabBarIcon: ({ color, size }) => (<Ionicons name="add-circle" color={color} size={30} />)}} name={"Add Bills"} component={AddBillsPage}/>
         <Tab.Screen options={{headerShown: false, tabBarIcon: ({ color, size }) => (<Ionicons name="notifications" color={color} size={30} />)}} name={"Notification"} component={NotificationPage}/>
