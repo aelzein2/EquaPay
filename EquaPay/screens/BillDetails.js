@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, View, TouchableOpacity, Modal, Alert } from 'react-native';
+import { ActionSheetIOS, ScrollView, StyleSheet, Text, TextInput, View, TouchableOpacity, Modal, Alert, Button, Image } from 'react-native';
 import { getFirestore, doc, addDoc, deleteDoc, collection, Timestamp } from 'firebase/firestore';
 import { AntDesign, MaterialIcons } from '@expo/vector-icons'; // used for the icons
 import { useNavigation } from '@react-navigation/native';
 import { Dropdown } from 'react-native-element-dropdown';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { firestore } from '../firebase'
+import { firestore } from '../firebase';
+import { getStorage, ref, uploadBytes } from "firebase/storage";
+import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
 
 
 const db = getFirestore();
@@ -32,8 +35,87 @@ const BillDetails = ({ route }) => {
   const navigation = useNavigation();
   const [amountValidationMessage, setAmountValidationMessage] = useState('');
   const [hasInteracted, setHasInteracted] = useState(false);
+  const [image, setImage] = useState(null);
 
+  const pickImage = async () => {
+    // No permissions request is necessary for launching the image library
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: false
+    });
 
+    console.log(result);
+
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
+    }
+  };
+  
+  const cameraUpload = async () => {
+    try {
+      await ImagePicker.requestCameraPermissionsAsync();
+      let result = await ImagePicker.launchCameraAsync({
+        allowsEditing: false
+      });
+    
+    if (!result.canceled){
+      // save image
+      setImage(result.assets[0].uri);
+    }
+      
+    }catch (error) {
+
+    }
+  };
+
+  const pickImageOptions = () => {
+    ActionSheetIOS.showActionSheetWithOptions(
+      {
+        options: ['Cancel', 'Camera', 'Photo Library', 'Remove'],
+        destructiveButtonIndex: 3,
+        cancelButtonIndex: 0,
+        userInterfaceStyle: 'dark',
+      },
+      buttonIndex => {
+        if (buttonIndex == 1){
+          cameraUpload();
+        }else if(buttonIndex == 2){
+          pickImage();
+        }
+      },
+    );
+  };
+
+  const uploadImage = async () => {
+
+    try {
+      const { uri } = await FileSystem.getInfoAsync(image);
+      const blob = await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.onload = () => {
+          resolve(xhr.response);
+        };
+        xhr.onerror = (error) => {
+          reject(new TypeError('Network request failed'));
+        };
+        xhr.responseType = 'blob';
+        xhr.open('GET', uri, true);
+        xhr.send(null);
+      });
+
+      const filename = image.substring(image.lastIndexOf('/') + 1);
+      const storage = getStorage();
+      const storageRef = ref(storage, filename);
+
+      uploadBytes(storageRef, blob).then((snapshot) => {
+        console.log('Uploaded Image!');
+      });
+      
+      setImage(null);
+    }catch (error){
+      console.error(error);
+    }
+  };
 
   // navigate back to the previous screen
   const backToPreviousScreen = () => {
@@ -339,6 +421,7 @@ const BillDetails = ({ route }) => {
 
     // attempts to store the bill details in the database, with all details needed
     try {
+      uploadImage();
 
       // all bill form data is stored in the database in 'billsCreated' table. 
       const docRef = await addDoc(collection(db, 'billsCreated'), {
@@ -407,6 +490,11 @@ const BillDetails = ({ route }) => {
             console.log('Selected participant: ', item.label);
           }}
         />
+
+        <TouchableOpacity style={{flex: 1, flexDirection: "row", justifyContent: 'flex-start', alignItems: 'center'}} onPress={pickImageOptions}> 
+          <Text>Upload Image</Text>
+          {image && <Image source={{ uri: image }} style={{ width: 50, height: 50 }} />}
+        </TouchableOpacity>
 
 
         <View style={styles.row}>
