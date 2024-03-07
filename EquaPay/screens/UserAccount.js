@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Dimensions, Image } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Dimensions, Image, Alert, } from 'react-native';
 import { Divider } from '@rneui/themed';
 import { useNavigation } from '@react-navigation/native';
 import { AntDesign } from '@expo/vector-icons'; // used for the icons
 import { auth, firestore } from '../firebase' // used for authentication
-import { Alert } from 'react-native';
-import { doc, getDoc, getFirestore } from 'firebase/firestore';
+import { doc, getDoc, getFirestore, query, where, collection, addDoc, getDocs, } from 'firebase/firestore';
 import Ionicons from 'react-native-vector-icons/Ionicons'; // used for the icons
 import { MaterialIcons } from '@expo/vector-icons';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { getAuth } from 'firebase/auth';
 
 
 //profile picture
@@ -28,10 +28,11 @@ const friendsData=[
 
 
 const UserAccount = () => {
- 
-    const navigation = useNavigation();
-    const [userFullName, setUserFullName] = useState('Loading...'); // State to store the user's full name
-    const [userEmail, setUserEmail] = useState('Loading...'); // State to store users email
+  const auth = getAuth();
+  const [addFriend, setAddFriend] = useState("");
+  const navigation = useNavigation();
+  const [userFullName, setUserFullName] = useState('Loading...'); // State to store the user's full name
+  const [userEmail, setUserEmail] = useState('Loading...'); // State to store users email
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -62,6 +63,42 @@ const UserAccount = () => {
 
     fetchUserData();
   }, []);
+
+  function handleAddFriend(){
+    Alert.prompt("Add Friend",
+    "",[
+      {
+        text: "Cancel",
+        onPress: () => console.log("Cancel Pressed"),
+        style: "cancel"
+      },
+      {
+        text: "Ok",
+        onPress: friend => addFriends(friend),
+      }
+    ],)
+    
+}
+
+async function addFriends(friend){
+  setAddFriend(friend)
+  console.log(addFriend);
+  const usersRef = collection(db, 'users'); // reference to the users collection
+  const queryDatabase = query(usersRef, where("email", "==", addFriend));
+  if (addFriend !== null){
+    getDocs(queryDatabase).then(querySnapshot => {
+      if (!querySnapshot.empty) {
+        const docRef = addDoc(collection(db, 'friends'), {
+          befriender: userEmail,
+          befriended: addFriend,
+      })
+      console.log(docRef.id)
+      }  
+    })
+  } else {
+      Alert.alert('Error', 'Please enter a correct email.');
+  }
+}
 
 
   // function that handles the press of the users name/avatar block. this will be pressed so a user can change account details.
@@ -110,7 +147,7 @@ const userOptions=[
       <View style={[styles.bodyContainer]}>
         <Text style={[styles.headingText]}>Friends</Text>
         <View style={[styles.friendContainer]}>
-          <TouchableOpacity style={[styles.friendButton]}>
+          <TouchableOpacity style={[styles.friendButton]} onPress={handleAddFriend}>
             <Ionicons name='add-circle-outline' size={30}/>
             <Text style={[styles.friendText]}>Add Friends</Text>
           </TouchableOpacity>
