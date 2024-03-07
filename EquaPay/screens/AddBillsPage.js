@@ -1,23 +1,30 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState, useCallback} from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, TextInput, ScrollView } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { Dropdown } from 'react-native-element-dropdown';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { lightBlue } from '@mui/material/colors';
 import { MaterialIcons } from '@expo/vector-icons'; // Importing MaterialIcons for the garbage can icon
 import firebase from 'firebase/app';
 import {firestore } from '../firebase'
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, getFirestore, where, getDocs, doc, getDoc, } from 'firebase/firestore';
 import { Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native' // used to navigate between screens
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getAuth } from 'firebase/auth';
 
+const db = getFirestore();
 
 const AddBillsPage = () => {
+  const auth = getAuth();
   const [groupName, setGroupName] = useState('');
   const [currency, setCurrency] = useState(null);
   const [participants, setParticipants] = useState(['']);
-
+  const placeholder = []
+  const [friends, setFriends] = useState([])
   const navigation = useNavigation(); // used to navigate between screens
+  const [currentUser, setCurrentUser] = useState('');
+  const [forceUpdate, setForceUpdate] = useState(false);
 
   // currencies available. may add more later, but for now we'll just use these three for now. 
   const currencyData = [
@@ -25,9 +32,47 @@ const AddBillsPage = () => {
     { label: 'EUR - €', value: 'EUR' },
     { label: 'JPY - ¥', value: 'JPY' },
   ];
+  const handleForceUpdate = () => {
+    setForceUpdate(prevState => !prevState);
+  };
+  useFocusEffect(
+    useCallback(() => {
+      handleForceUpdate();
+    }, [])
+  )
+  useEffect(() => {
+    async function pullFriends() { 
+      try { 
+        const userDocRef = doc(db, 'users', auth.currentUser.uid)
+        const docSnap = await getDoc(userDocRef);
+        const userData = docSnap.data();
+        //console.log(userData);
+        setCurrentUser(userData.email);
+      const q = query(collection(db, "friends"), where("befriender", "==", `${currentUser}`))
+      const querySnapshot = await getDocs(q)
+      querySnapshot.forEach((doc) => {
+        let i = 1;
+        placeholder.push({label: doc.data().befriended, value: i })
+        i++
+        if(placeholder.length > 0){
+          setFriends(placeholder);}
+        console.log(doc.id, " => ", doc.data());
+      });
+      handleForceUpdate();
+    }catch(error) {
+      console.log(error)
+    }
+    };
+
+    console.log("user", currentUser);
+    console.log("placeholder", placeholder);
+    console.log("friends", friends);
+    pullFriends();
+  }, [])
+  
 
   // adds a new participant to the participants array when the user clicks the "Add participant" button
-  const handleAddParticipant = () => {
+  const handleAddParticipant = async () => {
     setParticipants([...participants, '']);
   };
 
@@ -116,13 +161,22 @@ const AddBillsPage = () => {
       <Text style={styles.screenSubTitle}>Participants</Text>
       {participants.map((participant, index) => (
         <View key={index} style={styles.participantRow}>
-          <TextInput
+        <Dropdown
+        style={[styles.dropdown, styles.input]}
+        data={friends}
+        placeholder="Select participant"
+        labelField="label"
+        valueField="value"
+        onChange={text => handleParticipantChange(text, index)}
+        value={participant}
+      />
+          {/* <TextInput
             style={styles.input}
             placeholder="Enter participant name"
             placeholderTextColor="#999"
             onChangeText={(text) => handleParticipantChange(text, index)}
             value={participant}
-          />
+          /> */}
           <TouchableOpacity 
             style={styles.deleteButton}
             onPress={() => handleDeleteParticipant(index)}
@@ -137,7 +191,7 @@ const AddBillsPage = () => {
 
 
        {/* Create Bill Button */}
-       <TouchableOpacity style={styles.createBillButton} onPress = {handleCreateBill} >
+       <TouchableOpacity style={styles.createBillButton} onPress={handleCreateBill} >
         <Text style={styles.createBillButtonText}>Create Bill</Text>
       </TouchableOpacity>
 
