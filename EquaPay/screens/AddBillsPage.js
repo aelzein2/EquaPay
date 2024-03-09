@@ -19,7 +19,7 @@ const AddBillsPage = () => {
   const auth = getAuth();
   const [groupName, setGroupName] = useState('');
   const [currency, setCurrency] = useState(null);
-  const [participants, setParticipants] = useState(['']);
+  const [participants, setParticipants] = useState([{ label: '', value: '' }]);
   const placeholder = []
   const [friends, setFriends] = useState([])
   const navigation = useNavigation(); // used to navigate between screens
@@ -43,27 +43,38 @@ const AddBillsPage = () => {
   useEffect(() => {
     async function pullFriends() { 
       try { 
-        const userDocRef = doc(db, 'users', auth.currentUser.uid)
+        const userDocRef = doc(db, 'users', auth.currentUser.uid);
         const docSnap = await getDoc(userDocRef);
-        const userData = docSnap.data();
-        //console.log(userData);
-        setCurrentUser(userData.email);
-      const q = query(collection(db, "friends"), where("befriender", "==", `${currentUser}`))
-      const querySnapshot = await getDocs(q)
-      querySnapshot.forEach((doc) => {
-        let i = 1;
-        placeholder.push({label: doc.data().befriended, value: i })
-        i++
-        if(placeholder.length > 0){
-          setFriends(placeholder);}
-        console.log(doc.id, " => ", doc.data());
-      });
-      handleForceUpdate();
-    }catch(error) {
-      console.log(error)
+        if (docSnap.exists()) {
+          const userData = docSnap.data();
+          setCurrentUser(userData.email);
+    
+          const q = query(collection(db, "friends"), where("befriender", "==", userData.email));
+          const querySnapshot = await getDocs(q);
+          const friendsList = [];
+    
+          for (const doc of querySnapshot.docs) {
+            const friendEmail = doc.data().befriended;
+            // Query the 'users' collection to get the friend's document by email
+            const friendQuery = query(collection(db, "users"), where("email", "==", friendEmail));
+            const friendSnapshot = await getDocs(friendQuery);
+    
+            if (!friendSnapshot.empty) {
+              const friendData = friendSnapshot.docs[0].data(); // email is unique and there's only one document per user (assuming this)
+              friendsList.push({
+                label: friendData.fullName, // friend's fullName for the label
+                value: friendEmail, //  friend's email as the value
+              });
+            }
+          }
+    
+          setFriends(friendsList);
+        }
+      } catch (error) {
+        console.error("Error fetching friends: ", error);
+      }
     }
-    };
-
+    
     console.log("user", currentUser);
     console.log("placeholder", placeholder);
     console.log("friends", friends);
@@ -72,17 +83,20 @@ const AddBillsPage = () => {
   
 
   // adds a new participant to the participants array when the user clicks the "Add participant" button
-  const handleAddParticipant = async () => {
-    setParticipants([...participants, '']);
+  const handleAddParticipant = () => {
+    setParticipants([...participants, { label: '', value: '' }]);
   };
-
-  // updates the participants array when the user types in a participant's name
-  const handleParticipantChange = (text, index) => {
-    const newParticipants = [...participants];
-    newParticipants[index] = text;
+  
+  // updates the participants array when the user selects a participant from the dropdown. filtering out the participant that was just added or selected
+  const handleParticipantChange = (selectedItem, index) => {
+    const newParticipants = participants.map((participant, idx) => 
+      idx === index ? { label: selectedItem.label || '', value: selectedItem.value || '' } : participant
+    );
     setParticipants(newParticipants);
+    console.log(`Participant added: ${selectedItem.label}`);
   };
-
+  
+  
   // deletes a participant from the participants array when the user clicks the garbage can icon
   const handleDeleteParticipant = (index) => {
     setParticipants(participants.filter((_, idx) => idx !== index));
@@ -95,10 +109,11 @@ const AddBillsPage = () => {
     }
   
     try {
+      const participantValues = participants.map(participant => participant.value); // passes the email of the participant to the participants array for unique identification. cannot send an entire object
       const billData = {
         groupName,
         currency,
-        participants,
+        participants: participantValues,
         timeCreated: new Date().toISOString(),
       };
       const billId = 'bill_' + new Date().getTime(); //  unique ID for the bill
@@ -160,31 +175,29 @@ const AddBillsPage = () => {
       {/* Participants Section */}
       <Text style={styles.screenSubTitle}>Participants</Text>
       {participants.map((participant, index) => (
-        <View key={index} style={styles.participantRow}>
-        <Dropdown
-        style={[styles.dropdown, styles.input]}
-        data={friends}
-        placeholder="Select participant"
-        labelField="label"
-        valueField="value"
-        onChange={text => handleParticipantChange(text, index)}
-        value={participant}
-      />
-          {/* <TextInput
-            style={styles.input}
-            placeholder="Enter participant name"
-            placeholderTextColor="#999"
-            onChangeText={(text) => handleParticipantChange(text, index)}
-            value={participant}
-          /> */}
-          <TouchableOpacity 
-            style={styles.deleteButton}
-            onPress={() => handleDeleteParticipant(index)}
-          >
-            <MaterialIcons name="delete" size={24} color="white" />
-          </TouchableOpacity>
-        </View>
-      ))}
+  <View key={index} style={styles.participantRow}>
+    <Dropdown
+      style={[styles.dropdown, styles.input]}
+      data={friends.filter(friend => 
+        !participants.some(p => p.value === friend.value) || participant.value === friend.value
+      )}
+      placeholder="Select participant"
+      labelField="label"
+      valueField="value"
+      onChange={(item) => handleParticipantChange(item, index)}
+      value={participant.value}  // Use the value from the participant object
+    />
+    <TouchableOpacity 
+      style={styles.deleteButton}
+      onPress={() => handleDeleteParticipant(index)}
+    >
+      <MaterialIcons name="delete" size={24} color="white" />
+    </TouchableOpacity>
+  </View>
+))}
+
+
+
       <TouchableOpacity style={styles.button} onPress={handleAddParticipant}>
         <Text style={styles.buttonText}>Add participant</Text>
       </TouchableOpacity>
