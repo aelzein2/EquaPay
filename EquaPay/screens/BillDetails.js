@@ -81,12 +81,14 @@ const BillDetails = ({ route }) => {
           cameraUpload();
         }else if(buttonIndex == 2){
           pickImage();
+        }else if(buttonIndex == 3){
+          setImage(null);
         }
       },
     );
   };
 
-  const uploadImage = async () => {
+  const uploadImage = async (dbID) => {
 
     try {
       const { uri } = await FileSystem.getInfoAsync(image);
@@ -103,14 +105,14 @@ const BillDetails = ({ route }) => {
         xhr.send(null);
       });
 
-      const filename = image.substring(image.lastIndexOf('/') + 1);
+      const filename = dbID;
       const storage = getStorage();
       const storageRef = ref(storage, filename);
 
       uploadBytes(storageRef, blob).then((snapshot) => {
         console.log('Uploaded Image!');
       });
-      
+
       setImage(null);
     }catch (error){
       console.error(error);
@@ -421,8 +423,6 @@ const BillDetails = ({ route }) => {
 
     // attempts to store the bill details in the database, with all details needed
     try {
-      uploadImage();
-
       // all bill form data is stored in the database in 'billsCreated' table. 
       const docRef = await addDoc(collection(db, 'billsCreated'), {
         description: description,
@@ -434,6 +434,8 @@ const BillDetails = ({ route }) => {
         billDeadline: billDeadlineTimestamp,
         billSplitType: splitType
       });
+
+      uploadImage(docRef.id);
 
       console.log('Bill stored in database', docRef.id); // test to see if it was stored in the database
       Alert.alert('Success', 'Bill submitted successfully.');
