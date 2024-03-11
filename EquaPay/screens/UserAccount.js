@@ -18,13 +18,11 @@ import friendAvatar from "../assets/img/friendAvatar.png";
 const { width } = Dimensions.get('window');
 const db = getFirestore();
 
-
 const friendsData=[
   {id:'0', name: 'Friend A'},
   {id: '1', name: 'Friend B'},
   {id: '2', name: 'Friend C'}  
 ]
-
 
 
 const UserAccount = () => {
@@ -80,30 +78,42 @@ const UserAccount = () => {
     
 }
 
-async function addFriends(friend){
-  setAddFriend(friend)
-  console.log(addFriend);
-  const usersRef = collection(db, 'users'); // reference to the users collection
-  const queryDatabase = query(usersRef, where("email", "==", addFriend));
-  if (addFriend !== null){
-    getDocs(queryDatabase).then(querySnapshot => {
-      if (!querySnapshot.empty) {
-        const docRef = addDoc(collection(db, 'friends'), {
-          befriender: userEmail,
-          befriended: addFriend,
-      })
-      console.log(docRef.id)
-      }  
-    })
-  } else {
-      Alert.alert('Error', 'Please enter a correct email.');
+async function addFriends(friend) {
+  if (friend) {
+    console.log(friend); // Log the email being added
+
+    // Reference to the users collection
+    const usersRef = collection(db, 'users');
+
+    // Query to find user by email
+    const queryDatabase = query(usersRef, where("email", "==", friend)); // need this to be if the email is found capitalized or uncapitalized
+
+    // Execute query
+    const querySnapshot = await getDocs(queryDatabase);
+
+    // Check if user with the given email exists
+    if (!querySnapshot.empty) {
+      // Get the first document (user) from the results
+      const userDoc = querySnapshot.docs[0];
+
+      // Retrieve user's fullName from the document
+      const fullName = userDoc.data().fullName;
+      console.log(`Adding friend: ${fullName}`); // to actually see if friend is being added and name is being fetched
+
+      // Add a new document in the 'friends' collection
+      const docRef = await addDoc(collection(db, 'friends'), {
+        befriender: userEmail, // userEmail should be the email of the current user
+        befriended: friend,
+      });
+
+      console.log(`Friend added with ID: ${docRef.id}`);
+    } else if (friend !== userEmail) {
+      Alert.alert('Error', 'User not found. Please try again.');
+    }
+  } else if (friend == ''){
+    Alert.alert('Error', 'Please enter a correct email.');
   }
 }
-
-
-  // function that handles the press of the users name/avatar block. this will be pressed so a user can change account details.
-  const handlePressAccountSection = () => {
-  };
 
   // back button redirects back to the homepage
   const backToPreviousScreen = () => {
@@ -119,10 +129,7 @@ const userOptions=[
     
     <View style={[styles.container]}>
       <Text style = {[styles.titleText]} >Account</Text>
-      <TouchableOpacity style={styles.accountSection} onPress={handlePressAccountSection}>
-        <View style={styles.avatarPlaceholder} />
-        <Text style={styles.accountText}>{userFullName}</Text>
-      </TouchableOpacity>
+     
       
       <TouchableOpacity onPress={backToPreviousScreen} style={styles.backButton}>
           <AntDesign name="arrowleft" size={24} color="black" />
