@@ -7,6 +7,7 @@ import { Dropdown } from 'react-native-element-dropdown';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { firestore } from '../firebase'
+import { getAuth } from 'firebase/auth';
 
 
 const db = getFirestore();
@@ -33,6 +34,7 @@ const BillDetails = ({ route }) => {
   const [amountValidationMessage, setAmountValidationMessage] = useState('');
   const [hasInteracted, setHasInteracted] = useState(false);
   const [dropdownOptions, setDropdownOptions] = useState([]);
+  const auth = getAuth();
 
 
   // navigate back to the previous screen
@@ -203,50 +205,55 @@ const BillDetails = ({ route }) => {
 
 
 // used to fetch bill data from async storage. it also fetches participants full names from the database 
-  useEffect(() => {
-    const fetchBillData = async () => {
-      setIsLoading(true);
-  
-      try {
-        
-        const storedBillData = await AsyncStorage.getItem(billId);
-        if (storedBillData !== null) {
-          
-          // set all data from async storage
-          const data = JSON.parse(storedBillData);
-          setBillName(data.groupName);
-          setBillCurrency(data.currency);
-          setParticipants(data.participants);
-          setIsLoading(false);
-  
-          // querying the database to find participants first nane to be displayed. names are just for displaying and internally, emails are referenced.
-          const usersRef = collection(db, "users");
-          const fetchedOptions = await Promise.all(
-            data.participants.map(async (participant) => {
-              const q = query(usersRef, where("email", "==", participant)); // query to find the participant's full name based on their email
-              const querySnapshot = await getDocs(q);
-              const participantData = querySnapshot.docs[0]?.data();
-              return {
-                label: participantData ? participantData.fullName : "Unknown", // unknown fallback if nothing is found
-                value: participant
-              };
-            })
-          );
-  
-          setDropdownOptions(fetchedOptions); // set whatever is fetched (names) as options in the dropdown menu
-        } else {
-          console.log('No data available!');
-          setIsLoading(false);
-        }
-      } catch (error) {
-        console.error('Error fetching bill data and participant names: ', error);
+useEffect(() => {
+  const fetchBillData = async () => {
+    setIsLoading(true);
+
+    try {
+      const storedBillData = await AsyncStorage.getItem(billId);
+      if (storedBillData !== null) {
+        const data = JSON.parse(storedBillData);
+        setBillName(data.groupName);
+        setBillCurrency(data.currency);
+        setParticipants(data.participants);
+        setIsLoading(false);
+
+        const usersRef = collection(db, "users");
+        const currentUserEmail = auth.currentUser.email.toLowerCase(); // Convert current user's email to lowercase for comparison
+        const fetchedOptions = await Promise.all(
+          data.participants.map(async (participant) => {
+            const q = query(usersRef, where("email", "==", participant)); // Keep the participant email as it is for the query
+            const querySnapshot = await getDocs(q);
+            const participantData = querySnapshot.docs[0]?.data();
+
+            let label = participantData
+              ? participant.toLowerCase() === currentUserEmail // Convert participant email to lowercase only for comparison
+                ? `${participantData.fullName} (You)` // Append "(You)" if current user
+                : participantData.fullName
+              : "Unknown";
+
+            return {
+              label: label,
+              value: participant
+            };
+          })
+        );
+
+        setDropdownOptions(fetchedOptions);
+      } else {
+        console.log('No data available!');
         setIsLoading(false);
       }
-    };
-  
-    fetchBillData();
-  }, [billId]);
-  
+    } catch (error) {
+      console.error('Error fetching bill data and participant names: ', error);
+      setIsLoading(false);
+    }
+  };
+
+  fetchBillData();
+}, [billId, auth.currentUser.email]);
+
+
   
   // Maps the participants to the structure of the drop down menu. CAN DELETE THIS LATER, may want to keep it for now in case something doesnt work
   const participantOptions = participants.map((participant) => ({
@@ -410,7 +417,7 @@ const BillDetails = ({ route }) => {
           value={description}
         />
 
-        <Text style={styles.subtitle}>Paid by</Text>
+        <Text style={styles.subtitle}>Bill Owner</Text>
         <Dropdown
   style={styles.input}
   placeholder="Who paid for this bill?"
