@@ -94,35 +94,38 @@ const BillDetails = ({ route }) => {
   };
 
   const uploadImage = async (dbID) => {
-
-    try {
-      const { uri } = await FileSystem.getInfoAsync(image);
-      const blob = await new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.onload = () => {
-          resolve(xhr.response);
-        };
-        xhr.onerror = (error) => {
-          reject(new TypeError('Network request failed'));
-        };
-        xhr.responseType = 'blob';
-        xhr.open('GET', uri, true);
-        xhr.send(null);
-      });
-
-      const filename = dbID;
-      const storage = getStorage();
-      const storageRef = ref(storage, filename);
-
-      uploadBytes(storageRef, blob).then((snapshot) => {
-        console.log('Uploaded Image!');
-      });
-
-
-      setImage(null);
-    }catch (error){
-      console.error(error);
+    if (image !== null){
+      try {
+        const { uri } = await FileSystem.getInfoAsync(image);
+        const blob = await new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.onload = () => {
+            resolve(xhr.response);
+          };
+          xhr.onerror = (error) => {
+            reject(new TypeError('Network request failed'));
+          };
+          xhr.responseType = 'blob';
+          xhr.open('GET', uri, true);
+          xhr.send(null);
+        });
+  
+        const filename = dbID;
+        const storage = getStorage();
+        const storageRef = ref(storage, filename);
+  
+        uploadBytes(storageRef, blob).then((snapshot) => {
+          console.log('Uploaded Image!');
+          console.log(filename);
+        });
+  
+  
+        setImage(null);
+      }catch (error){
+        console.error(error);
+      }
     }
+    
   };
 
   // navigate back to the previous screen
@@ -456,6 +459,20 @@ const BillDetails = ({ route }) => {
         billDeadline: billDeadlineTimestamp,
         billSplitType: splitType
       });
+
+      let participantEmails = ["noreplyequapay@gmail.com"];
+
+      for (let i = 0; i < participantsWithAmounts.length; i++){
+        participantEmails.push(participantsWithAmounts[i].id);
+      }
+
+      await addDoc(collection(db, 'mail'), {
+        to: participantEmails,
+        message: {
+          subject: 'ALERT: YOU HAVE BEEN ADDED TO A BILL',
+          text: 'This is the plaintext section of the email body.',
+          html: 'This is the <code>HTML</code> section of the email body.'
+      }});
 
       uploadImage(docRef.id);
 
