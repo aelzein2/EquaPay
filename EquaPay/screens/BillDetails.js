@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, View, TouchableOpacity, Modal, Alert } from 'react-native';
-import { getFirestore, doc, addDoc, deleteDoc, collection, Timestamp, updateDoc, arrayUnion } from 'firebase/firestore';
+import { getFirestore, doc, addDoc, deleteDoc, collection, Timestamp, updateDoc, arrayUnion, getDocs, query, where} from 'firebase/firestore';
+import { ActionSheetIOS, ScrollView, StyleSheet, Text, TextInput, View, TouchableOpacity, Modal, Alert, Button, Image } from 'react-native';
 import { AntDesign, MaterialIcons } from '@expo/vector-icons'; // used for the icons
 import { useNavigation } from '@react-navigation/native';
 import { Dropdown } from 'react-native-element-dropdown';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { auth, firestore } from '../firebase' // used for authentication
+import { getStorage, ref, uploadBytes } from "firebase/storage";
+import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
 
 
 const db = getFirestore();
@@ -32,8 +35,96 @@ const BillDetails = ({ route }) => {
   const navigation = useNavigation();
   const [amountValidationMessage, setAmountValidationMessage] = useState('');
   const [hasInteracted, setHasInteracted] = useState(false);
-
   const [userEmail, setUserEmail] = useState(''); // State to store users email
+  const [dropdownOptions, setDropdownOptions] = useState([]);
+
+  const [image, setImage] = useState(null);
+
+  const pickImage = async () => {
+    // No permissions request is necessary for launching the image library
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: false
+    });
+
+    console.log(result);
+
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
+    }
+  };
+  
+  const cameraUpload = async () => {
+    try {
+      await ImagePicker.requestCameraPermissionsAsync();
+      let result = await ImagePicker.launchCameraAsync({
+        allowsEditing: false
+      });
+    
+    if (!result.canceled){
+      // save image
+      setImage(result.assets[0].uri);
+    }
+      
+    }catch (error) {
+
+    }
+  };
+
+  const pickImageOptions = () => {
+    ActionSheetIOS.showActionSheetWithOptions(
+      {
+        options: ['Cancel', 'Camera', 'Photo Library', 'Remove'],
+        destructiveButtonIndex: 3,
+        cancelButtonIndex: 0,
+        userInterfaceStyle: 'dark',
+      },
+      buttonIndex => {
+        if (buttonIndex == 1){
+          cameraUpload();
+        }else if(buttonIndex == 2){
+          pickImage();
+        }else if(buttonIndex == 3){
+          setImage(null);
+        }
+      },
+    );
+  };
+
+  const uploadImage = async (dbID) => {
+    if (image !== null){
+      try {
+        const { uri } = await FileSystem.getInfoAsync(image);
+        const blob = await new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.onload = () => {
+            resolve(xhr.response);
+          };
+          xhr.onerror = (error) => {
+            reject(new TypeError('Network request failed'));
+          };
+          xhr.responseType = 'blob';
+          xhr.open('GET', uri, true);
+          xhr.send(null);
+        });
+  
+        const filename = dbID;
+        const storage = getStorage();
+        const storageRef = ref(storage, filename);
+  
+        uploadBytes(storageRef, blob).then((snapshot) => {
+          console.log('Uploaded Image!');
+          console.log(filename);
+        });
+  
+  
+        setImage(null);
+      }catch (error){
+        console.error(error);
+      }
+    }
+    
+  };
 
   // navigate back to the previous screen
   const backToPreviousScreen = () => {
@@ -202,12 +293,11 @@ const BillDetails = ({ route }) => {
   }, [splitType, selectedParticipants, billTotalAmount, participantAmounts]);
 
 
-
-  // uses a useEffect hook to fetch the bill data from Async Storage. It references the bill ID that was created in the previous screen to determine which bill data to fetch
+// used to fetch bill data from async storage. it also fetches participants full names from the database 
   useEffect(() => {
     const fetchBillData = async () => {
       setIsLoading(true);
-
+  
       try {
         const storedBillData = await AsyncStorage.getItem(billId); // Fetch the bill data from AsyncStorage
         console.log('Bill ID: ', billId) // --> this was just to reference the bill ID to make sure it was being pulled correctly from async storage
@@ -215,28 +305,42 @@ const BillDetails = ({ route }) => {
         if (storedBillData !== null) { // if the bill data exists
           const data = JSON.parse(storedBillData); // Parse the JSON data
           // sets all the data to the corresponding states
-          setUserEmail(data.userEmail)
+          setUserEmail(data.userEmail);
           setBillName(data.groupName);
           setBillCurrency(data.currency);
           setParticipants(data.participants);
           setIsLoading(false);
-        }
-        else {
-          console.log('No data available!'); // cant find or fetch the data from async storage
+  
+          // querying the database to find participants first nane to be displayed. names are just for displaying and internally, emails are referenced.
+          const usersRef = collection(db, "users");
+          const fetchedOptions = await Promise.all(
+            data.participants.map(async (participant) => {
+              const q = query(usersRef, where("email", "==", participant)); // query to find the participant's full name based on their email
+              const querySnapshot = await getDocs(q);
+              const participantData = querySnapshot.docs[0]?.data();
+              return {
+                label: participantData ? participantData.fullName : "Unknown", // unknown fallback if nothing is found
+                value: participant
+              };
+            })
+          );
+  
+          setDropdownOptions(fetchedOptions); // set whatever is fetched (names) as options in the dropdown menu
+        } else {
+          console.log('No data available!');
           setIsLoading(false);
         }
       } catch (error) {
-        console.error('Error fetching bill data: ', error);
+        console.error('Error fetching bill data and participant names: ', error);
         setIsLoading(false);
       }
     };
-
+  
     fetchBillData();
   }, [billId]);
-
-
-
-  // Maps the participants to the structure of the drop down menu
+  
+  
+  // Maps the participants to the structure of the drop down menu. CAN DELETE THIS LATER, may want to keep it for now in case something doesnt work
   const participantOptions = participants.map((participant) => ({
     label: participant,
     value: participant, // Use the participant's name as the value
@@ -248,6 +352,7 @@ const BillDetails = ({ route }) => {
 
   // Function that toggles the selection of participants for the bill in the "Paid For section"
   const toggleParticipantSelection = (participant) => {
+   console.log('Selected participant: ', participant); // used to see if its actually referencing the emails internally and not just names
     setHasInteracted(true);
     const updatedSelectedParticipants = selectedParticipants.includes(participant) // if the participant is already selected
       ? selectedParticipants.filter(p => p !== participant) // remove the participant from the selected participants
@@ -273,6 +378,7 @@ const BillDetails = ({ route }) => {
 
   // Function that handles the split type dropdown and clears amounts to start fresh
   const handleDropdownChange = (item) => {
+    console.log('Dropdown selection changed: ', item.value); // console log to see if the dropdown selection is being changed
     setSplitType(item.value);
     setParticipantAmounts({}); // clears the amounts when the split type is changed
     forceUpdate(); // Force the component to re-render
@@ -306,6 +412,7 @@ const BillDetails = ({ route }) => {
 
   // Function to update the amount for a participant that is selected
   const handleAmountChange = (participant, amount) => {
+    console.log("Updating amount for participant: ", participant, " with amount: ", amount); // console log to see if the amounts are being updated correctly
     setParticipantAmounts(prevAmounts => { // sets the participant amounts
       const updatedAmounts = { ...prevAmounts };  // updates the amounts
       updatedAmounts[participant] = amount;
@@ -341,7 +448,6 @@ const BillDetails = ({ route }) => {
 
     // attempts to store the bill details in the database, with all details needed
     try {
-
       // all bill form data is stored in the database in 'billsCreated' table. 
       const docRef = await addDoc(collection(db, 'billsCreated'), {
         description: description,
@@ -355,8 +461,22 @@ const BillDetails = ({ route }) => {
         billSplitType: splitType
       });
 
-     
- 
+      let participantEmails = ["noreplyequapay@gmail.com"];
+
+      for (let i = 0; i < participantsWithAmounts.length; i++){
+        participantEmails.push(participantsWithAmounts[i].id);
+      }
+
+      await addDoc(collection(db, 'mail'), {
+        to: participantEmails,
+        message: {
+          subject: 'ALERT: YOU HAVE BEEN ADDED TO A BILL',
+          text: 'This is the plaintext section of the email body.',
+          html: 'This is the <code>HTML</code> section of the email body.'
+      }});
+
+      uploadImage(docRef.id);
+
       console.log('Bill stored in database', docRef.id); // test to see if it was stored in the database
       Alert.alert('Success', 'Bill submitted successfully.');
       navigation.navigate("Homepage");
@@ -401,17 +521,22 @@ const BillDetails = ({ route }) => {
 
         <Text style={styles.subtitle}>Paid by</Text>
         <Dropdown
-          style={styles.input}
-          placeholder="Who paid for this bill?"
-          data={participantOptions}
-          labelField="label"
-          valueField="value"
-          value={selectedParticipant}
-          onChange={item => {
-            setSelectedParticipant(item.value);
-            console.log('Selected participant: ', item.label);
-          }}
-        />
+  style={styles.input}
+  placeholder="Who paid for this bill?"
+  data={dropdownOptions}
+  labelField="label"
+  valueField="value"
+  value={selectedParticipant}
+  onChange={(item) => {
+    setSelectedParticipant(item.value);
+    console.log('Selected participant: ', item.value);
+  }}
+/>
+
+        <TouchableOpacity style={{flex: 1, flexDirection: "row", justifyContent: 'flex-start', alignItems: 'center'}} onPress={pickImageOptions}> 
+          <Text>Upload Image</Text>
+          {image && <Image source={{ uri: image }} style={{ width: 50, height: 50 }} />}
+        </TouchableOpacity>
 
 
         <View style={styles.row}>
@@ -448,21 +573,21 @@ const BillDetails = ({ route }) => {
 
       <View style={styles.paidForContainer}>
         <Text style={styles.subContainerTitleTwo}>Bill Distribution</Text>
-        {participants.map((participant, index) => (
+        {dropdownOptions.map((option, index) => (
           <View key={index} style={styles.participantContainer}>
             <TouchableOpacity
               style={[
                 styles.participantRow,
-                selectedParticipants.includes(participant) ? styles.selectedParticipantRow : null
+                selectedParticipants.includes(option.value) ? styles.selectedParticipantRow : null
               ]}
               onPress={() => {
-                toggleParticipantSelection(participant);
-                setHasInteracted(true); // Ensure interaction state is updated here as well
+                toggleParticipantSelection(option.value);
+                setHasInteracted(true);
               }}
               activeOpacity={0.6}
             >
-              <Text style={styles.participantName}>{participant}</Text>
-              {selectedParticipants.includes(participant) && (
+              <Text style={styles.participantName}>{option.label}</Text>
+              {selectedParticipants.includes(option.value) && (
                 <MaterialIcons name="check-circle" size={24} color="green" style={styles.checkmarkIcon} />
               )}
             </TouchableOpacity>
@@ -472,11 +597,10 @@ const BillDetails = ({ route }) => {
               <TextInput
                 style={[
                   styles.amountInput,
-                  selectedParticipants.includes(participant) ? styles.activeAmountInput : styles.inactiveAmountInput
+                  selectedParticipants.includes(option.value) ? styles.activeAmountInput : styles.inactiveAmountInput
                 ]}
-                onChangeText={(amount) => handleAmountChange(participant, amount)}
-                value={participantAmounts[participant] || ''} // Ensure the value is a string
-                editable={selectedParticipants.includes(participant)}
+                onChangeText={(amount) => handleAmountChange(option.value, amount)}
+                value={participantAmounts[option.value] || ''} // value is a string and references participants email and not name
                 placeholder="Amount"
                 keyboardType="numeric"
               />
