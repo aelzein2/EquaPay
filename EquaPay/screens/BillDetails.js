@@ -1,14 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { getFirestore, doc, addDoc, deleteDoc, collection, Timestamp, getDocs, query, where } from 'firebase/firestore';
-
+import { getFirestore, doc, addDoc, deleteDoc, collection, Timestamp, updateDoc, arrayUnion, getDocs, query, where} from 'firebase/firestore';
 import { ActionSheetIOS, ScrollView, StyleSheet, Text, TextInput, View, TouchableOpacity, Modal, Alert, Button, Image } from 'react-native';
-
 import { AntDesign, MaterialIcons } from '@expo/vector-icons'; // used for the icons
 import { useNavigation } from '@react-navigation/native';
 import { Dropdown } from 'react-native-element-dropdown';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { firestore } from '../firebase';
+import { auth, firestore } from '../firebase' // used for authentication
 import { getStorage, ref, uploadBytes } from "firebase/storage";
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
@@ -37,7 +35,7 @@ const BillDetails = ({ route }) => {
   const navigation = useNavigation();
   const [amountValidationMessage, setAmountValidationMessage] = useState('');
   const [hasInteracted, setHasInteracted] = useState(false);
-
+  const [userEmail, setUserEmail] = useState(''); // State to store users email
   const [dropdownOptions, setDropdownOptions] = useState([]);
 
   const [image, setImage] = useState(null);
@@ -145,7 +143,7 @@ const BillDetails = ({ route }) => {
     try {
       await AsyncStorage.removeItem(billId);
       console.log('Bill deleted successfully!');
-      navigation.navigate("Homepage"); // Redirect to the desired screen after deletion
+      navigation.navigate("ViewBills"); // Redirect to the desired screen after deletion
     }
     catch (error) {
       console.error('Error deleting bill: ', error);
@@ -301,12 +299,13 @@ const BillDetails = ({ route }) => {
       setIsLoading(true);
   
       try {
-        
-        const storedBillData = await AsyncStorage.getItem(billId);
-        if (storedBillData !== null) {
-          
-          // set all data from async storage
-          const data = JSON.parse(storedBillData);
+        const storedBillData = await AsyncStorage.getItem(billId); // Fetch the bill data from AsyncStorage
+        console.log('Bill ID: ', billId) // --> this was just to reference the bill ID to make sure it was being pulled correctly from async storage
+
+        if (storedBillData !== null) { // if the bill data exists
+          const data = JSON.parse(storedBillData); // Parse the JSON data
+          // sets all the data to the corresponding states
+          setUserEmail(data.userEmail);
           setBillName(data.groupName);
           setBillCurrency(data.currency);
           setParticipants(data.participants);
@@ -393,9 +392,10 @@ const BillDetails = ({ route }) => {
       console.log('Bill name: ', billName);
       console.log('Bill currency: ', currency);
       console.log('Bill participants: ', participants);
+      console.log('Email: ', userEmail);
 
     }
-  }, [isLoading, billName, currency, participants]); // only runs when the data is loaded
+  }, [isLoading, billName, currency, participants, userEmail]); // only runs when the data is loaded
 
   if (isLoading) {
     return <Text>Loading...</Text>; // Display loading message --> can delete later, was just added for debugging
@@ -451,6 +451,7 @@ const BillDetails = ({ route }) => {
       // all bill form data is stored in the database in 'billsCreated' table. 
       const docRef = await addDoc(collection(db, 'billsCreated'), {
         description: description,
+        userEmail: userEmail,
         billName: billName,
         billTotalAmount: parseFloat(billTotalAmount),
         currency: currency,
