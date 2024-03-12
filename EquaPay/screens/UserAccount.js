@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Dimensions, Image } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Dimensions, Image, Alert, } from 'react-native';
 import { Divider } from '@rneui/themed';
 import { useNavigation } from '@react-navigation/native';
 import { AntDesign } from '@expo/vector-icons'; // used for the icons
 import { auth, firestore } from '../firebase' // used for authentication
-import { Alert } from 'react-native';
-import { doc, getDoc, getFirestore } from 'firebase/firestore';
+import { doc, getDoc, getFirestore, query, where, collection, addDoc, getDocs, } from 'firebase/firestore';
 import Ionicons from 'react-native-vector-icons/Ionicons'; // used for the icons
 import { MaterialIcons } from '@expo/vector-icons';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { getAuth } from 'firebase/auth';
 
 
 //profile picture
@@ -18,7 +18,6 @@ import friendAvatar from "../assets/img/friendAvatar.png";
 const { width } = Dimensions.get('window');
 const db = getFirestore();
 
-
 const friendsData=[
   {id:'0', name: 'Friend A'},
   {id: '1', name: 'Friend B'},
@@ -26,12 +25,12 @@ const friendsData=[
 ]
 
 
-
 const UserAccount = () => {
- 
-    const navigation = useNavigation();
-    const [userFullName, setUserFullName] = useState('Loading...'); // State to store the user's full name
-    const [userEmail, setUserEmail] = useState('Loading...'); // State to store users email
+  const auth = getAuth();
+  const [addFriend, setAddFriend] = useState("");
+  const navigation = useNavigation();
+  const [userFullName, setUserFullName] = useState('Loading...'); // State to store the user's full name
+  const [userEmail, setUserEmail] = useState('Loading...'); // State to store users email
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -63,10 +62,58 @@ const UserAccount = () => {
     fetchUserData();
   }, []);
 
+  function handleAddFriend(){
+    Alert.prompt("Add Friend",
+    "",[
+      {
+        text: "Cancel",
+        onPress: () => console.log("Cancel Pressed"),
+        style: "cancel"
+      },
+      {
+        text: "Ok",
+        onPress: friend => addFriends(friend),
+      }
+    ],)
+    
+}
 
-  // function that handles the press of the users name/avatar block. this will be pressed so a user can change account details.
-  const handlePressAccountSection = () => {
-  };
+async function addFriends(friend) {
+  if (friend) {
+    console.log(friend); // Log the email being added
+
+    // Reference to the users collection
+    const usersRef = collection(db, 'users');
+
+    // Query to find user by email
+    const queryDatabase = query(usersRef, where("email", "==", friend)); // need this to be if the email is found capitalized or uncapitalized
+
+    // Execute query
+    const querySnapshot = await getDocs(queryDatabase);
+
+    // Check if user with the given email exists
+    if (!querySnapshot.empty) {
+      // Get the first document (user) from the results
+      const userDoc = querySnapshot.docs[0];
+
+      // Retrieve user's fullName from the document
+      const fullName = userDoc.data().fullName;
+      console.log(`Adding friend: ${fullName}`); // to actually see if friend is being added and name is being fetched
+
+      // Add a new document in the 'friends' collection
+      const docRef = await addDoc(collection(db, 'friends'), {
+        befriender: userEmail, // userEmail should be the email of the current user
+        befriended: friend,
+      });
+
+      console.log(`Friend added with ID: ${docRef.id}`);
+    } else if (friend !== userEmail) {
+      Alert.alert('Error', 'User not found. Please try again.');
+    }
+  } else if (friend == ''){
+    Alert.alert('Error', 'Please enter a correct email.');
+  }
+}
 
   // back button redirects back to the homepage
   const backToPreviousScreen = () => {
@@ -87,6 +134,10 @@ const userOptions=[
     <View style={[styles.container]}>
       <Text style = {[styles.titleText]} >Account</Text>
 
+      <TouchableOpacity onPress={backToPreviousScreen} style={styles.backButton}>
+          <AntDesign name="arrowleft" size={24} color="black" />
+      </TouchableOpacity>
+
       {/* <TouchableOpacity onPress={backToPreviousScreen} style={[styles.backButton]}>
                 <Ionicons name='chevron-back' size={24} color={'white'}/>
       </TouchableOpacity> */}
@@ -106,7 +157,7 @@ const userOptions=[
       <View style={[styles.bodyContainer]}>
         <Text style={[styles.headingText]}>Friends</Text>
         <View style={[styles.friendContainer]}>
-          <TouchableOpacity style={[styles.friendButton]}>
+          <TouchableOpacity style={[styles.friendButton]} onPress={handleAddFriend}>
             <Ionicons name='add-circle-outline' size={30}/>
             <Text style={[styles.friendText]}>Add Friends</Text>
           </TouchableOpacity>
