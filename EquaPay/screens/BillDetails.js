@@ -359,7 +359,7 @@ const BillDetails = ({ route }) => {
  
       console.log('Bill stored in database', docRef.id); // test to see if it was stored in the database
       Alert.alert('Success', 'Bill submitted successfully.');
-      navigation.navigate("Homepage");
+      navigation.navigate("ViewBills");
     }
     catch (error) { // bill cant be submitted and stored
       console.error("Error submitting bill: ", error);

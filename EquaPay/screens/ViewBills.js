@@ -11,9 +11,10 @@ const db = getFirestore();
 
 const ViewBills = () => {
   const [userEmail, setUserEmail] = useState('');
+  const [userFullName, setUserFullName] = useState('');
   const [billName, setBillName] = useState('');
   const [billDate, setBillDate] = useState('');
-  const [billAmount, setBillAmount] = useState('')
+  const [billAmount, setBillAmount] = useState('');
   
   const navigation = useNavigation(); // used to navigate between screens
  
