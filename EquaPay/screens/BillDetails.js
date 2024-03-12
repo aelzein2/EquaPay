@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, View, TouchableOpacity, Modal, Alert } from 'react-native';
-import { getFirestore, doc, addDoc, deleteDoc, collection, Timestamp } from 'firebase/firestore';
+import { getFirestore, doc, addDoc, deleteDoc, collection, Timestamp, updateDoc, arrayUnion } from 'firebase/firestore';
 import { AntDesign, MaterialIcons } from '@expo/vector-icons'; // used for the icons
 import { useNavigation } from '@react-navigation/native';
 import { Dropdown } from 'react-native-element-dropdown';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { firestore } from '../firebase'
+import { auth, firestore } from '../firebase' // used for authentication
 
 
 const db = getFirestore();
@@ -33,7 +33,7 @@ const BillDetails = ({ route }) => {
   const [amountValidationMessage, setAmountValidationMessage] = useState('');
   const [hasInteracted, setHasInteracted] = useState(false);
 
-
+  const [userEmail, setUserEmail] = useState(''); // State to store users email
 
   // navigate back to the previous screen
   const backToPreviousScreen = () => {
@@ -52,7 +52,7 @@ const BillDetails = ({ route }) => {
     try {
       await AsyncStorage.removeItem(billId);
       console.log('Bill deleted successfully!');
-      navigation.navigate("Homepage"); // Redirect to the desired screen after deletion
+      navigation.navigate("ViewBills"); // Redirect to the desired screen after deletion
     }
     catch (error) {
       console.error('Error deleting bill: ', error);
@@ -215,6 +215,7 @@ const BillDetails = ({ route }) => {
         if (storedBillData !== null) { // if the bill data exists
           const data = JSON.parse(storedBillData); // Parse the JSON data
           // sets all the data to the corresponding states
+          setUserEmail(data.userEmail)
           setBillName(data.groupName);
           setBillCurrency(data.currency);
           setParticipants(data.participants);
@@ -285,9 +286,10 @@ const BillDetails = ({ route }) => {
       console.log('Bill name: ', billName);
       console.log('Bill currency: ', currency);
       console.log('Bill participants: ', participants);
+      console.log('Email: ', userEmail);
 
     }
-  }, [isLoading, billName, currency, participants]); // only runs when the data is loaded
+  }, [isLoading, billName, currency, participants, userEmail]); // only runs when the data is loaded
 
   if (isLoading) {
     return <Text>Loading...</Text>; // Display loading message --> can delete later, was just added for debugging
@@ -343,6 +345,7 @@ const BillDetails = ({ route }) => {
       // all bill form data is stored in the database in 'billsCreated' table. 
       const docRef = await addDoc(collection(db, 'billsCreated'), {
         description: description,
+        userEmail: userEmail,
         billName: billName,
         billTotalAmount: parseFloat(billTotalAmount),
         currency: currency,
@@ -352,6 +355,8 @@ const BillDetails = ({ route }) => {
         billSplitType: splitType
       });
 
+     
+ 
       console.log('Bill stored in database', docRef.id); // test to see if it was stored in the database
       Alert.alert('Success', 'Bill submitted successfully.');
       navigation.navigate("Homepage");
