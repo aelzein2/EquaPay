@@ -430,11 +430,26 @@ useEffect(() => {
   // Function that stores the entered bill details into the database. Probably the most important function here.
   const handleSubmitBill = async () => {
     // Validation to ensure all required fields are filled out
-    if (!description || !billTotalAmount || !billName || selectedParticipants.length === 0) {
+    if (!description || !billTotalAmount || !billName || selectedParticipants.length === 0 || !selectedParticipant || !splitType || !date) {
       Alert.alert('Error', 'Please complete all required fields.');
       return;
     }
-
+  
+    // Additional validation for participant amounts if split type is not 'equal'
+    let amountsValidationFailed = false;
+    if (splitType !== 'equal') {
+      for (const participant of selectedParticipants) {
+        if (!participantAmounts[participant] || participantAmounts[participant] <= 0) {
+          amountsValidationFailed = true;
+          break; // Exit the loop early if any validation fails
+        }
+      }
+  
+      if (amountsValidationFailed) {
+        Alert.alert('Error', 'Please ensure all selected participants have valid amounts.');
+        return;
+      }
+    }
     const billDeadlineTimestamp = Timestamp.fromDate(date); // deadline converted to a timestamp type since database field stores it in this type
 
     // this is to make sure it will store the correct amounts for any split type for each participant
