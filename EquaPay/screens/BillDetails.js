@@ -462,7 +462,7 @@ useEffect(() => {
         billTotalAmount: parseFloat(billTotalAmount),
         currency: currency,
         participants: participantsWithAmounts, // stores selected participants with their amounts
-        paidBy: selectedParticipant,
+        billOwner: selectedParticipant,
         billDeadline: billDeadlineTimestamp,
         billSplitType: splitType
       });
