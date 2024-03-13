@@ -28,6 +28,7 @@
     "@rneui/themed": "^4.0.0-rc.8",
     "@sendgrid/mail": "^8.1.1",
     "emailjs": "^4.0.3",
+    "@stripe/stripe-react-native": "^0.37.0",
     "expo": "~49.0.15",
     "expo-font": "~11.4.0",
     "expo-image-picker": "~14.3.2",
@@ -45,10 +46,7 @@
     "react-native-screens": "~3.22.0",
     "react-native-svg": "^14.0.0",
     "react-native-vector-icons": "^10.0.2",
-    "react-navigation": "^5.0.0",
-    "resend": "^3.2.0",
-    "sendgrid": "^5.2.3",
-    "expo-file-system": "~15.4.5"
+    "react-navigation": "^5.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
