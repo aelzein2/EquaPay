@@ -6,8 +6,8 @@ import AntDesign from '@expo/vector-icons/AntDesign';
 import { lightBlue } from '@mui/material/colors';
 import { MaterialIcons } from '@expo/vector-icons'; // Importing MaterialIcons for the garbage can icon
 import firebase from 'firebase/app';
-import {firestore } from '../firebase'
-import { collection, addDoc, serverTimestamp, query, getFirestore, where, getDocs, doc, getDoc, } from 'firebase/firestore';
+import { auth, firestore } from '../firebase'
+import { collection, addDoc, serverTimestamp, query, getFirestore, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native' // used to navigate between screens
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -19,12 +19,39 @@ const AddBillsPage = () => {
   const auth = getAuth();
   const [groupName, setGroupName] = useState('');
   const [currency, setCurrency] = useState(null);
+  const [userEmail, setUserEmail] = useState(''); // State to store users email
   const [participants, setParticipants] = useState([{ label: '', value: '' }]);
   const placeholder = []
   const [friends, setFriends] = useState([])
   const navigation = useNavigation(); // used to navigate between screens
   const [currentUser, setCurrentUser] = useState('');
   const [forceUpdate, setForceUpdate] = useState(false);
+
+  //useEffect to fetch the userEmail to assign with the bill
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (auth.currentUser) { // If the user is logged in
+        const userDocRef = doc(db, 'users', auth.currentUser.uid); // Reference to the user stored in the database.
+
+        try {
+          const docSnap = await getDoc(userDocRef); // fetches the user's data from the database
+          if (docSnap.exists()) {
+            const userData = docSnap.data(); // Get the user's data
+            setUserEmail(userData.email); // Set the user's email state
+            console.log("User's email is: ", userData.email);
+          } else {
+            console.log("User record not found");
+            setUserEmail("Email not found");
+          }
+          
+        } catch (error) {
+          console.error("Error fetching user data: ", error);
+        }
+      }
+    };
+
+    fetchUserData();
+  }, []);
 
   // currencies available. may add more later, but for now we'll just use these three for now. 
   const currencyData = [
@@ -118,6 +145,7 @@ const AddBillsPage = () => {
     try {
       const participantValues = participants.map(participant => participant.value); // passes the email of the participant to the participants array for unique identification. cannot send an entire object
       const billData = {
+        userEmail,
         groupName,
         currency,
         participants: participantValues,
@@ -142,7 +170,6 @@ const AddBillsPage = () => {
     <ScrollView style={styles.container}>
 
       <Text style={styles.screenTitle}>Add Bill</Text>
-
          <Text style={styles.screenSubTitle}>Bill Information</Text>
       
       {/* Bill Name Section */} 

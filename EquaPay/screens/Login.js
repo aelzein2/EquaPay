@@ -35,7 +35,7 @@ const Login = () => {
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, user => {
             if (user) {
-                navigation.navigate("Homepage") // when logged in, navigate to the homepage
+                navigation.navigate("ViewBills") // when logged in, navigate to the homepage
             }
         }
         )

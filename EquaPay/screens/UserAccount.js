@@ -117,11 +117,15 @@ async function addFriends(friend) {
 
   // back button redirects back to the homepage
   const backToPreviousScreen = () => {
-    navigation.navigate("Homepage");
+    navigation.navigate("Home");
+}
+
+const handleSettingPage = () => {
+  navigation.navigate("Settings");
 }
 
 const userOptions=[
-  {id:'0', name:'Profile Settings', icon:<MaterialCommunityIcons name="account-settings-outline" size={30} color={'#EDEDED'}/>},
+  {id:'0', name:'Profile Settings', icon:<MaterialCommunityIcons name="account-settings-outline" size={30} color={'#EDEDED'}/>, onPress: handleSettingPage},
   {id:'1', name:'Activities History', icon:<MaterialIcons name="history" size={30} color={'#EDEDED'}/>},
   // {id:'2', name:'Logout', icon:<MaterialIcons name="logout" size={28} color={'#EDEDED'}/>, onPress: handleLogout}
 ]
@@ -129,15 +133,14 @@ const userOptions=[
     
     <View style={[styles.container]}>
       <Text style = {[styles.titleText]} >Account</Text>
-     
-      
+
       <TouchableOpacity onPress={backToPreviousScreen} style={styles.backButton}>
           <AntDesign name="arrowleft" size={24} color="black" />
-      </TouchableOpacity>      
-
-      <TouchableOpacity onPress={() => {navigation.navigate("Settings")}} style={styles.settings}>
-          <AntDesign name="setting" size={24} color="black" />
       </TouchableOpacity>
+
+      {/* <TouchableOpacity onPress={backToPreviousScreen} style={[styles.backButton]}>
+                <Ionicons name='chevron-back' size={24} color={'white'}/>
+      </TouchableOpacity> */}
       
       <View style={[styles.profilePictureContainer]}>
         <Image source={Avatar}
@@ -195,58 +198,28 @@ const styles = StyleSheet.create({
     container: {
       flex: 1,
       paddingTop:"20%",
-      paddingLeft: "10%",
-      paddingRight:"10%",
+      paddingLeft: "5%",
+      paddingRight:"5%",
       backgroundColor: '#153A59'
     },
-    accountSection: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingVertical: 12,
-      paddingHorizontal: 15,
-      backgroundColor: 'rgba(190, 234, 241, 0.9)', 
-      marginTop: 40, 
-      width: width * 0.9, 
-      borderRadius: 20, 
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.25,
-      shadowRadius: 3.84,
-      elevation: 5,
-    },
-    avatarPlaceholder: {
-      width: 50,
-      height: 50,
-      borderRadius: 25,
-      backgroundColor: '#d0d0d0', 
-      marginRight: 10,
-    },
-    accountText: {
-      fontSize: 18,
-      color: '#000',
-    },
+
     backButton: {
-        position: 'absolute',
-        top: 80, 
-        left: 20, // Safe area padding
-        zIndex: 10, // Ensures that the touchable is clickable above all other elements
-      },
-      settings: {
-        position: 'absolute',
-        top: 80, 
-        right: 20, // Safe area padding
-        zIndex: 10, // Ensures that the touchable is clickable above all other elements
-      },
+      justifyContent:'center',
+      alignItems:'center',
+      backgroundColor:"#366B7C",
+      borderRadius:"100%",
+      width: 35,
+      height: 35
+    },
 
     bodyContainer:{
       marginTop: 15
     },
-
+    
     titleText:{
       color:"white",
-      fontSize: 40,
-      fontWeight: 400,
-      alignSelf: 'center',
+      fontSize: 30,
+      fontWeight: 600,
     },
 
     profilePictureContainer:{
