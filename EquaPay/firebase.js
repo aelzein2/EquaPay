@@ -5,6 +5,7 @@ import {getFirestore} from 'firebase/firestore'
 import 'firebase/compat/storage'
 //import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage'; --> used for persistance login, dont need this now as we are developing
 
+import { getFunctions, httpsCallable } from 'firebase/functions';
 
  const firebaseConfig = {
    apiKey: "AIzaSyCvP8Eqkqrn4uiG7l4NKydV5F6ghD-1vZ0",
@@ -18,6 +19,7 @@ import 'firebase/compat/storage'
 
  // Initialize Firebase
  const app = initializeApp(firebaseConfig);
+ const functions = getFunctions(app);
  const auth = getAuth(app);
  
  /* Initialize Firebase Auth with AsyncStorage Persistence
@@ -27,4 +29,4 @@ const auth = initializeAuth(app, {
   
   const firestore = getFirestore(app);
 
- export {auth, firestore}
+ export {auth, firestore, functions};
