@@ -2,6 +2,7 @@ import { initializeApp } from "firebase/app";
 import {getAuth} from 'firebase/auth'
 //import {initializeAuth, getReactNativePersistence } from 'firebase/auth'; --> used for presistence login, dont need this now as we are developing
 import {getFirestore} from 'firebase/firestore'
+import 'firebase/compat/storage'
 //import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage'; --> used for persistance login, dont need this now as we are developing
 
 import { getFunctions, httpsCallable } from 'firebase/functions';

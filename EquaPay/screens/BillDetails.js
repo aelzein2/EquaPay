@@ -1,13 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, View, TouchableOpacity, Modal, Alert } from 'react-native';
-import { getFirestore, doc, addDoc, deleteDoc, collection, Timestamp, getDocs, query, where } from 'firebase/firestore';
+import { getFirestore, doc, addDoc, deleteDoc, collection, Timestamp, updateDoc, arrayUnion, getDocs, query, where} from 'firebase/firestore';
+import { ActionSheetIOS, ScrollView, StyleSheet, Text, TextInput, View, TouchableOpacity, Modal, Alert, Button, Image } from 'react-native';
 import { AntDesign, MaterialIcons } from '@expo/vector-icons'; // used for the icons
 import { useNavigation } from '@react-navigation/native';
 import { Dropdown } from 'react-native-element-dropdown';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { firestore } from '../firebase'
 import { getAuth } from 'firebase/auth';
+import { auth, firestore } from '../firebase' // used for authentication
+import { getStorage, ref, uploadBytes } from "firebase/storage";
+import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
 
 
 const db = getFirestore();
@@ -33,9 +36,97 @@ const BillDetails = ({ route }) => {
   const navigation = useNavigation();
   const [amountValidationMessage, setAmountValidationMessage] = useState('');
   const [hasInteracted, setHasInteracted] = useState(false);
+  const [userEmail, setUserEmail] = useState(''); // State to store users email
   const [dropdownOptions, setDropdownOptions] = useState([]);
   const auth = getAuth();
 
+  const [image, setImage] = useState(null);
+
+  const pickImage = async () => {
+    // No permissions request is necessary for launching the image library
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: false
+    });
+
+    console.log(result);
+
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
+    }
+  };
+  
+  const cameraUpload = async () => {
+    try {
+      await ImagePicker.requestCameraPermissionsAsync();
+      let result = await ImagePicker.launchCameraAsync({
+        allowsEditing: false
+      });
+    
+    if (!result.canceled){
+      // save image
+      setImage(result.assets[0].uri);
+    }
+      
+    }catch (error) {
+
+    }
+  };
+
+  const pickImageOptions = () => {
+    ActionSheetIOS.showActionSheetWithOptions(
+      {
+        options: ['Cancel', 'Camera', 'Photo Library', 'Remove'],
+        destructiveButtonIndex: 3,
+        cancelButtonIndex: 0,
+        userInterfaceStyle: 'dark',
+      },
+      buttonIndex => {
+        if (buttonIndex == 1){
+          cameraUpload();
+        }else if(buttonIndex == 2){
+          pickImage();
+        }else if(buttonIndex == 3){
+          setImage(null);
+        }
+      },
+    );
+  };
+
+  const uploadImage = async (dbID) => {
+    if (image !== null){
+      try {
+        const { uri } = await FileSystem.getInfoAsync(image);
+        const blob = await new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.onload = () => {
+            resolve(xhr.response);
+          };
+          xhr.onerror = (error) => {
+            reject(new TypeError('Network request failed'));
+          };
+          xhr.responseType = 'blob';
+          xhr.open('GET', uri, true);
+          xhr.send(null);
+        });
+  
+        const filename = dbID;
+        const storage = getStorage();
+        const storageRef = ref(storage, filename);
+  
+        uploadBytes(storageRef, blob).then((snapshot) => {
+          console.log('Uploaded Image!');
+          console.log(filename);
+        });
+  
+  
+        setImage(null);
+      }catch (error){
+        console.error(error);
+      }
+    }
+    
+  };
 
   // navigate back to the previous screen
   const backToPreviousScreen = () => {
@@ -54,7 +145,7 @@ const BillDetails = ({ route }) => {
     try {
       await AsyncStorage.removeItem(billId);
       console.log('Bill deleted successfully!');
-      navigation.navigate("Homepage"); // Redirect to the desired screen after deletion
+      navigation.navigate("ViewBills"); // Redirect to the desired screen after deletion
     }
     catch (error) {
       console.error('Error deleting bill: ', error);
@@ -307,9 +398,10 @@ useEffect(() => {
       console.log('Bill name: ', billName);
       console.log('Bill currency: ', currency);
       console.log('Bill participants: ', participants);
+      console.log('Email: ', userEmail);
 
     }
-  }, [isLoading, billName, currency, participants]); // only runs when the data is loaded
+  }, [isLoading, billName, currency, participants, userEmail]); // only runs when the data is loaded
 
   if (isLoading) {
     return <Text>Loading...</Text>; // Display loading message --> can delete later, was just added for debugging
@@ -362,10 +454,10 @@ useEffect(() => {
 
     // attempts to store the bill details in the database, with all details needed
     try {
-
       // all bill form data is stored in the database in 'billsCreated' table. 
       const docRef = await addDoc(collection(db, 'billsCreated'), {
         description: description,
+        userEmail: userEmail,
         billName: billName,
         billTotalAmount: parseFloat(billTotalAmount),
         currency: currency,
@@ -375,9 +467,25 @@ useEffect(() => {
         billSplitType: splitType
       });
 
+      let participantEmails = ["noreplyequapay@gmail.com"];
+
+      for (let i = 0; i < participantsWithAmounts.length; i++){
+        participantEmails.push(participantsWithAmounts[i].id);
+      }
+
+      await addDoc(collection(db, 'mail'), {
+        to: participantEmails,
+        message: {
+          subject: 'ALERT: YOU HAVE BEEN ADDED TO A BILL',
+          text: 'This is the plaintext section of the email body.',
+          html: 'This is the <code>HTML</code> section of the email body.'
+      }});
+
+      uploadImage(docRef.id);
+
       console.log('Bill stored in database', docRef.id); // test to see if it was stored in the database
       Alert.alert('Success', 'Bill submitted successfully.');
-      navigation.navigate("Homepage");
+      navigation.navigate("ViewBills");
     }
     catch (error) { // bill cant be submitted and stored
       console.error("Error submitting bill: ", error);
@@ -430,6 +538,11 @@ useEffect(() => {
     console.log('Selected participant: ', item.value);
   }}
 />
+
+        <TouchableOpacity style={{flex: 1, flexDirection: "row", justifyContent: 'flex-start', alignItems: 'center'}} onPress={pickImageOptions}> 
+          <Text>Upload Image</Text>
+          {image && <Image source={{ uri: image }} style={{ width: 50, height: 50 }} />}
+        </TouchableOpacity>
 
 
         <View style={styles.row}>
