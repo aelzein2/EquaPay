@@ -76,14 +76,9 @@ const AddBillsPage = () => {
           const userData = docSnap.data();
           setCurrentUser(userData.email);
     
-          // Initialize friendsList with the current user's data
-          const friendsList = [{
-            label: `${userData.fullName} (You)`, // Label the current user with their full name and "(You)"
-            value: userData.email, // Use the current user's email as the value
-          }];
-    
           const q = query(collection(db, "friends"), where("befriender", "==", userData.email));
           const querySnapshot = await getDocs(q);
+          const friendsList = [];
     
           for (const doc of querySnapshot.docs) {
             const friendEmail = doc.data().befriended;
@@ -92,10 +87,10 @@ const AddBillsPage = () => {
             const friendSnapshot = await getDocs(friendQuery);
     
             if (!friendSnapshot.empty) {
-              const friendData = friendSnapshot.docs[0].data(); // Assuming email is unique and there's only one document per user
+              const friendData = friendSnapshot.docs[0].data(); // email is unique and there's only one document per user (assuming this)
               friendsList.push({
-                label: friendData.fullName, // Friend's fullName for the label
-                value: friendEmail, // Friend's email as the value
+                label: friendData.fullName, // friend's fullName for the label
+                value: friendEmail, //  friend's email as the value
               });
             }
           }
@@ -106,8 +101,6 @@ const AddBillsPage = () => {
         console.error("Error fetching friends: ", error);
       }
     }
-    
-    
     
     console.log("user", currentUser);
     console.log("placeholder", placeholder);
