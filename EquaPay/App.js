@@ -15,15 +15,19 @@ import ChangeEmail from './screens/ChangeEmail';
 import ChangePassword from './screens/ChangePassword';
 import AddBillsPage from './screens/AddBillsPage';
 import BillDetails from './screens/BillDetails';
+import { StripeProvider } from '@stripe/stripe-react-native';
+
 
 
 const Stack = createNativeStackNavigator();
+const stripePublishableKey = 'pk_test_51OsL50LoVnwBJvv3xXEPKGByLPCSwEnQqvzUiOMMBt0zCxbPzLfeuAh04kguoqLmq97GMYtWUXIUwnzXqw4MCLrR00j9gIAPDL'
 
 
 export default function App() {
 
 
   return (
+    <StripeProvider publishableKey={stripePublishableKey}>
     <NavigationContainer>
     <Stack.Navigator>
       
@@ -45,6 +49,7 @@ export default function App() {
       <Stack.Screen options={{headerShown: false,}} name = "UserAccount" component={UserAccount} /> */}
     </Stack.Navigator>
   </NavigationContainer>
+  </StripeProvider>
   );
 }
 
