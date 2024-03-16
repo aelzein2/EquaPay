@@ -1,53 +1,119 @@
 import { StyleSheet, Text, View, Alert, TouchableOpacity } from "react-native";
 import { useState, useEffect } from "react";
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useNavigation } from '@react-navigation/native' // used to navigate between screens
 import { MaterialIcons } from '@expo/vector-icons';
 import { Divider } from '@rneui/themed';
 import { auth, firestore } from '../firebase' // used for authentication
-import { doc, getDoc, getFirestore } from 'firebase/firestore';
+import { doc, getDoc, getFirestore, collection, getDocs } from 'firebase/firestore';
 
 const db = getFirestore();
 
 const ViewBills = () => {
   const [userEmail, setUserEmail] = useState('');
   const [userFullName, setUserFullName] = useState('');
-  const [billName, setBillName] = useState('');
-  const [billDate, setBillDate] = useState('');
-  const [billAmount, setBillAmount] = useState('');
+  const [billName, setBillName] = useState([]);
+  const [billDate, setBillDate] = useState([]);
+  const [billAmount, setBillAmount] = useState([]);
+  const [billInfo, setBillInfo] = useState([]);
   
   const navigation = useNavigation(); // used to navigate between screens
- 
+
   useEffect(() => {
     const fetchUserData = async () => {
       if (auth.currentUser) { // If the user is logged in
-        const userDocRef = doc(db, 'billsCreated', auth.currentUser.uid); // Reference to the user stored in the database.
+        const userDocRef = doc(db, 'users', auth.currentUser.uid); // Reference to the user stored in the database.
 
         try {
           const docSnap = await getDoc(userDocRef); // fetches the user's data from the database
-          if (docSnap.exists()) {
-            const userData = docSnap.data(); // Get the user's data
-            console.log("User's full name is: ", userData.fullName); // Log the user's full name
-            console.log("User's email is: ", userData.email); // Log the user's email
-          
-            setUserFullName(userData.fullName); // Set the user's full name state
-            setUserEmail(userData.email); // Set the user's email state
-          } else {
+          if (docSnap.exists()) { // if the user exists
+            setUserFullName(docSnap.data().fullName); // get the users name and sets it to the state
+            setUserEmail(docSnap.data().email);
+
+            console.log("User's email is: ", docSnap.data().email)
+            console.log("User's full name is: ", docSnap.data().fullName);
+          } 
+          else { // if the user does not exist
             console.log("User record not found");
-            setUserFullName("Name not found");
-            setUserEmail("Email not found");
           }
-          
         } catch (error) {
           console.error("Error fetching user data: ", error);
-          setUserFullName("Error Loading Name"); 
         }
       }
     };
 
     fetchUserData();
   }, []);
- 
+
+  useEffect(() => {
+  const fetchBillData = async () => {
+    if (auth.currentUser) { 
+      const querySnapshot = await getDocs(collection(db, "billsCreated"));
+      const newBillInfo = [];
+
+      try {
+        querySnapshot.forEach((doc) => {
+          
+          if (doc.data().billOwner === userEmail) {
+            newBillInfo.push({
+              id: doc.id, // Assuming doc.id is unique
+              name: doc.data().billName,
+              date: doc.data().billDeadline.toDate().toDateString().split(' ').slice(1).join(' '),
+              amount: doc.data().billTotalAmount,
+              currency: doc.data().currency,
+              
+            });
+          }
+        });
+
+        setBillInfo(newBillInfo); 
+
+        console.log(billInfo)
+      } catch (error) {
+        console.error("Error fetching data: ", error);
+      }
+    }
+  };
+
+  fetchBillData();
+}, [auth.currentUser, userEmail]);
+
+  // useEffect(() => {
+  //   const fetchBillData = async () => {
+  //     if (auth.currentUser) { // If the user is logged in
+  //       const querySnapshot = await getDocs(collection(db, "billsCreated"));
+  
+  //       try {
+  //         let tempBillInfo = []; // Temporary array to hold bill info
+  
+  //         querySnapshot.forEach((doc) => {
+  //           // doc.data() is never undefined for query doc snapshots
+  //           if (doc.data().billOwner === userEmail){
+  //             const i = tempBillInfo.length + 1; // Calculate ID based on tempBillInfo length
+  
+  //             tempBillInfo.push({
+  //               id: i.toString(),
+  //               name: doc.data().billName,
+  //               date: 'Feb 12, 2024',
+  //               amount: doc.data().billTotalAmount,
+  //               currency: 'CAD',
+  //               icon: <MaterialIcons name="payments" size={30} color={'#EDEDED'}/>
+  //             });
+  //           }
+  //         });
+  
+  //         setBillInfo(tempBillInfo); // Update state once with all the data
+  //         console.log(billInfo); // Log the temporary array
+  //       } catch (error) {
+  //         console.error("Error fetching data: ", error);
+  //       }
+  //     }
+  //   };
+  
+  //   fetchBillData(); // Call the fetchBillData function
+  // }, []); // Empty dependency array means this effect runs once after initial render
+  
+
 // temporary function to redirect to account detail page for testing purposes.
   const redirectAccountDetail = () => {
     navigation.navigate("Account")
@@ -80,7 +146,7 @@ const ViewBills = () => {
         </View>
 
         <View style={[styles.yourBillsContainer]}>
-          {yourBillsOptions.map((option)=> (
+          {billInfo.map((option)=> (
             <TouchableOpacity style={[styles.billButton]} key={option.key} onPress={option.onPress}>
                 <View style={{display:'flex', flexDirection:'row', alignItems:'center', gap:15}}>
                   <View style={[styles.iconContainer]}>
@@ -88,7 +154,7 @@ const ViewBills = () => {
                   </View>
                   <View style={[styles.billInfoContainer]}>
                     <Text style={[styles.optionText]}>{option.name}</Text>
-                    <Text style={[styles.subOptionText]}>Created on {option.date}</Text>
+                    <Text style={[styles.subOptionText]}>Deadline by {option.date}</Text>
                   </View>
                 </View>
                 <Text style={[styles.optionText]}>{option.amount} {option.currency}</Text> 
