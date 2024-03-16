@@ -1,71 +1,137 @@
 import { StyleSheet, Text, View, Alert, TouchableOpacity } from "react-native";
 import { useState, useEffect } from "react";
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useNavigation } from '@react-navigation/native' // used to navigate between screens
 import { MaterialIcons } from '@expo/vector-icons';
 import { Divider } from '@rneui/themed';
 import { auth, firestore } from '../firebase' // used for authentication
-import { doc, getDoc, getFirestore } from 'firebase/firestore';
+import { doc, getDoc, getFirestore, collection, getDocs } from 'firebase/firestore';
 
 const db = getFirestore();
 
 const ViewBills = () => {
   const [userEmail, setUserEmail] = useState('');
   const [userFullName, setUserFullName] = useState('');
-  const [billName, setBillName] = useState('');
-  const [billDate, setBillDate] = useState('');
-  const [billAmount, setBillAmount] = useState('');
+  const [billInfo, setBillInfo] = useState([]);
+  const [otherBillInfo, setOtherBillInfo] = useState([]);
   
   const navigation = useNavigation(); // used to navigate between screens
- 
+
   useEffect(() => {
     const fetchUserData = async () => {
       if (auth.currentUser) { // If the user is logged in
-        const userDocRef = doc(db, 'billsCreated', auth.currentUser.uid); // Reference to the user stored in the database.
+        const userDocRef = doc(db, 'users', auth.currentUser.uid); // Reference to the user stored in the database.
 
         try {
           const docSnap = await getDoc(userDocRef); // fetches the user's data from the database
-          if (docSnap.exists()) {
-            const userData = docSnap.data(); // Get the user's data
-            console.log("User's full name is: ", userData.fullName); // Log the user's full name
-            console.log("User's email is: ", userData.email); // Log the user's email
-          
-            setUserFullName(userData.fullName); // Set the user's full name state
-            setUserEmail(userData.email); // Set the user's email state
-          } else {
+          if (docSnap.exists()) { // if the user exists
+            setUserFullName(docSnap.data().fullName); // get the users name and sets it to the state
+            setUserEmail(docSnap.data().email);
+
+            console.log("User's email is: ", docSnap.data().email)
+            console.log("User's full name is: ", docSnap.data().fullName);
+          } 
+          else { // if the user does not exist
             console.log("User record not found");
-            setUserFullName("Name not found");
-            setUserEmail("Email not found");
           }
-          
         } catch (error) {
           console.error("Error fetching user data: ", error);
-          setUserFullName("Error Loading Name"); 
         }
       }
     };
 
     fetchUserData();
   }, []);
- 
+
+  useEffect(() => {
+  const fetchOwnerBillData = async () => {
+    if (auth.currentUser) { 
+      const querySnapshot = await getDocs(collection(db, "billsCreated"));
+      const newBillInfo = [];
+
+      try {
+        querySnapshot.forEach((doc) => {
+          
+          if (doc.data().billOwner === userEmail) {
+            newBillInfo.push({
+              id: doc.id, // Assuming doc.id is unique
+              name: doc.data().billName,
+              date: doc.data().billDeadline.toDate().toDateString().split(' ').slice(1).join(' '),
+              amount: doc.data().billTotalAmount,
+              currency: doc.data().currency,
+              icon:<MaterialIcons name="payments" size={30} color={'#EDEDED'}/>
+              
+            });
+          }
+        });
+
+        setBillInfo(newBillInfo); 
+
+        //console.log(billInfo)
+      } catch (error) {
+        console.error("Error fetching data: ", error);
+      }
+    }
+  };
+
+  fetchOwnerBillData();
+}, [auth.currentUser, userEmail]);
+
+useEffect(() => {
+  const fetchOthersBillData = async () => {
+    if (auth.currentUser) { 
+      const querySnapshot = await getDocs(collection(db, "billsCreated"));
+      const newBillInfo = [];
+
+      try {
+        querySnapshot.forEach((doc) => {
+          doc.data().participants.forEach((i) => {
+            if (i.id === userEmail && doc.data().billOwner != userEmail){
+              newBillInfo.push({
+                id: doc.id, // Assuming doc.id is unique
+                name: doc.data().billName,
+                creator: doc.data().billOwner,
+                date: doc.data().billDeadline.toDate().toDateString().split(' ').slice(1).join(' '),
+                amount: i.amount,
+                currency: doc.data().currency,
+                icon:<MaterialIcons name="payments" size={30} color={'#EDEDED'}/>
+                
+              });
+            }
+          })
+        });
+
+        setOtherBillInfo(newBillInfo)
+
+        // console.log(otherBillInfo)
+
+      } catch (error) {
+        console.error("Error fetching data: ", error);
+      }
+    }
+  };
+
+  fetchOthersBillData();
+}, [auth.currentUser, userEmail]);
+
 // temporary function to redirect to account detail page for testing purposes.
   const redirectAccountDetail = () => {
     navigation.navigate("Account")
   }
 
-  const yourBillsOptions=[
-    {id:'0', name:'Food', date:'Feb 12, 2024', amount:'100', currency:'CAD', icon:<MaterialIcons name="payments" size={30} color={'#EDEDED'}/>},
-    {id:'1', name:'Food', date:'Feb 12, 2024', amount:'100', currency:'CAD', icon:<MaterialIcons name="payments" size={30} color={'#EDEDED'}/>},
-    {id:'2', name:'Food', date:'Feb 12, 2024', amount:'100', currency:'CAD', icon:<MaterialIcons name="payments" size={30} color={'#EDEDED'}/>},
-    // {id:'2', name:'Logout', icon:<MaterialIcons name="logout" size={28} color={'#EDEDED'}/>, onPress: handleLogout}
-  ]
+  // const yourBillsOptions=[
+  //   {id:'0', name:'Food', date:'Feb 12, 2024', amount:'100', currency:'CAD', icon:<MaterialIcons name="payments" size={30} color={'#EDEDED'}/>},
+  //   {id:'1', name:'Food', date:'Feb 12, 2024', amount:'100', currency:'CAD', icon:<MaterialIcons name="payments" size={30} color={'#EDEDED'}/>},
+  //   {id:'2', name:'Food', date:'Feb 12, 2024', amount:'100', currency:'CAD', icon:<MaterialIcons name="payments" size={30} color={'#EDEDED'}/>},
+  //   // {id:'2', name:'Logout', icon:<MaterialIcons name="logout" size={28} color={'#EDEDED'}/>, onPress: handleLogout}
+  // ]
 
-  const othersBillsOptions=[
-    {id:'0', name:'Food', creator:'Khanh', date:'Feb 12, 2024', amount:'100', currency:'CAD', icon:<MaterialIcons name="payments" size={30} color={'#EDEDED'}/>},
-    {id:'1', name:'Food', creator:'Khanh', date:'Feb 12, 2024', amount:'100', currency:'CAD', icon:<MaterialIcons name="payments" size={30} color={'#EDEDED'}/>},
-    {id:'2', name:'Food', creator:'Khanh', date:'Feb 12, 2024', amount:'100', currency:'CAD', icon:<MaterialIcons name="payments" size={30} color={'#EDEDED'}/>},
-    // {id:'2', name:'Logout', icon:<MaterialIcons name="logout" size={28} color={'#EDEDED'}/>, onPress: handleLogout}
-  ]
+  // const othersBillsOptions=[
+  //   {id:'0', name:'Food', creator:'Khanh', date:'Feb 12, 2024', amount:'100', currency:'CAD', icon:<MaterialIcons name="payments" size={30} color={'#EDEDED'}/>},
+  //   {id:'1', name:'Food', creator:'Khanh', date:'Feb 12, 2024', amount:'100', currency:'CAD', icon:<MaterialIcons name="payments" size={30} color={'#EDEDED'}/>},
+  //   {id:'2', name:'Food', creator:'Khanh', date:'Feb 12, 2024', amount:'100', currency:'CAD', icon:<MaterialIcons name="payments" size={30} color={'#EDEDED'}/>},
+  //   // {id:'2', name:'Logout', icon:<MaterialIcons name="logout" size={28} color={'#EDEDED'}/>, onPress: handleLogout}
+  // ]
  
 
 
@@ -80,7 +146,7 @@ const ViewBills = () => {
         </View>
 
         <View style={[styles.yourBillsContainer]}>
-          {yourBillsOptions.map((option)=> (
+          {billInfo.map((option)=> (
             <TouchableOpacity style={[styles.billButton]} key={option.key} onPress={option.onPress}>
                 <View style={{display:'flex', flexDirection:'row', alignItems:'center', gap:15}}>
                   <View style={[styles.iconContainer]}>
@@ -88,7 +154,7 @@ const ViewBills = () => {
                   </View>
                   <View style={[styles.billInfoContainer]}>
                     <Text style={[styles.optionText]}>{option.name}</Text>
-                    <Text style={[styles.subOptionText]}>Created on {option.date}</Text>
+                    <Text style={[styles.subOptionText]}>Deadline: {option.date}</Text>
                   </View>
                 </View>
                 <Text style={[styles.optionText]}>{option.amount} {option.currency}</Text> 
@@ -105,7 +171,7 @@ const ViewBills = () => {
         </View>
 
         <View style={[styles.yourBillsContainer]}>
-          {othersBillsOptions.map((option)=> (
+          {otherBillInfo.map((option)=> (
             <TouchableOpacity style={[styles.billButton]} key={option.key} onPress={option.onPress}>
                 <View style={{display:'flex', flexDirection:'row', alignItems:'center', gap:15}}>
                   <View style={[styles.iconContainer]}>
@@ -113,7 +179,7 @@ const ViewBills = () => {
                   </View>
                   <View style={[styles.billInfoContainer]}>
                     <Text style={[styles.optionText]}>{option.name}</Text>
-                    <Text style={[styles.subOptionText]}>By {option.creator} on {option.date}</Text>
+                    <Text style={[styles.subOptionText]}>By {option.creator}, Deadline: {option.date}</Text>
                   </View>
                 </View>
                 <Text style={[styles.optionText]}>{option.amount} {option.currency}</Text> 
