@@ -1,12 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, View, TouchableOpacity, Modal, Alert } from 'react-native';
-import { getFirestore, doc, addDoc, deleteDoc, collection, Timestamp, getDocs, query, where } from 'firebase/firestore';
+import { getFirestore, doc, addDoc, deleteDoc, collection, Timestamp, updateDoc, arrayUnion, getDocs, query, where} from 'firebase/firestore';
+import { ActionSheetIOS, ScrollView, StyleSheet, Text, TextInput, View, TouchableOpacity, Modal, Alert, Button, Image } from 'react-native';
 import { AntDesign, MaterialIcons } from '@expo/vector-icons'; // used for the icons
 import { useNavigation } from '@react-navigation/native';
 import { Dropdown } from 'react-native-element-dropdown';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { firestore } from '../firebase'
+import { getAuth } from 'firebase/auth';
+import { auth, firestore } from '../firebase' // used for authentication
+import { getStorage, ref, uploadBytes } from "firebase/storage";
+import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
 
 
 const db = getFirestore();
@@ -32,8 +36,97 @@ const BillDetails = ({ route }) => {
   const navigation = useNavigation();
   const [amountValidationMessage, setAmountValidationMessage] = useState('');
   const [hasInteracted, setHasInteracted] = useState(false);
+  const [userEmail, setUserEmail] = useState(''); // State to store users email
   const [dropdownOptions, setDropdownOptions] = useState([]);
+  const auth = getAuth();
 
+  const [image, setImage] = useState(null);
+
+  const pickImage = async () => {
+    // No permissions request is necessary for launching the image library
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: false
+    });
+
+    console.log(result);
+
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
+    }
+  };
+  
+  const cameraUpload = async () => {
+    try {
+      await ImagePicker.requestCameraPermissionsAsync();
+      let result = await ImagePicker.launchCameraAsync({
+        allowsEditing: false
+      });
+    
+    if (!result.canceled){
+      // save image
+      setImage(result.assets[0].uri);
+    }
+      
+    }catch (error) {
+
+    }
+  };
+
+  const pickImageOptions = () => {
+    ActionSheetIOS.showActionSheetWithOptions(
+      {
+        options: ['Cancel', 'Camera', 'Photo Library', 'Remove'],
+        destructiveButtonIndex: 3,
+        cancelButtonIndex: 0,
+        userInterfaceStyle: 'dark',
+      },
+      buttonIndex => {
+        if (buttonIndex == 1){
+          cameraUpload();
+        }else if(buttonIndex == 2){
+          pickImage();
+        }else if(buttonIndex == 3){
+          setImage(null);
+        }
+      },
+    );
+  };
+
+  const uploadImage = async (dbID) => {
+    if (image !== null){
+      try {
+        const { uri } = await FileSystem.getInfoAsync(image);
+        const blob = await new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.onload = () => {
+            resolve(xhr.response);
+          };
+          xhr.onerror = (error) => {
+            reject(new TypeError('Network request failed'));
+          };
+          xhr.responseType = 'blob';
+          xhr.open('GET', uri, true);
+          xhr.send(null);
+        });
+  
+        const filename = dbID;
+        const storage = getStorage();
+        const storageRef = ref(storage, filename);
+  
+        uploadBytes(storageRef, blob).then((snapshot) => {
+          console.log('Uploaded Image!');
+          console.log(filename);
+        });
+  
+  
+        setImage(null);
+      }catch (error){
+        console.error(error);
+      }
+    }
+    
+  };
 
   // navigate back to the previous screen
   const backToPreviousScreen = () => {
@@ -52,7 +145,7 @@ const BillDetails = ({ route }) => {
     try {
       await AsyncStorage.removeItem(billId);
       console.log('Bill deleted successfully!');
-      navigation.navigate("Homepage"); // Redirect to the desired screen after deletion
+      navigation.navigate("ViewBills"); // Redirect to the desired screen after deletion
     }
     catch (error) {
       console.error('Error deleting bill: ', error);
@@ -203,50 +296,55 @@ const BillDetails = ({ route }) => {
 
 
 // used to fetch bill data from async storage. it also fetches participants full names from the database 
-  useEffect(() => {
-    const fetchBillData = async () => {
-      setIsLoading(true);
-  
-      try {
-        
-        const storedBillData = await AsyncStorage.getItem(billId);
-        if (storedBillData !== null) {
-          
-          // set all data from async storage
-          const data = JSON.parse(storedBillData);
-          setBillName(data.groupName);
-          setBillCurrency(data.currency);
-          setParticipants(data.participants);
-          setIsLoading(false);
-  
-          // querying the database to find participants first nane to be displayed. names are just for displaying and internally, emails are referenced.
-          const usersRef = collection(db, "users");
-          const fetchedOptions = await Promise.all(
-            data.participants.map(async (participant) => {
-              const q = query(usersRef, where("email", "==", participant)); // query to find the participant's full name based on their email
-              const querySnapshot = await getDocs(q);
-              const participantData = querySnapshot.docs[0]?.data();
-              return {
-                label: participantData ? participantData.fullName : "Unknown", // unknown fallback if nothing is found
-                value: participant
-              };
-            })
-          );
-  
-          setDropdownOptions(fetchedOptions); // set whatever is fetched (names) as options in the dropdown menu
-        } else {
-          console.log('No data available!');
-          setIsLoading(false);
-        }
-      } catch (error) {
-        console.error('Error fetching bill data and participant names: ', error);
+useEffect(() => {
+  const fetchBillData = async () => {
+    setIsLoading(true);
+
+    try {
+      const storedBillData = await AsyncStorage.getItem(billId);
+      if (storedBillData !== null) {
+        const data = JSON.parse(storedBillData);
+        setBillName(data.groupName);
+        setBillCurrency(data.currency);
+        setParticipants(data.participants);
+        setIsLoading(false);
+
+        const usersRef = collection(db, "users");
+        const currentUserEmail = auth.currentUser.email.toLowerCase(); // Convert current user's email to lowercase for comparison
+        const fetchedOptions = await Promise.all(
+          data.participants.map(async (participant) => {
+            const q = query(usersRef, where("email", "==", participant)); // Keep the participant email as it is for the query
+            const querySnapshot = await getDocs(q);
+            const participantData = querySnapshot.docs[0]?.data();
+
+            let label = participantData
+              ? participant.toLowerCase() === currentUserEmail // Convert participant email to lowercase only for comparison
+                ? `${participantData.fullName} (You)` // Append "(You)" if current user
+                : participantData.fullName
+              : "Unknown";
+
+            return {
+              label: label,
+              value: participant
+            };
+          })
+        );
+
+        setDropdownOptions(fetchedOptions);
+      } else {
+        console.log('No data available!');
         setIsLoading(false);
       }
-    };
-  
-    fetchBillData();
-  }, [billId]);
-  
+    } catch (error) {
+      console.error('Error fetching bill data and participant names: ', error);
+      setIsLoading(false);
+    }
+  };
+
+  fetchBillData();
+}, [billId, auth.currentUser.email]);
+
+
   
   // Maps the participants to the structure of the drop down menu. CAN DELETE THIS LATER, may want to keep it for now in case something doesnt work
   const participantOptions = participants.map((participant) => ({
@@ -300,9 +398,10 @@ const BillDetails = ({ route }) => {
       console.log('Bill name: ', billName);
       console.log('Bill currency: ', currency);
       console.log('Bill participants: ', participants);
+      console.log('Email: ', userEmail);
 
     }
-  }, [isLoading, billName, currency, participants]); // only runs when the data is loaded
+  }, [isLoading, billName, currency, participants, userEmail]); // only runs when the data is loaded
 
   if (isLoading) {
     return <Text>Loading...</Text>; // Display loading message --> can delete later, was just added for debugging
@@ -331,11 +430,26 @@ const BillDetails = ({ route }) => {
   // Function that stores the entered bill details into the database. Probably the most important function here.
   const handleSubmitBill = async () => {
     // Validation to ensure all required fields are filled out
-    if (!description || !billTotalAmount || !billName || selectedParticipants.length === 0) {
+    if (!description || !billTotalAmount || !billName || selectedParticipants.length === 0 || !selectedParticipant || !splitType || !date) {
       Alert.alert('Error', 'Please complete all required fields.');
       return;
     }
-
+  
+    // Additional validation for participant amounts if split type is not 'equal'
+    let amountsValidationFailed = false;
+    if (splitType !== 'equal') {
+      for (const participant of selectedParticipants) {
+        if (!participantAmounts[participant] || participantAmounts[participant] <= 0) {
+          amountsValidationFailed = true;
+          break; // Exit the loop early if any validation fails
+        }
+      }
+  
+      if (amountsValidationFailed) {
+        Alert.alert('Error', 'Please ensure all selected participants have valid amounts.');
+        return;
+      }
+    }
     const billDeadlineTimestamp = Timestamp.fromDate(date); // deadline converted to a timestamp type since database field stores it in this type
 
     // this is to make sure it will store the correct amounts for any split type for each participant
@@ -355,22 +469,38 @@ const BillDetails = ({ route }) => {
 
     // attempts to store the bill details in the database, with all details needed
     try {
-
       // all bill form data is stored in the database in 'billsCreated' table. 
       const docRef = await addDoc(collection(db, 'billsCreated'), {
         description: description,
+        userEmail: userEmail,
         billName: billName,
         billTotalAmount: parseFloat(billTotalAmount),
         currency: currency,
         participants: participantsWithAmounts, // stores selected participants with their amounts
-        paidBy: selectedParticipant,
+        billOwner: selectedParticipant,
         billDeadline: billDeadlineTimestamp,
         billSplitType: splitType
       });
 
+      let participantEmails = ["noreplyequapay@gmail.com"];
+
+      for (let i = 0; i < participantsWithAmounts.length; i++){
+        participantEmails.push(participantsWithAmounts[i].id);
+      }
+
+      await addDoc(collection(db, 'mail'), {
+        to: participantEmails,
+        message: {
+          subject: 'ALERT: YOU HAVE BEEN ADDED TO A BILL',
+          text: 'This is the plaintext section of the email body.',
+          html: 'This is the <code>HTML</code> section of the email body.'
+      }});
+
+      uploadImage(docRef.id);
+
       console.log('Bill stored in database', docRef.id); // test to see if it was stored in the database
       Alert.alert('Success', 'Bill submitted successfully.');
-      navigation.navigate("Homepage");
+      navigation.navigate("ViewBills");
     }
     catch (error) { // bill cant be submitted and stored
       console.error("Error submitting bill: ", error);
@@ -410,7 +540,7 @@ const BillDetails = ({ route }) => {
           value={description}
         />
 
-        <Text style={styles.subtitle}>Paid by</Text>
+        <Text style={styles.subtitle}>Bill Owner</Text>
         <Dropdown
   style={styles.input}
   placeholder="Who paid for this bill?"
@@ -423,6 +553,11 @@ const BillDetails = ({ route }) => {
     console.log('Selected participant: ', item.value);
   }}
 />
+
+        <TouchableOpacity style={{flex: 1, flexDirection: "row", justifyContent: 'flex-start', alignItems: 'center'}} onPress={pickImageOptions}> 
+          <Text>Upload Image</Text>
+          {image && <Image source={{ uri: image }} style={{ width: 50, height: 50 }} />}
+        </TouchableOpacity>
 
 
         <View style={styles.row}>
