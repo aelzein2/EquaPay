@@ -103,7 +103,7 @@ useEffect(() => {
 
         setOtherBillInfo(newBillInfo)
 
-        console.log(otherBillInfo)
+        // console.log(otherBillInfo)
 
       } catch (error) {
         console.error("Error fetching data: ", error);
