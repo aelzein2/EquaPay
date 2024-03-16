@@ -78,42 +78,6 @@ const ViewBills = () => {
   fetchBillData();
 }, [auth.currentUser, userEmail]);
 
-  // useEffect(() => {
-  //   const fetchBillData = async () => {
-  //     if (auth.currentUser) { // If the user is logged in
-  //       const querySnapshot = await getDocs(collection(db, "billsCreated"));
-  
-  //       try {
-  //         let tempBillInfo = []; // Temporary array to hold bill info
-  
-  //         querySnapshot.forEach((doc) => {
-  //           // doc.data() is never undefined for query doc snapshots
-  //           if (doc.data().billOwner === userEmail){
-  //             const i = tempBillInfo.length + 1; // Calculate ID based on tempBillInfo length
-  
-  //             tempBillInfo.push({
-  //               id: i.toString(),
-  //               name: doc.data().billName,
-  //               date: 'Feb 12, 2024',
-  //               amount: doc.data().billTotalAmount,
-  //               currency: 'CAD',
-  //               icon: <MaterialIcons name="payments" size={30} color={'#EDEDED'}/>
-  //             });
-  //           }
-  //         });
-  
-  //         setBillInfo(tempBillInfo); // Update state once with all the data
-  //         console.log(billInfo); // Log the temporary array
-  //       } catch (error) {
-  //         console.error("Error fetching data: ", error);
-  //       }
-  //     }
-  //   };
-  
-  //   fetchBillData(); // Call the fetchBillData function
-  // }, []); // Empty dependency array means this effect runs once after initial render
-  
-
 // temporary function to redirect to account detail page for testing purposes.
   const redirectAccountDetail = () => {
     navigation.navigate("Account")
