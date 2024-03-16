@@ -12,10 +12,8 @@ const db = getFirestore();
 const ViewBills = () => {
   const [userEmail, setUserEmail] = useState('');
   const [userFullName, setUserFullName] = useState('');
-  const [billName, setBillName] = useState([]);
-  const [billDate, setBillDate] = useState([]);
-  const [billAmount, setBillAmount] = useState([]);
   const [billInfo, setBillInfo] = useState([]);
+  const [otherBillInfo, setOtherBillInfo] = useState([]);
   
   const navigation = useNavigation(); // used to navigate between screens
 
@@ -46,7 +44,7 @@ const ViewBills = () => {
   }, []);
 
   useEffect(() => {
-  const fetchBillData = async () => {
+  const fetchOwnerBillData = async () => {
     if (auth.currentUser) { 
       const querySnapshot = await getDocs(collection(db, "billsCreated"));
       const newBillInfo = [];
@@ -61,6 +59,7 @@ const ViewBills = () => {
               date: doc.data().billDeadline.toDate().toDateString().split(' ').slice(1).join(' '),
               amount: doc.data().billTotalAmount,
               currency: doc.data().currency,
+              icon:<MaterialIcons name="payments" size={30} color={'#EDEDED'}/>
               
             });
           }
@@ -68,14 +67,51 @@ const ViewBills = () => {
 
         setBillInfo(newBillInfo); 
 
-        console.log(billInfo)
+        //console.log(billInfo)
       } catch (error) {
         console.error("Error fetching data: ", error);
       }
     }
   };
 
-  fetchBillData();
+  fetchOwnerBillData();
+}, [auth.currentUser, userEmail]);
+
+useEffect(() => {
+  const fetchOthersBillData = async () => {
+    if (auth.currentUser) { 
+      const querySnapshot = await getDocs(collection(db, "billsCreated"));
+      const newBillInfo = [];
+
+      try {
+        querySnapshot.forEach((doc) => {
+          doc.data().participants.forEach((i) => {
+            if (i.id === userEmail && doc.data().billOwner != userEmail){
+              newBillInfo.push({
+                id: doc.id, // Assuming doc.id is unique
+                name: doc.data().billName,
+                creator: doc.data().billOwner,
+                date: doc.data().billDeadline.toDate().toDateString().split(' ').slice(1).join(' '),
+                amount: i.amount,
+                currency: doc.data().currency,
+                icon:<MaterialIcons name="payments" size={30} color={'#EDEDED'}/>
+                
+              });
+            }
+          })
+        });
+
+        setOtherBillInfo(newBillInfo)
+
+        console.log(otherBillInfo)
+
+      } catch (error) {
+        console.error("Error fetching data: ", error);
+      }
+    }
+  };
+
+  fetchOthersBillData();
 }, [auth.currentUser, userEmail]);
 
 // temporary function to redirect to account detail page for testing purposes.
@@ -83,19 +119,19 @@ const ViewBills = () => {
     navigation.navigate("Account")
   }
 
-  const yourBillsOptions=[
-    {id:'0', name:'Food', date:'Feb 12, 2024', amount:'100', currency:'CAD', icon:<MaterialIcons name="payments" size={30} color={'#EDEDED'}/>},
-    {id:'1', name:'Food', date:'Feb 12, 2024', amount:'100', currency:'CAD', icon:<MaterialIcons name="payments" size={30} color={'#EDEDED'}/>},
-    {id:'2', name:'Food', date:'Feb 12, 2024', amount:'100', currency:'CAD', icon:<MaterialIcons name="payments" size={30} color={'#EDEDED'}/>},
-    // {id:'2', name:'Logout', icon:<MaterialIcons name="logout" size={28} color={'#EDEDED'}/>, onPress: handleLogout}
-  ]
+  // const yourBillsOptions=[
+  //   {id:'0', name:'Food', date:'Feb 12, 2024', amount:'100', currency:'CAD', icon:<MaterialIcons name="payments" size={30} color={'#EDEDED'}/>},
+  //   {id:'1', name:'Food', date:'Feb 12, 2024', amount:'100', currency:'CAD', icon:<MaterialIcons name="payments" size={30} color={'#EDEDED'}/>},
+  //   {id:'2', name:'Food', date:'Feb 12, 2024', amount:'100', currency:'CAD', icon:<MaterialIcons name="payments" size={30} color={'#EDEDED'}/>},
+  //   // {id:'2', name:'Logout', icon:<MaterialIcons name="logout" size={28} color={'#EDEDED'}/>, onPress: handleLogout}
+  // ]
 
-  const othersBillsOptions=[
-    {id:'0', name:'Food', creator:'Khanh', date:'Feb 12, 2024', amount:'100', currency:'CAD', icon:<MaterialIcons name="payments" size={30} color={'#EDEDED'}/>},
-    {id:'1', name:'Food', creator:'Khanh', date:'Feb 12, 2024', amount:'100', currency:'CAD', icon:<MaterialIcons name="payments" size={30} color={'#EDEDED'}/>},
-    {id:'2', name:'Food', creator:'Khanh', date:'Feb 12, 2024', amount:'100', currency:'CAD', icon:<MaterialIcons name="payments" size={30} color={'#EDEDED'}/>},
-    // {id:'2', name:'Logout', icon:<MaterialIcons name="logout" size={28} color={'#EDEDED'}/>, onPress: handleLogout}
-  ]
+  // const othersBillsOptions=[
+  //   {id:'0', name:'Food', creator:'Khanh', date:'Feb 12, 2024', amount:'100', currency:'CAD', icon:<MaterialIcons name="payments" size={30} color={'#EDEDED'}/>},
+  //   {id:'1', name:'Food', creator:'Khanh', date:'Feb 12, 2024', amount:'100', currency:'CAD', icon:<MaterialIcons name="payments" size={30} color={'#EDEDED'}/>},
+  //   {id:'2', name:'Food', creator:'Khanh', date:'Feb 12, 2024', amount:'100', currency:'CAD', icon:<MaterialIcons name="payments" size={30} color={'#EDEDED'}/>},
+  //   // {id:'2', name:'Logout', icon:<MaterialIcons name="logout" size={28} color={'#EDEDED'}/>, onPress: handleLogout}
+  // ]
  
 
 
@@ -118,7 +154,7 @@ const ViewBills = () => {
                   </View>
                   <View style={[styles.billInfoContainer]}>
                     <Text style={[styles.optionText]}>{option.name}</Text>
-                    <Text style={[styles.subOptionText]}>Deadline by {option.date}</Text>
+                    <Text style={[styles.subOptionText]}>Deadline: {option.date}</Text>
                   </View>
                 </View>
                 <Text style={[styles.optionText]}>{option.amount} {option.currency}</Text> 
@@ -135,7 +171,7 @@ const ViewBills = () => {
         </View>
 
         <View style={[styles.yourBillsContainer]}>
-          {othersBillsOptions.map((option)=> (
+          {otherBillInfo.map((option)=> (
             <TouchableOpacity style={[styles.billButton]} key={option.key} onPress={option.onPress}>
                 <View style={{display:'flex', flexDirection:'row', alignItems:'center', gap:15}}>
                   <View style={[styles.iconContainer]}>
@@ -143,7 +179,7 @@ const ViewBills = () => {
                   </View>
                   <View style={[styles.billInfoContainer]}>
                     <Text style={[styles.optionText]}>{option.name}</Text>
-                    <Text style={[styles.subOptionText]}>By {option.creator} on {option.date}</Text>
+                    <Text style={[styles.subOptionText]}>By {option.creator}, Deadline: {option.date}</Text>
                   </View>
                 </View>
                 <Text style={[styles.optionText]}>{option.amount} {option.currency}</Text> 
