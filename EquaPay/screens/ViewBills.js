@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, Alert, TouchableOpacity } from "react-native";
+import { StyleSheet, Text, View, Alert, TouchableOpacity, Modal, Button, SafeAreaView, Pressable } from "react-native";
 import { useState, useEffect } from "react";
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useNavigation } from '@react-navigation/native' // used to navigate between screens
@@ -14,6 +14,7 @@ const ViewBills = () => {
   const [userFullName, setUserFullName] = useState('');
   const [billInfo, setBillInfo] = useState([]);
   const [otherBillInfo, setOtherBillInfo] = useState([]);
+  const [modalVisible, setModalVisible] = useState(false);
   
   const navigation = useNavigation(); // used to navigate between screens
 
@@ -119,6 +120,41 @@ useEffect(() => {
     navigation.navigate("Account")
   }
 
+  const showModal = (data) => {
+    console.log(data);
+    
+    if (!modalVisible){
+      setModalVisible(true)
+
+      const fetchUserData = async () => {
+        if (auth.currentUser) { // If the user is logged in
+          const userDocRef = doc(db, 'billsCreated', data); // Reference to the user stored in the database.
+  
+          try {
+            const docSnap = await getDoc(userDocRef); // fetches the user's data from the database
+            if (docSnap.exists()) { // if the user exists
+              console.log(docSnap.data());
+            } 
+            else { // if the user does not exist
+              console.log("User record not found");
+            }
+          } catch (error) {
+            console.error("Error fetching user data: ", error);
+          }
+        }
+      };
+  
+      fetchUserData();
+      
+    }
+  }
+
+  const hideModal = () => {
+    if (modalVisible){
+      setModalVisible(false)
+    }
+  }
+
   // const yourBillsOptions=[
   //   {id:'0', name:'Food', date:'Feb 12, 2024', amount:'100', currency:'CAD', icon:<MaterialIcons name="payments" size={30} color={'#EDEDED'}/>},
   //   {id:'1', name:'Food', date:'Feb 12, 2024', amount:'100', currency:'CAD', icon:<MaterialIcons name="payments" size={30} color={'#EDEDED'}/>},
@@ -139,7 +175,7 @@ useEffect(() => {
     <KeyboardAwareScrollView style={[styles.container]}>
       <Text style = {[styles.titleText]} >View Bills</Text>
 
-      <View style={[styles.bodyContainer]}>
+      <View style={[styles.bodyContainer, styles.fill]}>
         <View style={[styles.headingContainer]}>
           <Text style = {[styles.headingText]} >Your Bills</Text>
           <Text style={[styles.seeAllText]}>See all</Text>
@@ -147,7 +183,7 @@ useEffect(() => {
 
         <View style={[styles.yourBillsContainer]}>
           {billInfo.map((option)=> (
-            <TouchableOpacity style={[styles.billButton]} key={option.key} onPress={option.onPress}>
+            <TouchableOpacity style={[styles.billButton]} key={option.key} onPress={() => {showModal(option.id)}}>
                 <View style={{display:'flex', flexDirection:'row', alignItems:'center', gap:15}}>
                   <View style={[styles.iconContainer]}>
                     {option.icon}
@@ -161,6 +197,17 @@ useEffect(() => {
             </TouchableOpacity>
           ))}
         </View>
+        <Modal
+          visible={modalVisible}
+          animationType="fade"
+          transparent
+
+        >
+          <Pressable style={[styles.upper]} onPress={hideModal} />
+          <View style={[styles.lower]}>
+            <Button title="Hide" onPress={hideModal}/>
+          </View>
+        </Modal>
         <Divider color='#85E5CA'/>
       </View>
 
@@ -201,6 +248,10 @@ useEffect(() => {
 export default ViewBills;
 
 const styles = StyleSheet.create({
+
+  fill: { flex: 1 },
+  upper: { height: 100, backgroundColor: '#DDD', opacity: 0.5 },
+  lower: { flex: 1, backgroundColor: 'white'},
 
   container:{
     backgroundColor:'#153A59',
