@@ -34,7 +34,6 @@ export default function App() {
       
       <Stack.Screen options={{headerShown: false,}} name = "LoadingScreen" component={LoadingScreen} />
       <Stack.Screen options = {{headerShown : false}} name="Login" component={Login} />
-      <Stack.Screen options = {{headerShown : false}} name = "ViewBills" component={ViewBills} />
       <Stack.Screen options={{headerShown: false,}} name = "UserAccount" component={UserAccount} />
       <Stack.Screen options = {{headerShown: false,}} name = "Settings" component={Settings} />
       <Stack.Screen options = {{headerShown: false,}} name = "Reauthentication" component={Reauthentication} />
