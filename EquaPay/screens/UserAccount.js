@@ -116,9 +116,9 @@ async function addFriends(friend) {
 }
 
   // back button redirects back to the homepage
-  const backToPreviousScreen = () => {
-    navigation.navigate("Home");
-}
+//   const backToPreviousScreen = () => {
+//     navigation.navigate("Home");
+// }
 
 const handleSettingPage = () => {
   navigation.navigate("Settings");
@@ -132,11 +132,11 @@ const userOptions=[
   return (
     
     <View style={[styles.container]}>
-      <Text style = {[styles.titleText]} >Account</Text>
+      <Text style = {[styles.titleText]}>Account</Text>
 
-      <TouchableOpacity onPress={backToPreviousScreen} style={styles.backButton}>
+      {/* <TouchableOpacity onPress={backToPreviousScreen} style={styles.backButton}>
           <AntDesign name="arrowleft" size={24} color="black" />
-      </TouchableOpacity>
+      </TouchableOpacity> */}
 
       {/* <TouchableOpacity onPress={backToPreviousScreen} style={[styles.backButton]}>
                 <Ionicons name='chevron-back' size={24} color={'white'}/>

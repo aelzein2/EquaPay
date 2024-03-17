@@ -2,6 +2,7 @@ import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import Login from './screens/Login';
 import Signup from './screens/Signup';
 import ViewBills from './screens/ViewBills';
@@ -24,27 +25,30 @@ export default function App() {
 
 
   return (
-    <NavigationContainer>
-    <Stack.Navigator>
-      
-      <Stack.Screen options={{headerShown: false,}} name = "LoadingScreen" component={LoadingScreen} />
-      <Stack.Screen options = {{headerShown : false}} name="Login" component={Login} />
-      <Stack.Screen options = {{headerShown : false}} name = "ViewBills" component={ViewBills} />
-      <Stack.Screen options={{headerShown: false,}} name = "UserAccount" component={UserAccount} />
-      <Stack.Screen options = {{headerShown: false,}} name = "Settings" component={Settings} />
-      <Stack.Screen options = {{headerShown: false,}} name = "Reauthentication" component={Reauthentication} />
-      <Stack.Screen options = {{headerShown: false,}} name = "ChangePassword" component={ChangePassword} />
-      <Stack.Screen options = {{headerShown: false,}} name = "ChangeEmail" component={ChangeEmail} />
-      <Stack.Screen options = {{headerShown : false}} name="Signup" component={Signup} />
-      <Stack.Screen options={{headerShown: false,}} name = "EditProfile" component={EditProfile} />
-      <Stack.Screen options={{headerShown: false,}} name = "BottomTab" component={BottomTab} />
-      <Stack.Screen options={{headerShown: false,}} name = "AddBillsPage" component={AddBillsPage} />
-      <Stack.Screen options={{headerShown: false,}} name = "BillDetails" component={BillDetails} />
-      {/* <Stack.Screen name = "Homepage" component={HomePage} /> */}
-      {/* <Stack.Screen options = {{headerShown : false}} name = "Homepage" component={HomePage} />
-      <Stack.Screen options={{headerShown: false,}} name = "UserAccount" component={UserAccount} /> */}
-    </Stack.Navigator>
-  </NavigationContainer>
+    <SafeAreaProvider>
+      <NavigationContainer>
+      <Stack.Navigator>
+        
+        <Stack.Screen options={{headerShown: false,}} name = "LoadingScreen" component={LoadingScreen} />
+        <Stack.Screen options = {{headerShown : false}} name="Login" component={Login} />
+        <Stack.Screen options = {{headerShown : false}} name = "ViewBills" component={ViewBills} />
+        <Stack.Screen options={{headerShown: false,}} name = "UserAccount" component={UserAccount} />
+        <Stack.Screen options = {{headerShown: false,}} name = "Settings" component={Settings} />
+        <Stack.Screen options = {{headerShown: false,}} name = "Reauthentication" component={Reauthentication} />
+        <Stack.Screen options = {{headerShown: false,}} name = "ChangePassword" component={ChangePassword} />
+        <Stack.Screen options = {{headerShown: false,}} name = "ChangeEmail" component={ChangeEmail} />
+        <Stack.Screen options = {{headerShown : false}} name="Signup" component={Signup} />
+        <Stack.Screen options={{headerShown: false,}} name = "EditProfile" component={EditProfile} />
+        <Stack.Screen options={{headerShown: false,}} name = "BottomTab" component={BottomTab} />
+        <Stack.Screen options={{headerShown: false,}} name = "AddBillsPage" component={AddBillsPage} />
+        <Stack.Screen options={{headerShown: false,}} name = "BillDetails" component={BillDetails} />
+        {/* <Stack.Screen name = "Homepage" component={HomePage} /> */}
+        {/* <Stack.Screen options = {{headerShown : false}} name = "Homepage" component={HomePage} />
+        <Stack.Screen options={{headerShown: false,}} name = "UserAccount" component={UserAccount} /> */}
+      </Stack.Navigator>
+      </NavigationContainer>
+    </SafeAreaProvider>
+    
   );
 }
 

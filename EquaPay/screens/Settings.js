@@ -50,7 +50,7 @@ export default function Setting(){
       }
 
       const backToPreviousScreen = () => {
-        navigation.navigate("UserAccount");
+        navigation.navigate("Account");
     }
 
 
