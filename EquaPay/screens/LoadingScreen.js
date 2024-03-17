@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View, Image, Button, Pressable, TouchableOpacity } from 'react-native'
 import * as React from "react"
 import { useCallback } from 'react';
-
+import { useNavigation } from '@react-navigation/native';
 import Logo from "../assets/img/logo-removebg.png";
 import Union from "../assets/img/Union.svg";
 import { LinearGradient as Gradient } from 'expo-linear-gradient';
@@ -15,7 +15,9 @@ import Svg, {
 import { useFonts } from 'expo-font';
 
 
-const LoadingScreen= ({ navigation }) => {
+const LoadingScreen= () => {
+
+  const navigation = useNavigation();
   return (
     <View style={[styles.container]}>
       <Image source={Logo} 
@@ -28,11 +30,11 @@ const LoadingScreen= ({ navigation }) => {
       
       <View style={[styles.buttonContainer]}>
         <TouchableOpacity style={[styles.button]} onPress={() => navigation.navigate('Login')}>
-          <Text style={[styles.baseText]} >Login</Text>
+          <Text style={[styles.baseText]}>Login</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={[styles.button]} onPress={() => navigation.navigate('Signup')}>
-          <Text style={[styles.baseText]} >Sign up</Text>
+          <Text style={[styles.baseText]}>Sign up</Text>
         </TouchableOpacity>
       </View>
       

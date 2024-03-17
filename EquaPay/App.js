@@ -2,6 +2,7 @@ import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import Login from './screens/Login';
 import Signup from './screens/Signup';
 import ViewBills from './screens/ViewBills';
@@ -33,7 +34,6 @@ export default function App() {
       
       <Stack.Screen options={{headerShown: false,}} name = "LoadingScreen" component={LoadingScreen} />
       <Stack.Screen options = {{headerShown : false}} name="Login" component={Login} />
-      <Stack.Screen options = {{headerShown : false}} name = "ViewBills" component={ViewBills} />
       <Stack.Screen options={{headerShown: false,}} name = "UserAccount" component={UserAccount} />
       <Stack.Screen options = {{headerShown: false,}} name = "Settings" component={Settings} />
       <Stack.Screen options = {{headerShown: false,}} name = "Reauthentication" component={Reauthentication} />
