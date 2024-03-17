@@ -35,7 +35,7 @@ const Login = () => {
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, user => {
             if (user) {
-                navigation.navigate("ViewBills") // when logged in, navigate to the homepage
+                navigation.navigate("BottomTab",{screen:'View Bills'}) // when logged in, navigate to the homepage
             }
         }
         )
@@ -49,7 +49,7 @@ const Login = () => {
                 // Successfully signed in
                 const user = userCredentials.user; // after signing in, assign the user to the userCredential
                 console.log("User signed in with email: ", user.email, user.uid); // user ID is automatically and uniquely generated for each user
-                navigation.navigate("BottomTab",{screen:'Home'}) //navigate to next screen
+                navigation.navigate("BottomTab",{screen:'View Bills'}) //navigate to next screen
 
             })
             .catch(error => {
@@ -64,8 +64,6 @@ const Login = () => {
                     alert('Please enter your login details.');
                 }
             });
-            //navigation.navigate("BottomTab",{screen:'Home'}) //TESTINGG ONLY WILL REMOVE LATER
-         
     };
 
     // function that is used to display the forgot password popup

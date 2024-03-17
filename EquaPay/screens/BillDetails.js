@@ -130,7 +130,7 @@ const BillDetails = ({ route }) => {
 
   // navigate back to the previous screen
   const backToPreviousScreen = () => {
-    navigation.navigate("AddBillsPage");
+    navigation.navigate("Add Bills");
   }
 
 
@@ -145,7 +145,7 @@ const BillDetails = ({ route }) => {
     try {
       await AsyncStorage.removeItem(billId);
       console.log('Bill deleted successfully!');
-      navigation.navigate("ViewBills"); // Redirect to the desired screen after deletion
+      navigation.navigate("View Bills"); // Redirect to the desired screen after deletion
     }
     catch (error) {
       console.error('Error deleting bill: ', error);
@@ -500,7 +500,7 @@ useEffect(() => {
 
       console.log('Bill stored in database', docRef.id); // test to see if it was stored in the database
       Alert.alert('Success', 'Bill submitted successfully.');
-      navigation.navigate("ViewBills");
+      navigation.navigate("View Bills");
     }
     catch (error) { // bill cant be submitted and stored
       console.error("Error submitting bill: ", error);
