@@ -6,6 +6,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Dropdown } from 'react-native-element-dropdown';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getAuth } from 'firebase/auth';
 import { auth, firestore } from '../firebase' // used for authentication
 import { getStorage, ref, uploadBytes } from "firebase/storage";
 import * as ImagePicker from 'expo-image-picker';
@@ -37,6 +38,7 @@ const BillDetails = ({ route }) => {
   const [hasInteracted, setHasInteracted] = useState(false);
   const [userEmail, setUserEmail] = useState(''); // State to store users email
   const [dropdownOptions, setDropdownOptions] = useState([]);
+  const auth = getAuth();
 
   const [image, setImage] = useState(null);
 
@@ -294,51 +296,55 @@ const BillDetails = ({ route }) => {
 
 
 // used to fetch bill data from async storage. it also fetches participants full names from the database 
-  useEffect(() => {
-    const fetchBillData = async () => {
-      setIsLoading(true);
-  
-      try {
-        const storedBillData = await AsyncStorage.getItem(billId); // Fetch the bill data from AsyncStorage
-        console.log('Bill ID: ', billId) // --> this was just to reference the bill ID to make sure it was being pulled correctly from async storage
+useEffect(() => {
+  const fetchBillData = async () => {
+    setIsLoading(true);
 
-        if (storedBillData !== null) { // if the bill data exists
-          const data = JSON.parse(storedBillData); // Parse the JSON data
-          // sets all the data to the corresponding states
-          setUserEmail(data.userEmail);
-          setBillName(data.groupName);
-          setBillCurrency(data.currency);
-          setParticipants(data.participants);
-          setIsLoading(false);
-  
-          // querying the database to find participants first nane to be displayed. names are just for displaying and internally, emails are referenced.
-          const usersRef = collection(db, "users");
-          const fetchedOptions = await Promise.all(
-            data.participants.map(async (participant) => {
-              const q = query(usersRef, where("email", "==", participant)); // query to find the participant's full name based on their email
-              const querySnapshot = await getDocs(q);
-              const participantData = querySnapshot.docs[0]?.data();
-              return {
-                label: participantData ? participantData.fullName : "Unknown", // unknown fallback if nothing is found
-                value: participant
-              };
-            })
-          );
-  
-          setDropdownOptions(fetchedOptions); // set whatever is fetched (names) as options in the dropdown menu
-        } else {
-          console.log('No data available!');
-          setIsLoading(false);
-        }
-      } catch (error) {
-        console.error('Error fetching bill data and participant names: ', error);
+    try {
+      const storedBillData = await AsyncStorage.getItem(billId);
+      if (storedBillData !== null) {
+        const data = JSON.parse(storedBillData);
+        setBillName(data.groupName);
+        setBillCurrency(data.currency);
+        setParticipants(data.participants);
+        setIsLoading(false);
+
+        const usersRef = collection(db, "users");
+        const currentUserEmail = auth.currentUser.email.toLowerCase(); // Convert current user's email to lowercase for comparison
+        const fetchedOptions = await Promise.all(
+          data.participants.map(async (participant) => {
+            const q = query(usersRef, where("email", "==", participant)); // Keep the participant email as it is for the query
+            const querySnapshot = await getDocs(q);
+            const participantData = querySnapshot.docs[0]?.data();
+
+            let label = participantData
+              ? participant.toLowerCase() === currentUserEmail // Convert participant email to lowercase only for comparison
+                ? `${participantData.fullName} (You)` // Append "(You)" if current user
+                : participantData.fullName
+              : "Unknown";
+
+            return {
+              label: label,
+              value: participant
+            };
+          })
+        );
+
+        setDropdownOptions(fetchedOptions);
+      } else {
+        console.log('No data available!');
         setIsLoading(false);
       }
-    };
-  
-    fetchBillData();
-  }, [billId]);
-  
+    } catch (error) {
+      console.error('Error fetching bill data and participant names: ', error);
+      setIsLoading(false);
+    }
+  };
+
+  fetchBillData();
+}, [billId, auth.currentUser.email]);
+
+
   
   // Maps the participants to the structure of the drop down menu. CAN DELETE THIS LATER, may want to keep it for now in case something doesnt work
   const participantOptions = participants.map((participant) => ({
@@ -424,11 +430,26 @@ const BillDetails = ({ route }) => {
   // Function that stores the entered bill details into the database. Probably the most important function here.
   const handleSubmitBill = async () => {
     // Validation to ensure all required fields are filled out
-    if (!description || !billTotalAmount || !billName || selectedParticipants.length === 0) {
+    if (!description || !billTotalAmount || !billName || selectedParticipants.length === 0 || !selectedParticipant || !splitType || !date) {
       Alert.alert('Error', 'Please complete all required fields.');
       return;
     }
-
+  
+    // Additional validation for participant amounts if split type is not 'equal'
+    let amountsValidationFailed = false;
+    if (splitType !== 'equal') {
+      for (const participant of selectedParticipants) {
+        if (!participantAmounts[participant] || participantAmounts[participant] <= 0) {
+          amountsValidationFailed = true;
+          break; // Exit the loop early if any validation fails
+        }
+      }
+  
+      if (amountsValidationFailed) {
+        Alert.alert('Error', 'Please ensure all selected participants have valid amounts.');
+        return;
+      }
+    }
     const billDeadlineTimestamp = Timestamp.fromDate(date); // deadline converted to a timestamp type since database field stores it in this type
 
     // this is to make sure it will store the correct amounts for any split type for each participant
@@ -456,7 +477,7 @@ const BillDetails = ({ route }) => {
         billTotalAmount: parseFloat(billTotalAmount),
         currency: currency,
         participants: participantsWithAmounts, // stores selected participants with their amounts
-        paidBy: selectedParticipant,
+        billOwner: selectedParticipant,
         billDeadline: billDeadlineTimestamp,
         billSplitType: splitType
       });
@@ -519,7 +540,7 @@ const BillDetails = ({ route }) => {
           value={description}
         />
 
-        <Text style={styles.subtitle}>Paid by</Text>
+        <Text style={styles.subtitle}>Bill Owner</Text>
         <Dropdown
   style={styles.input}
   placeholder="Who paid for this bill?"
