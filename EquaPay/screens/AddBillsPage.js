@@ -10,7 +10,7 @@ import { lightBlue } from '@mui/material/colors';
 import { MaterialIcons } from '@expo/vector-icons'; // Importing MaterialIcons for the garbage can icon
 import firebase from 'firebase/app';
 import { auth, firestore } from '../firebase'
-import { collection, addDoc, serverTimestamp, query, getFirestore, where, getDocs, doc, getDoc } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, getFirestore, where, getDocs, doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native' // used to navigate between screens
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -62,10 +62,6 @@ const CurrencyModal = (props) => {
   );
 };
 
-
-
-
-
 const AddBillsPage = () => {
   const auth = getAuth();
   const [groupName, setGroupName] = useState('');
@@ -81,7 +77,6 @@ const AddBillsPage = () => {
   const [currentUser, setCurrentUser] = useState('');
   const [forceUpdate, setForceUpdate] = useState(false);
   const [isOpen, setIsOpen] = useState(true)
-
 
 
   //useEffect to fetch the userEmail to assign with the bill
@@ -118,53 +113,52 @@ const AddBillsPage = () => {
       handleForceUpdate();
     }, [])
   )
+
+  // new use effect to fetch friends in real time for constant updates.
   useEffect(() => {
-    async function pullFriends() { 
-      try { 
-        const userDocRef = doc(db, 'users', auth.currentUser.uid);
-        const docSnap = await getDoc(userDocRef);
+    if (auth.currentUser) {
+      const userDocRef = doc(db, 'users', auth.currentUser.uid);
+  
+      getDoc(userDocRef).then(docSnap => {
         if (docSnap.exists()) {
           const userData = docSnap.data();
-          setCurrentUser(userData.email);
-    
-          // Initialize friendsList with the current user's data
-          const friendsList = [{
-            label: `${userData.fullName} (You)`, // Label the current user with their full name and "(You)"
-            value: userData.email, // Use the current user's email as the value
-          }];
-    
           const q = query(collection(db, "friends"), where("befriender", "==", userData.email));
-          const querySnapshot = await getDocs(q);
-    
-          for (const doc of querySnapshot.docs) {
-            const friendEmail = doc.data().befriended;
-            // Query the 'users' collection to get the friend's document by email
-            const friendQuery = query(collection(db, "users"), where("email", "==", friendEmail));
-            const friendSnapshot = await getDocs(friendQuery);
-    
-            if (!friendSnapshot.empty) {
-              const friendData = friendSnapshot.docs[0].data(); // Assuming email is unique and there's only one document per user
-              friendsList.push({
-                label: friendData.fullName, // Friend's fullName for the label
-                value: friendEmail, // Friend's email as the value
-              });
-            }
-          }
-    
-          setFriends(friendsList);
+  
+          // real-time listener using onSnapshot
+          const unsubscribe = onSnapshot(q, async (querySnapshot) => {
+            const friendsList = [{ label: `${userData.fullName} (You)`, value: userData.email }];
+  
+            const friendPromises = querySnapshot.docs.map(async (friendDoc) => {
+              const friendData = friendDoc.data();
+              const friendEmail = friendData.befriended;
+              const friendQuery = query(collection(db, "users"), where("email", "==", friendEmail));
+  
+              const friendSnapshot = await getDocs(friendQuery);
+              if (!friendSnapshot.empty) {
+                const friendUser = friendSnapshot.docs[0].data();
+                return {
+                  label: friendUser.fullName,
+                  value: friendUser.email,
+                };
+              }
+              return null; // if friend doesn't exist in users collection for some reason
+            });
+  
+            // resolve all promises and update state
+            const friendsFromPromises = await Promise.all(friendPromises);
+            // Filter out any null values if a friend wasn't found and append to the initial list
+            const updatedFriendsList = friendsList.concat(friendsFromPromises.filter(friend => friend !== null));
+            setFriends(updatedFriendsList);
+          });
+  
+          // Cleanup function to unsubscribe from the listener when the component unmounts
+          return () => unsubscribe();
         }
-      } catch (error) {
+      }).catch(error => {
         console.error("Error fetching friends: ", error);
-      }
+      });
     }
-    
-    
-    
-    console.log("user", currentUser);
-    console.log("placeholder", placeholder);
-    console.log("friends", friends);
-    pullFriends();
-  }, [])
+  }, [auth.currentUser, db]);
   
 
   // adds a new participant to the participants array when the user clicks the "Add participant" button
