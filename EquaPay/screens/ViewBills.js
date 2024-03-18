@@ -15,6 +15,7 @@ const ViewBills = () => {
   const [billInfo, setBillInfo] = useState([]);
   const [otherBillInfo, setOtherBillInfo] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
+  const [modalBillInfo, setModalBillInfo] = useState({})
   
   const navigation = useNavigation(); // used to navigate between screens
 
@@ -112,13 +113,26 @@ const ViewBills = () => {
       setModalVisible(true)
 
       const fetchUserData = async () => {
-        if (auth.currentUser) { // If the user is logged in
-          const userDocRef = doc(db, 'billsCreated', data); // Reference to the user stored in the database.
+        if (auth.currentUser) {
+          const userDocRef = doc(db, 'billsCreated', data);
   
           try {
-            const docSnap = await getDoc(userDocRef); // fetches the user's data from the database
+            const docSnap = await getDoc(userDocRef); // fetches the bills's data from the database
             if (docSnap.exists()) { // if the user exists
-              console.log(docSnap.data());
+
+              setModalBillInfo(
+                {
+                  id: docSnap.id,
+                  name: docSnap.data().billName,
+                  description: docSnap.data().description,
+                  date: docSnap.data().billDeadline.toDate().toDateString().split(' ').slice(1).join(' '),
+                  amount: docSnap.data().billTotalAmount,
+                  currency: docSnap.data().currency,
+                  participants: docSnap.data().participants
+                }
+              )
+              
+              
             } 
             else { // if the user does not exist
               console.log("User record not found");
@@ -128,6 +142,8 @@ const ViewBills = () => {
           }
         }
       };
+
+      console.log(modalBillInfo);
   
       fetchUserData();
       
@@ -191,6 +207,10 @@ const ViewBills = () => {
           <Pressable style={[styles.upper]} onPress={hideModal} />
           <View style={[styles.lower]}>
             <Button title="Hide" onPress={hideModal}/>
+            <Text style={[styles.modalText]}>Bill Name: {modalBillInfo.name}</Text>
+            <Text style={[styles.modalText]}>Description: {modalBillInfo.description}</Text>
+            <Text style={[styles.modalText]}>Total Amount: {modalBillInfo.amount}</Text>
+            <Text style={[styles.modalText]}>Participants: {modalBillInfo.amount}</Text>
             <Button title="PAY NOW"/>
           </View>
         </Modal>
@@ -234,6 +254,11 @@ const ViewBills = () => {
 export default ViewBills;
 
 const styles = StyleSheet.create({
+
+  modalText:{
+    fontSize: 20,
+    fontWeight: 600
+  },
 
   fill: { flex: 1 },
   upper: { height: 100, backgroundColor: '#DDD', opacity: 0.5 },
