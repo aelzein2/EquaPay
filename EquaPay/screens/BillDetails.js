@@ -463,7 +463,8 @@ useEffect(() => {
 
       return { // returns the participant and the amount they were assigned
         id: participant,
-        amount: amount.toFixed(2) // Ensuring amount is formatted as currency
+        amount: amount.toFixed(2), // Ensuring amount is formatted as currency
+        paidStatus: false
       };
     });
 

@@ -1,10 +1,12 @@
-import { StyleSheet, Text, View, Alert, TouchableOpacity, Modal, Button, SafeAreaView, Pressable } from "react-native";
+import { StyleSheet, Text, View, Alert, TouchableOpacity, Modal, Button, SafeAreaView, Pressable, TextInput, ActivityIndicator } from "react-native";
 import { useState, useEffect } from "react";
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useNavigation } from '@react-navigation/native' // used to navigate between screens
 import { MaterialIcons } from '@expo/vector-icons';
 import { Divider } from '@rneui/themed';
-import { auth, firestore } from '../firebase' // used for authentication
+import { auth, firestore, functions } from '../firebase' // used for authentication
+import { httpsCallable } from 'firebase/functions';
+import { CardField, useStripe } from '@stripe/stripe-react-native';
 import { doc, getDoc, getFirestore, collection, getDocs, onSnapshot } from 'firebase/firestore';
 
 const db = getFirestore();
@@ -108,53 +110,55 @@ const ViewBills = () => {
 
   const showModal = (data) => {
     console.log(data);
+      if (!modalVisible){
+        setModalVisible(true)
+  
+        const fetchUserData = async () => {
+          if (auth.currentUser) {
+            const userDocRef = doc(db, 'billsCreated', data);
     
-    if (!modalVisible){
-      setModalVisible(true)
-
-      const fetchUserData = async () => {
-        if (auth.currentUser) {
-          const userDocRef = doc(db, 'billsCreated', data);
+            try {
+              const docSnap = await getDoc(userDocRef); // fetches the bills's data from the database
+              if (docSnap.exists()) { // if the user exists
   
-          try {
-            const docSnap = await getDoc(userDocRef); // fetches the bills's data from the database
-            if (docSnap.exists()) { // if the user exists
-
-              setModalBillInfo(
-                {
-                  id: docSnap.id,
-                  name: docSnap.data().billName,
-                  description: docSnap.data().description,
-                  date: docSnap.data().billDeadline.toDate().toDateString().split(' ').slice(1).join(' '),
-                  amount: docSnap.data().billTotalAmount,
-                  currency: docSnap.data().currency,
-                  participants: docSnap.data().participants
-                }
-              )
-              
-              
-            } 
-            else { // if the user does not exist
-              console.log("User record not found");
+                setModalBillInfo(
+                  {
+                    id: docSnap.id,
+                    name: docSnap.data().billName,
+                    description: docSnap.data().description,
+                    date: docSnap.data().billDeadline.toDate().toDateString().split(' ').slice(1).join(' '),
+                    amount: docSnap.data().billTotalAmount,
+                    currency: docSnap.data().currency,
+                    participants: docSnap.data().participants
+                  }
+                )
+                
+                
+              } 
+              else { // if the user does not exist
+                console.log("User record not found");
+              }
+            } catch (error) {
+              console.error("Error fetching user data: ", error);
             }
-          } catch (error) {
-            console.error("Error fetching user data: ", error);
           }
-        }
-      };
-
-      console.log(modalBillInfo);
+        };
   
-      fetchUserData();
-      
-    }
+        console.log(modalBillInfo);
+    
+        fetchUserData();
+        
+      }
+
   }
 
   const hideModal = () => {
     if (modalVisible){
+      setModalBillInfo({})
       setModalVisible(false)
     }
   }
+
 
   // const yourBillsOptions=[
   //   {id:'0', name:'Food', date:'Feb 12, 2024', amount:'100', currency:'CAD', icon:<MaterialIcons name="payments" size={30} color={'#EDEDED'}/>},
@@ -202,7 +206,6 @@ const ViewBills = () => {
           visible={modalVisible}
           animationType="fade"
           transparent
-
         >
           <Pressable style={[styles.upper]} onPress={hideModal} />
           <View style={[styles.lower]}>
@@ -210,10 +213,19 @@ const ViewBills = () => {
             <Text style={[styles.modalText]}>Bill Name: {modalBillInfo.name}</Text>
             <Text style={[styles.modalText]}>Description: {modalBillInfo.description}</Text>
             <Text style={[styles.modalText]}>Total Amount: {modalBillInfo.amount}</Text>
-            <Text style={[styles.modalText]}>Participants: {modalBillInfo.amount}</Text>
+            {modalVisible && modalBillInfo && modalBillInfo.participants && (
+              <Text style={[styles.modalText]}>Participants: </Text>
+            )}
+            {modalVisible && modalBillInfo && modalBillInfo.participants && modalBillInfo.participants.map((item) => (
+              <Text key={item.id} style={[styles.modalText]}>
+                {item.id} : {item.amount} {modalBillInfo.currency} {item.paidStatus ? 'PAID' : 'NOT PAID'}
+              </Text>
+            ))}
+            <Text style={[styles.modalText]}>Deadline: {modalBillInfo.date}</Text>
             <Button title="PAY NOW"/>
           </View>
         </Modal>
+
         <Divider color='#85E5CA'/>
       </View>
 
@@ -256,7 +268,7 @@ export default ViewBills;
 const styles = StyleSheet.create({
 
   modalText:{
-    fontSize: 20,
+    fontSize: 17,
     fontWeight: 600
   },
 
