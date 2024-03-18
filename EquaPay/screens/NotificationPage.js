@@ -1,157 +1,183 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Alert, Modal, TextInput, ActivityIndicator } from 'react-native';
-import { CardField, useStripe } from '@stripe/stripe-react-native';
-import { functions } from '../firebase'; // Adjust this import path as necessary
-import { httpsCallable } from 'firebase/functions';
+import React, { useState, useEffect } from "react";
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from "react-native";
+import { useNavigation } from '@react-navigation/native';
+import { auth, firestore } from '../firebase';
+import { doc, getDoc, collection, onSnapshot } from 'firebase/firestore';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { pubSub } from './PubSub'; // Import PubSub
 
-const NotificationPage = () => {
-  const { confirmPayment } = useStripe();
-  const [email, setEmail] = useState('');
-  const [name, setName] = useState('');
-  const [amount, setAmount] = useState(''); // State variable for the custom amount
-  const [modalVisible, setModalVisible] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+const NotificationsPage = () => {
+  const [userEmail, setUserEmail] = useState('');
+  const [initializing, setInitializing] = useState(true);
+  const [notifications, setNotifications] = useState([]);
+  const [lastClearedTime, setLastClearedTime] = useState(0); // Initialize to 0 to handle cases where there's no value in AsyncStorage
+  const navigation = useNavigation();
 
-  const handleCreatePaymentIntent = async () => {
-    setIsLoading(true);
-    const createPaymentIntent = httpsCallable(functions, 'createPaymentIntent');
-    try {
+  useEffect(() => {
+    // Load the last cleared time
+    const loadLastClearedTime = async () => {
+      const time = await AsyncStorage.getItem('lastClearedTime');
+      setLastClearedTime(parseInt(time) || 0); // Default to 0 if there's no value
+    };
+
+    loadLastClearedTime();
+
+    const fetchUserData = async () => {
+      if (auth.currentUser) {
+        const userDocRef = doc(firestore, 'users', auth.currentUser.uid);
+        const docSnap = await getDoc(userDocRef);
+        if (docSnap.exists()) {
+          setUserEmail(docSnap.data().email);
+        }
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
+  useEffect(() => {
+    if (userEmail) {
+      const billsCreatedRef = collection(firestore, "billsCreated");
       
-      const amountInCents = Math.round(parseFloat(amount) * 100); 
-      const result = await createPaymentIntent({
-        amount: amountInCents,
-        email: email, // Pass the email to the function
+      const unsubscribe = onSnapshot(billsCreatedRef, (querySnapshot) => {
+        const changes = querySnapshot.docChanges();
+        if (initializing) {
+          setInitializing(false);
+          return;
+        }
+  
+        changes.forEach((change) => {
+          if (change.type === "added") {
+            const data = change.doc.data();
+            const billCreatedTime = data.billCreated?.seconds * 1000 || 0;
+          
+            if (billCreatedTime > lastClearedTime) {
+              const notificationId = change.doc.id; // Use the document ID as a unique identifier
+              const notificationTimeStamp = new Date();
+              
+              const notificationMessage = data.billOwner === userEmail ? 
+                `You created a bill: ${data.billName}` : 
+                data.participants?.some(participant => participant.id === userEmail) ? 
+                `You have been added to a bill: ${data.billName}` : null;
+                console.log()
+              if (notificationMessage && !notifications.find(n => n.id === notificationId)) {
+                setNotifications(prev => [...prev, { id: notificationId, message: notificationMessage, timestamp: notificationTimeStamp}]);
+              }
+            }
+          }
+        });
       });
-      setIsLoading(false);
-      return result.data.clientSecret;
-    } catch (error) {
-      setIsLoading(false);
-      console.error('Error creating payment intent:', error);
-      Alert.alert('Payment error', error.message);
-      return null;
+  
+      return () => unsubscribe();
     }
+  }, [userEmail, initializing, lastClearedTime]);
+  
+  useEffect(() => {
+    // Whenever `notifications` changes, publish the new count
+    pubSub.publish('notificationCount', notifications.length);
+  }, [notifications]);
+
+  const clearNotifications = async () => {
+    const currentTime = Date.now();
+    await AsyncStorage.setItem('lastClearedTime', currentTime.toString());
+    setLastClearedTime(currentTime);
+    setNotifications([]);
+  };
+
+  const formatTimestamp = (timestamp) => {
+    const date = new Date(timestamp);
+    const formattedDate = date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+    const formattedTime = date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+    return `${formattedDate} at ${formattedTime}`;
   };
   
-const handlePayment = async () => {
-  if (!email || !name || !amount) { // Ensure amount is provided
-    Alert.alert('Error', 'Please provide email, name, and amount');
-    return;
-  }
 
-  // Log the email to the console
-  console.log('Submitting payment for email:', email);
-
-  const clientSecret = await handleCreatePaymentIntent();
-  if (!clientSecret) return;
-
-  const { error } = await confirmPayment(clientSecret, {
-    paymentMethodType: 'Card',
-    billingDetails: { email, name },
-  });
-
-  if (error) {
-    Alert.alert('Payment failed', error.message);
-  } else {
-    Alert.alert('Success', 'Payment succeeded!');
-    setModalVisible(false); // Close the modal on successful payment
-  }
-};
-
+  const handleNotificationPress = () => {
+    navigation.navigate("View Bills");
+  };
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Payment</Text>
-      <TouchableOpacity style={styles.payButton} onPress={() => setModalVisible(true)}>
-        <Text style={styles.buttonText}>Pay Now</Text>
+      <Text style={styles.title}>Notifications</Text>
+      <TouchableOpacity style={styles.clearButton} onPress={clearNotifications}>
+        <Text style={styles.clearButtonText}>Clear</Text>
       </TouchableOpacity>
+      <ScrollView style={styles.scrollView}>
+  {notifications.length > 0 ? notifications.map((notification, index) => (
+   <TouchableOpacity key={notification.id} style={styles.notificationContainer} onPress={handleNotificationPress}>
+   <Text style={styles.notificationText}>{notification.message}</Text>
+   <Text style={styles.notificationTimestamp}>{formatTimestamp(notification.timestamp)}</Text>
+ </TouchableOpacity>
+ 
+  )) : <Text style={styles.noNotificationsText}>You have no new notifications</Text>}
+</ScrollView>
 
-      <Modal visible={modalVisible} animationType="slide" transparent>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Enter Payment Details</Text>
-            <TextInput style={styles.input} placeholder="Email" value={email} onChangeText={setEmail} keyboardType="email-address" />
-            <TextInput style={styles.input} placeholder="Name on Card" value={name} onChangeText={setName} />
-            <TextInput style={styles.input} placeholder="Amount" value={amount} onChangeText={setAmount} keyboardType="numeric" />
-            <CardField style={styles.cardField} onCardChange={(cardDetails) => {}} />
-            {isLoading ? (
-              <ActivityIndicator size="small" color="#0000ff" />
-            ) : (
-              <TouchableOpacity style={styles.payButton} onPress={handlePayment}>
-                <Text style={styles.buttonText}>Confirm</Text>
-              </TouchableOpacity>
-            )}
-            <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
-              <Text style={styles.buttonText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 };
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: "#153A59", 
+    paddingTop: 50, 
   },
-  title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 20,
-  },
-  input: {
-    backgroundColor: '#fff',
-    borderColor: '#ddd',
-    borderWidth: 1,
-    borderRadius: 5,
-    padding: 10,
-    marginBottom: 10,
-    width: '100%',
-  },
-  cardField: {
-    width: '100%',
-    height: 50,
-    marginBottom: 20,
-  },
-  payButton: {
-    backgroundColor: '#40a7c3',
-    padding: 15,
-    borderRadius: 5,
-    width: '100%',
-    alignItems: 'center',
-  },
-  cancelButton: {
-    backgroundColor: '#999',
-    padding: 15,
-    borderRadius: 5,
+  scrollView: {
     marginTop: 10,
-    width: '100%',
-    alignItems: 'center',
   },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
+  title:{
+    color:"white",
+    fontSize: 30,
+    fontWeight: "600",
+    // move it to the right a bit
+    marginLeft: 22,
+    paddingTop: 30,
   },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    backgroundColor: '#fff',
+  notificationContainer: {
+    backgroundColor: "#fff",
     padding: 20,
-    width: '90%',
-    borderRadius: 10,
+    borderRadius: 10, // Rounded corners for notifications
+    marginHorizontal: 20,
+    marginTop: 10,
+    shadowOpacity: 0.1, // Added shadow for a nicer look
+    shadowRadius: 5,
+    shadowOffset: { height: 3, width: 0 },
   },
-  modalTitle: {
+  notificationText: {
+    fontSize: 16,
+  },
+  clearButton: {
+    margin: 20,
+    backgroundColor: "#40a7c3",
+    padding: 10,
+    borderRadius: 5,
+    alignSelf: "flex-end", // Aligns the button to the right of its container
+    width: 100, // Ensures the button is not too wide
+    alignItems: "center", // Centers the text within the button
+}
+,
+  clearButtonText: {
+    color: "white",
+    fontSize: 16,
+    
+  },
+  noNotificationsText: {
+    color: "white",
     fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
+    textAlign: "center",
+    marginTop: 20,
+  },
+  notificationTimestamp: {
+    fontSize: 12, 
+    color: '#A9A9A9', 
+    marginTop: 4, 
   },
 });
 
-export default NotificationPage;
+export default NotificationsPage;

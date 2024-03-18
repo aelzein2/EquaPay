@@ -17,6 +17,7 @@ import ChangePassword from './screens/ChangePassword';
 import AddBillsPage from './screens/AddBillsPage';
 import BillDetails from './screens/BillDetails';
 import { StripeProvider } from '@stripe/stripe-react-native';
+import NotificationsPage from './screens/NotificationPage';
 
 
 
@@ -44,6 +45,7 @@ export default function App() {
       <Stack.Screen options={{headerShown: false,}} name = "BottomTab" component={BottomTab} />
       <Stack.Screen options={{headerShown: false,}} name = "AddBillsPage" component={AddBillsPage} />
       <Stack.Screen options={{headerShown: false,}} name = "BillDetails" component={BillDetails} />
+      <Stack.Screen options={{headerShown: false,}} name = "NotificationsPage" component={NotificationsPage} />
       {/* <Stack.Screen name = "Homepage" component={HomePage} /> */}
       {/* <Stack.Screen options = {{headerShown : false}} name = "Homepage" component={HomePage} />
       <Stack.Screen options={{headerShown: false,}} name = "UserAccount" component={UserAccount} /> */}
