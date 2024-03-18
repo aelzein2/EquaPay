@@ -110,45 +110,45 @@ const ViewBills = () => {
 
   const showModal = (data) => {
     console.log(data);
-      if (!modalVisible){
-        setModalVisible(true)
+    if (!modalVisible){
+      setModalVisible(true)
+
+      const fetchUserData = async () => {
+        if (auth.currentUser) {
+          const userDocRef = doc(db, 'billsCreated', data);
   
-        const fetchUserData = async () => {
-          if (auth.currentUser) {
-            const userDocRef = doc(db, 'billsCreated', data);
-    
-            try {
-              const docSnap = await getDoc(userDocRef); // fetches the bills's data from the database
-              if (docSnap.exists()) { // if the user exists
-  
-                setModalBillInfo(
-                  {
-                    id: docSnap.id,
-                    name: docSnap.data().billName,
-                    description: docSnap.data().description,
-                    date: docSnap.data().billDeadline.toDate().toDateString().split(' ').slice(1).join(' '),
-                    amount: docSnap.data().billTotalAmount,
-                    currency: docSnap.data().currency,
-                    participants: docSnap.data().participants
-                  }
-                )
-                
-                
-              } 
-              else { // if the user does not exist
-                console.log("User record not found");
-              }
-            } catch (error) {
-              console.error("Error fetching user data: ", error);
+          try {
+            const docSnap = await getDoc(userDocRef); // fetches the bills's data from the database
+            if (docSnap.exists()) { // if the user exists
+
+              setModalBillInfo(
+                {
+                  id: docSnap.id,
+                  name: docSnap.data().billName,
+                  description: docSnap.data().description,
+                  date: docSnap.data().billDeadline.toDate().toDateString().split(' ').slice(1).join(' '),
+                  amount: docSnap.data().billTotalAmount,
+                  currency: docSnap.data().currency,
+                  participants: docSnap.data().participants
+                }
+              )
+              
+              
+            } 
+            else { // if the user does not exist
+              console.log("User record not found");
             }
+          } catch (error) {
+            console.error("Error fetching user data: ", error);
           }
-        };
+        }
+      };
+
+      console.log(modalBillInfo);
   
-        console.log(modalBillInfo);
-    
-        fetchUserData();
-        
-      }
+      fetchUserData();
+      
+    }
 
   }
 
