@@ -206,6 +206,7 @@ useEffect(() => {
           <Pressable style={[styles.upper]} onPress={hideModal} />
           <View style={[styles.lower]}>
             <Button title="Hide" onPress={hideModal}/>
+            <Button title="PAY NOW"/>
           </View>
         </Modal>
         <Divider color='#85E5CA'/>
