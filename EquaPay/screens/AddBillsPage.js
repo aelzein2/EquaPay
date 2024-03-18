@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useCallback} from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, TextInput, SafeAreaView, Modal } from 'react-native';
-import { Divider } from '@rneui/themed';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import { useFocusEffect } from '@react-navigation/native';
 import { Dropdown } from 'react-native-element-dropdown';
@@ -15,8 +14,6 @@ import { Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native' // used to navigate between screens
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getAuth } from 'firebase/auth';
-
-import { CircleFlag } from 'react-circle-flags'
 
 const db = getFirestore();
 
@@ -312,8 +309,8 @@ const AddBillsPage = () => {
 
             {/* Create Bill Button */}
             <View style={{display:'flex', justifyContent:'center', alignItems:'flex-end'}}>
-              <TouchableOpacity style={styles.createBillButton} onPress={handleCreateBill} >
-                <Text style={styles.createBillButtonText}>Continue</Text>
+              <TouchableOpacity style={[styles.createBillButton]} onPress={handleCreateBill} >
+                <Text style={[styles.createBillButtonText]}>Continue</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -399,19 +396,18 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: 600,
     marginBottom: 5,
-    marginTop: 15,
-    },
+  },
 
   instructions: {
-    color: 'white',
-    fontSize: 14,
-    marginBottom: 15,
-    },
+  color: 'white',
+  fontSize: 14,
+  marginBottom: 15,
+  },
   
-    placeholder:{
-      color:'#999', 
-      fontSize:17
-    },
+  placeholder:{
+    color:'#999', 
+    fontSize:17
+  },
 
   participantRow: {
     flex: 1,
@@ -419,11 +415,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     gap: 10,
-    
     marginBottom: 10,
   },
   createBillButton: {
-    backgroundColor: '#4CAF50', // Green color for the create button
+    backgroundColor: '#85E5CA', 
     padding: 15,
     borderRadius: 10,
     alignItems: 'center',
@@ -432,7 +427,7 @@ const styles = StyleSheet.create({
     width: 150
   },
   createBillButtonText: {
-    color: 'white',
+    color: '#153A59',
     fontWeight: 'bold',
     fontSize: 18,
   },
