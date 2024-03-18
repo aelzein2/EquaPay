@@ -5,7 +5,7 @@ import { useNavigation } from '@react-navigation/native' // used to navigate bet
 import { MaterialIcons } from '@expo/vector-icons';
 import { Divider } from '@rneui/themed';
 import { auth, firestore } from '../firebase' // used for authentication
-import { doc, getDoc, getFirestore, collection, getDocs, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, getFirestore, collection, getDocs } from 'firebase/firestore';
 
 const db = getFirestore();
 
@@ -45,60 +45,75 @@ const ViewBills = () => {
   }, []);
 
   useEffect(() => {
-    if (auth.currentUser) {
-      const unsubscribe = onSnapshot(collection(db, "billsCreated"), (querySnapshot) => {
-        const newBillInfo = [];
-  
+  const fetchOwnerBillData = async () => {
+    if (auth.currentUser) { 
+      const querySnapshot = await getDocs(collection(db, "billsCreated"));
+      const newBillInfo = [];
+
+      try {
         querySnapshot.forEach((doc) => {
+          
           if (doc.data().billOwner === userEmail) {
             newBillInfo.push({
-              id: doc.id,
+              id: doc.id, // Assuming doc.id is unique
               name: doc.data().billName,
               date: doc.data().billDeadline.toDate().toDateString().split(' ').slice(1).join(' '),
               amount: doc.data().billTotalAmount,
               currency: doc.data().currency,
-              icon: <MaterialIcons name="payments" size={30} color={'#EDEDED'}/>
+              icon:<MaterialIcons name="payments" size={30} color={'#EDEDED'}/>
+              
             });
           }
         });
-  
-        setBillInfo(newBillInfo);
-      });
-  
-      // Unsubscribe from the listener when the component unmounts
-      return () => unsubscribe();
-    }
-  }, [auth.currentUser, userEmail]); // Dependencies array
 
-  useEffect(() => {
-    if (auth.currentUser) {
-      const unsubscribe = onSnapshot(collection(db, "billsCreated"), (querySnapshot) => {
-        const newBillInfo = [];
-  
+        setBillInfo(newBillInfo); 
+
+        //console.log(billInfo)
+      } catch (error) {
+        console.error("Error fetching data: ", error);
+      }
+    }
+  };
+
+  fetchOwnerBillData();
+}, [auth.currentUser, userEmail]);
+
+useEffect(() => {
+  const fetchOthersBillData = async () => {
+    if (auth.currentUser) { 
+      const querySnapshot = await getDocs(collection(db, "billsCreated"));
+      const newBillInfo = [];
+
+      try {
         querySnapshot.forEach((doc) => {
-          doc.data().participants.forEach((participant) => {
-            if (participant.id === userEmail && doc.data().billOwner !== userEmail) {
+          doc.data().participants.forEach((i) => {
+            if (i.id === userEmail && doc.data().billOwner != userEmail){
               newBillInfo.push({
-                id: doc.id, 
+                id: doc.id, // Assuming doc.id is unique
                 name: doc.data().billName,
                 creator: doc.data().billOwner,
                 date: doc.data().billDeadline.toDate().toDateString().split(' ').slice(1).join(' '),
-                amount: participant.amount,
+                amount: i.amount,
                 currency: doc.data().currency,
-                icon: <MaterialIcons name="payments" size={30} color={'#EDEDED'}/>
+                icon:<MaterialIcons name="payments" size={30} color={'#EDEDED'}/>
+                
               });
             }
-          });
+          })
         });
-  
-        setOtherBillInfo(newBillInfo);
-      });
-  
-      // Unsubscribe from the listener when the component unmounts
-      return () => unsubscribe();
+
+        setOtherBillInfo(newBillInfo)
+
+        // console.log(otherBillInfo)
+
+      } catch (error) {
+        console.error("Error fetching data: ", error);
+      }
     }
-  }, [auth.currentUser, userEmail]); // Dependencies array
-  
+  };
+
+  fetchOthersBillData();
+}, [auth.currentUser, userEmail]);
 
 // temporary function to redirect to account detail page for testing purposes.
   const redirectAccountDetail = () => {
