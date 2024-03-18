@@ -15,8 +15,9 @@ exports.createPaymentIntent = functions.https.onCall(async (data, context) => {
   try {
     const paymentIntent = await stripe.paymentIntents.create({
       amount: data.amount,  // Amount is expected in cents
-      currency: 'cad',
-      type: 'Card'  // Use the currency you want
+      currency: 'cad', // you will need to change this to update dynamically based on what currency is in the bill details
+      receipt_email: data.email, // Dynamically attach the email to the payment
+      description: 'EquaPay'  
     });
     return { clientSecret: paymentIntent.client_secret };
   } catch (err) {

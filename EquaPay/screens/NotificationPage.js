@@ -8,6 +8,7 @@ const NotificationPage = () => {
   const { confirmPayment } = useStripe();
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
+  const [amount, setAmount] = useState(''); // State variable for the custom amount
   const [modalVisible, setModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -15,7 +16,12 @@ const NotificationPage = () => {
     setIsLoading(true);
     const createPaymentIntent = httpsCallable(functions, 'createPaymentIntent');
     try {
-      const result = await createPaymentIntent({ amount: 1000 }); // Ensure this is in the smallest currency unit e.g., cents
+      
+      const amountInCents = Math.round(parseFloat(amount) * 100); 
+      const result = await createPaymentIntent({
+        amount: amountInCents,
+        email: email, // Pass the email to the function
+      });
       setIsLoading(false);
       return result.data.clientSecret;
     } catch (error) {
@@ -25,28 +31,31 @@ const NotificationPage = () => {
       return null;
     }
   };
+  
+const handlePayment = async () => {
+  if (!email || !name || !amount) { // Ensure amount is provided
+    Alert.alert('Error', 'Please provide email, name, and amount');
+    return;
+  }
 
-  const handlePayment = async () => {
-    if (!email || !name) {
-      Alert.alert('Error', 'Please provide both email and name');
-      return;
-    }
+  // Log the email to the console
+  console.log('Submitting payment for email:', email);
 
-    const clientSecret = await handleCreatePaymentIntent();
-    if (!clientSecret) return;
+  const clientSecret = await handleCreatePaymentIntent();
+  if (!clientSecret) return;
 
-    const { error } = await confirmPayment(clientSecret, {
-      paymentMethodType: 'Card',
-      billingDetails: { email, name },
-    });
+  const { error } = await confirmPayment(clientSecret, {
+    paymentMethodType: 'Card',
+    billingDetails: { email, name },
+  });
 
-    if (error) {
-      Alert.alert('Payment failed', error.message);
-    } else {
-      Alert.alert('Success', 'Payment succeeded!');
-      setModalVisible(false); // Close the modal on successful payment
-    }
-  };
+  if (error) {
+    Alert.alert('Payment failed', error.message);
+  } else {
+    Alert.alert('Success', 'Payment succeeded!');
+    setModalVisible(false); // Close the modal on successful payment
+  }
+};
 
   return (
     <View style={styles.container}>
@@ -61,6 +70,7 @@ const NotificationPage = () => {
             <Text style={styles.modalTitle}>Enter Payment Details</Text>
             <TextInput style={styles.input} placeholder="Email" value={email} onChangeText={setEmail} keyboardType="email-address" />
             <TextInput style={styles.input} placeholder="Name on Card" value={name} onChangeText={setName} />
+            <TextInput style={styles.input} placeholder="Amount" value={amount} onChangeText={setAmount} keyboardType="numeric" />
             <CardField style={styles.cardField} onCardChange={(cardDetails) => {}} />
             {isLoading ? (
               <ActivityIndicator size="small" color="#0000ff" />
