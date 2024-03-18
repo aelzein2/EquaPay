@@ -1,101 +1,60 @@
-import React, { useState, useEffect, } from 'react';
-import { StyleSheet, Text, View, ScrollView} from "react-native";
-import { useNavigation } from '@react-navigation/native';
-import { doc, getDoc, collection, query, where, getDocs, getFirestore, onSnapshot} from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
+import { StyleSheet, Text, View, Alert, TouchableOpacity } from "react-native";
+import { useState } from "react";
+import { useNavigation } from '@react-navigation/native' // used to navigate between screens
 
 const FriendsPage = () => {
-  const [friends, setFriends] = useState([]);
-  const navigation = useNavigation();
-  const auth = getAuth();
-  const db = getFirestore();
+  
+  const navigation = useNavigation(); // used to navigate between screens
+ 
+ 
+// temporary function to redirect to account detail page for testing purposes.
+  const redirectAccountDetail = () => {
+    navigation.navigate("BottomTab",{screen:'Account'})
+  }
 
-  useEffect(() => {
-    if (auth.currentUser) {
-      const userDocRef = doc(db, 'users', auth.currentUser.uid);
-      
-      getDoc(userDocRef).then(docSnap => {
-        if (docSnap.exists()) {
-          const userData = docSnap.data();
-          const q = query(collection(db, "friends"), where("befriender", "==", userData.email));
-  
-          // Setup a real-time listener using onSnapshot
-          const unsubscribe = onSnapshot(q, (querySnapshot) => {
-            // Use Promise.all to wait for all friend details to be fetched
-            const friendPromises = querySnapshot.docs.map(async (friendDoc) => {
-              const friendData = friendDoc.data();
-              const friendEmail = friendData.befriended;
-              const friendQuery = query(collection(db, "users"), where("email", "==", friendEmail));
-  
-              // Await the query results for each friend
-              const friendSnapshot = await getDocs(friendQuery);
-              if (!friendSnapshot.empty) {
-                const friendUser = friendSnapshot.docs[0].data();
-                return {
-                  label: friendUser.fullName,
-                  value: friendUser.email,
-                };
-              }
-              return null; // In case the friend doesn't exist in users collection
-            });
-  
-            // Resolve all promises and update state
-            Promise.all(friendPromises).then(friendsList => {
-              // Filter out any null values if a friend wasn't found
-              setFriends(friendsList.filter(friend => friend !== null));
-            });
-          });
-  
-          // Cleanup function to unsubscribe from the listener when the component unmounts
-          return () => unsubscribe();
-        }
-      }).catch(error => {
-        console.error("Error fetching friends: ", error);
-      });
-    }
-  }, [auth.currentUser, db]);
-  
+
+
+
+
+
+
+
 
   return (
     <View style={styles.container}>
-    <Text style={styles.title}>Friends</Text>
-    <ScrollView style={styles.scrollView}>
-      {friends.map((friend, index) => (
-        <View style={styles.friendItem} key={index}>
-          <Text style={styles.friendText}>{friend.label}</Text>
-        </View>
-      ))}
-    </ScrollView>
-  </View>
+        <Text> Friends </Text>
+
+        <TouchableOpacity style={styles.button} onPress={redirectAccountDetail}>
+          <Text style={styles.buttonText}>Account Details</Text>
+        </TouchableOpacity>
+      
+    </View>
   );
 };
 
 export default FriendsPage;
 
 const styles = StyleSheet.create({
-  container: {
+
+  container:{
+    backgroundColor:'#153A59',
     flex: 1,
+    flex: 1,
+    justifyContent: "center",
     alignItems: "center",
-    padding: 20,
-    backgroundColor: '#153A59',
   },
-  scrollView: {
-    width: '100%',
+
+  
+  button: {
+    backgroundColor: '#40a7c3', // Light blue
+    padding: 15,
+    borderRadius: 15,
+    alignItems: "center",
+    marginTop: 500,
   },
-  title: {
+  buttonText: {
     color: 'white',
-    fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 20,
-  },
-  friendItem: {
-    backgroundColor: 'white',
-    padding: 20,
-    marginVertical: 8,
-    width: '100%',
-    borderRadius: 10,
-  },
-  friendText: {
     fontSize: 18,
   },
 });
