@@ -88,8 +88,8 @@ export default function Setting(){
 
 
       <View style={[styles.optionContainer]}>
-        {settingOptions.map((option)=> (
-          <TouchableOpacity style={[styles.optionButton]} key={option.key} onPress={option.onPress}>
+        {settingOptions.map((option, index)=> (
+          <TouchableOpacity style={[styles.optionButton]} key={index} onPress={option.onPress}>
             <View style={{display:'flex', flexDirection:'row', alignItems:'center', gap: 33}}>
               <View style={[styles.iconContainer]}>
                 {option.icon}
