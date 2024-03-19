@@ -508,7 +508,8 @@ useEffect(() => {
         participants: participantsWithAmounts, // stores selected participants with their amounts
         billOwner: selectedParticipant,
         billDeadline: billDeadlineTimestamp,
-        billSplitType: splitType
+        billSplitType: splitType,
+        billCreated: Timestamp.now()
       });
 
       let participantEmails = ["noreplyequapay@gmail.com"];
