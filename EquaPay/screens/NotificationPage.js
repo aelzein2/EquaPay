@@ -110,14 +110,14 @@ const NotificationsPage = () => {
         <Text style={styles.clearButtonText}>Clear</Text>
       </TouchableOpacity>
       <ScrollView style={styles.scrollView}>
-  {notifications.length > 0 ? notifications.map((notification, index) => (
-   <TouchableOpacity key={notification.id} style={styles.notificationContainer} onPress={handleNotificationPress}>
-   <Text style={styles.notificationText}>{notification.message}</Text>
-   <Text style={styles.notificationTimestamp}>{formatTimestamp(notification.timestamp)}</Text>
- </TouchableOpacity>
- 
-  )) : <Text style={styles.noNotificationsText}>You have no new notifications</Text>}
-</ScrollView>
+        {notifications.length > 0 ? notifications.map((notification, index) => (
+        <TouchableOpacity key={notification.id} style={styles.notificationContainer} onPress={handleNotificationPress}>
+        <Text style={styles.notificationText}>{notification.message}</Text>
+        <Text style={styles.notificationTimestamp}>{formatTimestamp(notification.timestamp)}</Text>
+      </TouchableOpacity>
+      
+        )) : <Text style={styles.noNotificationsText}>You have no new notifications</Text>}
+      </ScrollView>
 
     </View>
   );

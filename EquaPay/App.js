@@ -35,6 +35,7 @@ export default function App() {
       
       <Stack.Screen options={{headerShown: false,}} name = "LoadingScreen" component={LoadingScreen} />
       <Stack.Screen options = {{headerShown : false}} name="Login" component={Login} />
+      <Stack.Screen options={{headerShown: false,}} name = "BottomTab" component={BottomTab} />
       <Stack.Screen options={{headerShown: false,}} name = "UserAccount" component={UserAccount} />
       <Stack.Screen options = {{headerShown: false,}} name = "Settings" component={Settings} />
       <Stack.Screen options = {{headerShown: false,}} name = "Reauthentication" component={Reauthentication} />
@@ -42,7 +43,6 @@ export default function App() {
       <Stack.Screen options = {{headerShown: false,}} name = "ChangeEmail" component={ChangeEmail} />
       <Stack.Screen options = {{headerShown : false}} name="Signup" component={Signup} />
       <Stack.Screen options={{headerShown: false,}} name = "EditProfile" component={EditProfile} />
-      <Stack.Screen options={{headerShown: false,}} name = "BottomTab" component={BottomTab} />
       <Stack.Screen options={{headerShown: false,}} name = "AddBillsPage" component={AddBillsPage} />
       <Stack.Screen options={{headerShown: false,}} name = "BillDetails" component={BillDetails} />
       <Stack.Screen options={{headerShown: false,}} name = "NotificationsPage" component={NotificationsPage} />
