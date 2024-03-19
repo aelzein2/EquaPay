@@ -8,14 +8,14 @@ import {
   Keyboard,
   TouchableOpacity,
   TextInput,
-  Dimensions
+  Dimensions,
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { useHeaderHeight } from "@react-navigation/elements";
-import { getAuth, updatePassword } from "firebase/auth"
-import { AntDesign } from '@expo/vector-icons'
+import { getAuth, updatePassword } from "firebase/auth";
+import { AntDesign } from "@expo/vector-icons";
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
 export default function ChangePassword({ navigation }) {
   const [password, setPassword] = useState("");
