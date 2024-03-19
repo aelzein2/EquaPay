@@ -34,7 +34,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getAuth } from 'firebase/auth';
 import { auth, firestore } from '../firebase' // used for authentication
-import { getStorage, ref, uploadBytes } from "firebase/storage";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import { stepButtonClasses } from '@mui/material';
@@ -70,6 +70,7 @@ const BillDetails = ({ route }) => {
   const auth = getAuth();
 
   const [image, setImage] = useState(null);
+  const [imageURL, setImageURL] = useState(null);
 
   const pickImage = async () => {
     // No permissions request is necessary for launching the image library
@@ -141,11 +142,13 @@ const BillDetails = ({ route }) => {
   
         const filename = dbID;
         const storage = getStorage();
-        const storageRef = ref(storage, filename);
+        const storageRef = ref(storage, "images/" + filename);
   
         uploadBytes(storageRef, blob).then((snapshot) => {
           console.log('Uploaded Image!');
           console.log(filename);
+          console.log(storageRef);
+          console.log(getDownloadURL(storageRef));
         });
   
   
@@ -499,13 +502,27 @@ useEffect(() => {
 
       return { // returns the participant and the amount they were assigned
         id: participant,
-        amount: amount.toFixed(2) // Ensuring amount is formatted as currency
+        amount: amount.toFixed(2), // Ensuring amount is formatted as currency
+        paidStatus: false
       };
     });
 
     // attempts to store the bill details in the database, with all details needed
     try {
       // all bill form data is stored in the database in 'billsCreated' table. 
+      let participantEmails = ["noreplyequapay@gmail.com"];
+
+      for (let i = 0; i < participantsWithAmounts.length; i++){
+        participantEmails.push(participantsWithAmounts[i].id);
+
+        if (participantsWithAmounts[i].id === selectedParticipant){
+          participantsWithAmounts[i].paidStatus = true
+          console.log("SETTTTTT")
+        }
+        
+      }
+
+
       const docRef = await addDoc(collection(db, 'billsCreated'), {
         description: description,
         userEmail: userEmail,
@@ -519,18 +536,12 @@ useEffect(() => {
         billCreated: Timestamp.now()
       });
 
-      let participantEmails = ["noreplyequapay@gmail.com"];
-
-      for (let i = 0; i < participantsWithAmounts.length; i++){
-        participantEmails.push(participantsWithAmounts[i].id);
-      }
-
       await addDoc(collection(db, 'mail'), {
         to: participantEmails,
         message: {
           subject: 'ALERT: YOU HAVE BEEN ADDED TO A BILL',
           text: 'This is the plaintext section of the email body.',
-          html: 'This is the <code>HTML</code> section of the email body.'
+          html: 'You have been added to a new bill. Please login to EquaPay to view the details.'
       }});
 
       uploadImage(docRef.id);

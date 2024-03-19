@@ -179,10 +179,12 @@ const userOptions=[
 
       <View style={[styles.bodyContainer]}>
         <Text style={[styles.headingText]}>Friends</Text>
+
           <View style={[styles.friendContainer]}>
             <TouchableOpacity style={[styles.friendButton]} onPress={handleAddFriend}>
               <Ionicons name='add-circle-outline' size={30}/>
                <Text style={[styles.addFriend]}>Add{'\n'}Friends</Text>
+
             </TouchableOpacity>
 
     {/* Friends list rendered after the Add Friends button */}
