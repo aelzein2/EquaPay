@@ -91,7 +91,7 @@ export default function Reauthentication({navigation, route}){
           <View style={[styles.bodyContainer]}>
             <TextInput
               placeholder="Password"
-              placeholderTextColor="white"
+              placeholderTextColor="#EDEDED"
               onChangeText={(password) => setPassword(password)}
               value={password}
               autoCapitalize="none"
