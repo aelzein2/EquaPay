@@ -7,19 +7,88 @@ import { Divider } from '@rneui/themed';
 import { auth, firestore, functions } from '../firebase' // used for authentication
 import { httpsCallable } from 'firebase/functions';
 import { CardField, useStripe } from '@stripe/stripe-react-native';
-import { doc, getDoc, getFirestore, collection, getDocs, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, getFirestore, collection, getDocs, onSnapshot } from 'firebase/firestore';
 
 const db = getFirestore();
 
 const ViewBills = () => {
+  const { confirmPayment } = useStripe();
+  const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
+  const [amount, setAmount] = useState(''); // State variable for the custom amount
+  const [paymentModalVisible, setPaymentModalVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
   const [userEmail, setUserEmail] = useState('');
   const [userFullName, setUserFullName] = useState('');
   const [billInfo, setBillInfo] = useState([]);
   const [otherBillInfo, setOtherBillInfo] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [modalBillInfo, setModalBillInfo] = useState({})
+  const [paidStatus, setPaidStatus] = useState(false);
   
   const navigation = useNavigation(); // used to navigate between screens
+
+  const handleCreatePaymentIntent = async () => {
+    setIsLoading(true);
+    const createPaymentIntent = httpsCallable(functions, 'createPaymentIntent');
+    try {
+      
+      const amountInCents = Math.round(parseFloat(amount) * 100); 
+      const result = await createPaymentIntent({
+        amount: amountInCents,
+        email: email, // Pass the email to the function
+      });
+      setIsLoading(false);
+      return result.data.clientSecret;
+    } catch (error) {
+      setIsLoading(false);
+      console.error('Error creating payment intent:', error);
+      Alert.alert('Payment error', error.message);
+      return null;
+    }
+  };
+
+  const handlePayment = async () => {
+    if (!email || !name || !amount) { // Ensure amount is provided
+      Alert.alert('Error', 'Please provide email, name, and amount');
+      return;
+    }
+  
+    // Log the email to the console
+    console.log('Submitting payment for email:', email);
+  
+    const clientSecret = await handleCreatePaymentIntent();
+    if (!clientSecret) return;
+  
+    const { error } = await confirmPayment(clientSecret, {
+      paymentMethodType: 'Card',
+      billingDetails: { email, name },
+    });
+  
+    if (error) {
+      Alert.alert('Payment failed', error.message);
+    } else {
+
+      let participants = [];
+      const billDocRef = doc(db, "billsCreated", modalBillInfo.id);
+
+      modalBillInfo.participants.forEach((item) => {
+        if (item.id === userEmail){
+          item.paidStatus = true;
+          participants = modalBillInfo.participants;
+        }
+      });
+
+      await updateDoc(billDocRef, {
+        participants: participants
+      });
+      
+      Alert.alert('Success', 'Payment succeeded!');
+      setPaymentModalVisible(false); // Close the modal on successful payment
+      setModalVisible(false);
+    }
+  };
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -113,13 +182,26 @@ const ViewBills = () => {
     if (!modalVisible){
       setModalVisible(true)
 
-      const fetchUserData = async () => {
+      const fetchBillData = async () => {
         if (auth.currentUser) {
           const userDocRef = doc(db, 'billsCreated', data);
-  
+          let participantAmount = 0;
+          let newPaidStatus = false;
+
           try {
             const docSnap = await getDoc(userDocRef); // fetches the bills's data from the database
             if (docSnap.exists()) { // if the user exists
+
+              docSnap.data().participants.forEach((participant) => {
+                if (participant.id === userEmail) {
+                  participantAmount = participant.amount;
+
+                  if (participant.paidStatus)
+                    newPaidStatus = true
+                  else
+                    newPaidStatus = false
+                }
+              })
 
               setModalBillInfo(
                 {
@@ -128,6 +210,7 @@ const ViewBills = () => {
                   description: docSnap.data().description,
                   date: docSnap.data().billDeadline.toDate().toDateString().split(' ').slice(1).join(' '),
                   amount: docSnap.data().billTotalAmount,
+                  ownerParticipantAmount:  participantAmount,
                   currency: docSnap.data().currency,
                   participants: docSnap.data().participants
                 }
@@ -141,12 +224,15 @@ const ViewBills = () => {
           } catch (error) {
             console.error("Error fetching user data: ", error);
           }
+          setAmount(participantAmount)
+          setPaidStatus(newPaidStatus)
         }
       };
 
       console.log(modalBillInfo);
   
-      fetchUserData();
+      
+      fetchBillData();
       
     }
 
@@ -158,24 +244,7 @@ const ViewBills = () => {
       setModalVisible(false)
     }
   }
-
-
-  // const yourBillsOptions=[
-  //   {id:'0', name:'Food', date:'Feb 12, 2024', amount:'100', currency:'CAD', icon:<MaterialIcons name="payments" size={30} color={'#EDEDED'}/>},
-  //   {id:'1', name:'Food', date:'Feb 12, 2024', amount:'100', currency:'CAD', icon:<MaterialIcons name="payments" size={30} color={'#EDEDED'}/>},
-  //   {id:'2', name:'Food', date:'Feb 12, 2024', amount:'100', currency:'CAD', icon:<MaterialIcons name="payments" size={30} color={'#EDEDED'}/>},
-  //   // {id:'2', name:'Logout', icon:<MaterialIcons name="logout" size={28} color={'#EDEDED'}/>, onPress: handleLogout}
-  // ]
-
-  // const othersBillsOptions=[
-  //   {id:'0', name:'Food', creator:'Khanh', date:'Feb 12, 2024', amount:'100', currency:'CAD', icon:<MaterialIcons name="payments" size={30} color={'#EDEDED'}/>},
-  //   {id:'1', name:'Food', creator:'Khanh', date:'Feb 12, 2024', amount:'100', currency:'CAD', icon:<MaterialIcons name="payments" size={30} color={'#EDEDED'}/>},
-  //   {id:'2', name:'Food', creator:'Khanh', date:'Feb 12, 2024', amount:'100', currency:'CAD', icon:<MaterialIcons name="payments" size={30} color={'#EDEDED'}/>},
-  //   // {id:'2', name:'Logout', icon:<MaterialIcons name="logout" size={28} color={'#EDEDED'}/>, onPress: handleLogout}
-  // ]
  
-
-
   return (
     <KeyboardAwareScrollView style={[styles.container]}>
       <Text style = {[styles.titleText]} >View Bills</Text>
@@ -204,7 +273,7 @@ const ViewBills = () => {
         </View>
         <Modal
           visible={modalVisible}
-          animationType="fade"
+          animationType="slide"
           transparent
         >
           <Pressable style={[styles.upper]} onPress={hideModal} />
@@ -222,7 +291,29 @@ const ViewBills = () => {
               </Text>
             ))}
             <Text style={[styles.modalText]}>Deadline: {modalBillInfo.date}</Text>
-            <Button title="PAY NOW"/>
+            <Button title="PAY NOW" disabled={paidStatus ? true : false} onPress={() => setPaymentModalVisible(true)}/>
+
+            <Modal visible={paymentModalVisible} animationType="slide" transparent>
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>Enter Payment Details</Text>
+                  <TextInput style={styles.input} placeholder="Email" value={email} onChangeText={setEmail} keyboardType="email-address" />
+                  <TextInput style={styles.input} placeholder="Name on Card" value={name} onChangeText={setName} />
+                  <Text>Amount Due: {amount} </Text>
+                  <CardField style={styles.cardField} onCardChange={(cardDetails) => {}} />
+                  {isLoading ? (
+                    <ActivityIndicator size="small" color="#0000ff" />
+                  ) : (
+                    <TouchableOpacity style={styles.payButton} onPress={handlePayment}>
+                      <Text style={styles.buttonText}>Confirm</Text>
+                    </TouchableOpacity>
+                  )}
+                  <TouchableOpacity style={styles.cancelButton} onPress={() => setPaymentModalVisible(false)}>
+                    <Text style={styles.buttonText}>Cancel</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
           </View>
         </Modal>
 
@@ -366,5 +457,51 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
     fontSize: 18,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    padding: 20,
+    width: '90%',
+    borderRadius: 10,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  input: {
+    backgroundColor: '#fff',
+    borderColor: '#ddd',
+    borderWidth: 1,
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 10,
+    width: '100%',
+  },
+  cardField: {
+    width: '100%',
+    height: 50,
+    marginBottom: 20,
+  },
+  payButton: {
+    backgroundColor: '#40a7c3',
+    padding: 15,
+    borderRadius: 5,
+    width: '100%',
+    alignItems: 'center',
+  },
+  cancelButton: {
+    backgroundColor: '#999',
+    padding: 15,
+    borderRadius: 5,
+    marginTop: 10,
+    width: '100%',
+    alignItems: 'center',
   },
 });
