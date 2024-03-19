@@ -335,31 +335,37 @@ useEffect(() => {
         const data = JSON.parse(storedBillData);
         setBillName(data.groupName);
         setBillCurrency(data.currency);
-        setParticipants(data.participants);
+        setParticipants(data.participants); // Set all participants initially
         setIsLoading(false);
 
         const usersRef = collection(db, "users");
-        const currentUserEmail = auth.currentUser.email.toLowerCase(); // Convert current user's email to lowercase for comparison
-        const fetchedOptions = await Promise.all(
-          data.participants.map(async (participant) => {
-            const q = query(usersRef, where("email", "==", participant)); // Keep the participant email as it is for the query
-            const querySnapshot = await getDocs(q);
-            const participantData = querySnapshot.docs[0]?.data();
+        const currentUserEmail = auth.currentUser.email.toLowerCase(); // Current user's email in lowercase
 
-            let label = participantData
-              ? participant.toLowerCase() === currentUserEmail // Convert participant email to lowercase only for comparison
-                ? `${participantData.fullName} (You)` // Append "(You)" if current user
-                : participantData.fullName
-              : "Unknown";
+        const fetchedOptions = [];
+        let otherParticipants = []; // List for bill distribution excluding current user
 
-            return {
-              label: label,
+        await Promise.all(data.participants.map(async (participant) => {
+          const q = query(usersRef, where("email", "==", participant));
+          const querySnapshot = await getDocs(q);
+          const participantData = querySnapshot.docs[0]?.data();
+
+          if (participant.toLowerCase() === currentUserEmail) {
+            // Include only the current user in the dropdown options
+            fetchedOptions.push({
+              label: `${participantData.fullName} (You)`,
               value: participant
-            };
-          })
-        );
+            });
+          } else {
+            // Add other participants to a separate list for bill distribution
+            otherParticipants.push({
+              label: participantData ? participantData.fullName : "Unknown",
+              value: participant
+            });
+          }
+        }));
 
-        setDropdownOptions(fetchedOptions);
+        setDropdownOptions(fetchedOptions); // Set dropdown options to include only the current user
+        setParticipants(otherParticipants); // Update participants list to exclude the current user
       } else {
         console.log('No data available!');
         setIsLoading(false);
@@ -372,6 +378,7 @@ useEffect(() => {
 
   fetchBillData();
 }, [billId, auth.currentUser.email]);
+
 
 
   
@@ -558,9 +565,6 @@ useEffect(() => {
           </TouchableOpacity>
         
           <View style={styles.topRightButtons}>
-            <TouchableOpacity onPress={handleSave} style={styles.topButton}>
-              <MaterialIcons name="save" size={24} color="white" />
-            </TouchableOpacity>
             <TouchableOpacity onPress={handleDeleteConfirmation} style={styles.topButton}>
               <MaterialIcons name="delete" size={24} color="white" />
             </TouchableOpacity>
@@ -586,7 +590,7 @@ useEffect(() => {
               containerStyle={[styles.dropdown]}
               itemContainerStyle={[styles.dropdown]}
               selectedTextStyle={[styles.dropdown]}
-              placeholder="Who paid for this bill?"
+              placeholder="Who owns this bill?"
               placeholderStyle={[styles.placeholder]}
               data={dropdownOptions}
               labelField="label"
@@ -645,7 +649,7 @@ useEffect(() => {
 
         
           <Text style={[styles.subtitle]}>Bill Distribution</Text>
-            {dropdownOptions.map((option, index) => (
+            {participants.map((option, index) => (
               <View key={index} style={[styles.participantContainer]}>
                 <TouchableOpacity
                   style={[
