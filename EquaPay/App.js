@@ -6,6 +6,8 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import Login from './screens/Login';
 import Signup from './screens/Signup';
 import ViewBills from './screens/ViewBills';
+import ViewBillsSeeAll from './screens/ViewBillsSeeAll';
+import ViewBillsSeeAllOthers from './screens/ViewBillsSeeAllOthers';
 import LoadingScreen from './screens/LoadingScreen';
 import BottomTab from './screens/BottomTab';
 import UserAccount from './screens/UserAccount';
@@ -46,6 +48,10 @@ export default function App() {
       <Stack.Screen options={{headerShown: false,}} name = "AddBillsPage" component={AddBillsPage} />
       <Stack.Screen options={{headerShown: false,}} name = "BillDetails" component={BillDetails} />
       <Stack.Screen options={{headerShown: false,}} name = "NotificationsPage" component={NotificationsPage} />
+
+      <Stack.Screen options={{headerShown: false,}} name = "ViewBills" component={ViewBills} />
+      <Stack.Screen options={{headerShown: false,}} name = "ViewBillsSeeAll" component={ViewBillsSeeAll} />
+      <Stack.Screen options={{headerShown: false,}} name = "ViewBillsSeeAllOthers" component={ViewBillsSeeAllOthers} />
       {/* <Stack.Screen name = "Homepage" component={HomePage} /> */}
       {/* <Stack.Screen options = {{headerShown : false}} name = "Homepage" component={HomePage} />
       <Stack.Screen options={{headerShown: false,}} name = "UserAccount" component={UserAccount} /> */}
