@@ -1,13 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Dimensions, Image, Alert, } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Dimensions, Image, Alert } from 'react-native';
 import { Divider } from '@rneui/themed';
 import { useNavigation } from '@react-navigation/native';
-import { AntDesign } from '@expo/vector-icons'; // used for the icons
-import { auth, firestore } from '../firebase' // used for authentication
-import { doc, getDoc, getFirestore, query, where, collection, addDoc, getDocs, } from 'firebase/firestore';
-import Ionicons from 'react-native-vector-icons/Ionicons'; // used for the icons
-import { MaterialIcons } from '@expo/vector-icons';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { AntDesign, Ionicons, MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { auth, firestore } from '../firebase';
+import { doc, getDoc, getFirestore, query, where, collection, addDoc, getDocs, onSnapshot } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 
 
@@ -31,36 +28,46 @@ const UserAccount = () => {
   const navigation = useNavigation();
   const [userFullName, setUserFullName] = useState('Loading...'); // State to store the user's full name
   const [userEmail, setUserEmail] = useState('Loading...'); // State to store users email
-
+  const [friends, setFriends] = useState([]);
+  
   useEffect(() => {
     const fetchUserData = async () => {
-      if (auth.currentUser) { // If the user is logged in
-        const userDocRef = doc(db, 'users', auth.currentUser.uid); // Reference to the user stored in the database.
+      if (auth.currentUser) {
+        const userDocRef = doc(db, 'users', auth.currentUser.uid);
 
         try {
-          const docSnap = await getDoc(userDocRef); // fetches the user's data from the database
+          const docSnap = await getDoc(userDocRef);
           if (docSnap.exists()) {
-            const userData = docSnap.data(); // Get the user's data
-            console.log("User's full name is: ", userData.fullName); // Log the user's full name
-            console.log("User's email is: ", userData.email); // Log the user's email
-          
-            setUserFullName(userData.fullName); // Set the user's full name state
-            setUserEmail(userData.email); // Set the user's email state
-          } else {
-            console.log("User record not found");
-            setUserFullName("Name not found");
-            setUserEmail("Email not found");
+            const userData = docSnap.data();
+            setUserFullName(userData.fullName);
+            setUserEmail(userData.email);
+
+            // Fetch friends data
+            const q = query(collection(db, "friends"), where("befriender", "==", userData.email));
+            const unsubscribe = onSnapshot(q, (querySnapshot) => {
+              const friendPromises = querySnapshot.docs.map(async (friendDoc) => {
+                const friendData = friendDoc.data();
+                const friendQuery = query(collection(db, "users"), where("email", "==", friendData.befriended));
+                const friendSnapshot = await getDocs(friendQuery);
+                if (!friendSnapshot.empty) {
+                  return friendSnapshot.docs[0].data().fullName;
+                }
+                return null;
+              });
+              Promise.all(friendPromises).then(friendsList => setFriends(friendsList.filter(friend => friend !== null)));
+            });
+
+            return () => unsubscribe();
           }
-          
         } catch (error) {
           console.error("Error fetching user data: ", error);
-          setUserFullName("Error Loading Name"); 
         }
       }
     };
 
     fetchUserData();
   }, []);
+
 
   function handleAddFriend(){
     Alert.prompt("Add Friend",
@@ -172,17 +179,20 @@ const userOptions=[
 
       <View style={[styles.bodyContainer]}>
         <Text style={[styles.headingText]}>Friends</Text>
-        <View style={[styles.friendContainer]}>
-          <TouchableOpacity style={[styles.friendButton]} onPress={handleAddFriend}>
-            <Ionicons name='add-circle-outline' size={30}/>
-            <Text style={[styles.friendText]}>Add Friends</Text>
-          </TouchableOpacity>
-          {friendsData.map((friend) => (
-            <TouchableOpacity key={friend.key} style={[styles.friendButton]}>
-              <Image source={friendAvatar} style={{ resizeMode:'contain', width: 35, height: 35 }}/>
-              <Text style={[styles.friendText]}>{friend.name}</Text>
+          <View style={[styles.friendContainer]}>
+            <TouchableOpacity style={[styles.friendButton]} onPress={handleAddFriend}>
+              <Ionicons name='add-circle-outline' size={30}/>
+               <Text style={[styles.addFriend]}>Add{'\n'}Friends</Text>
             </TouchableOpacity>
-          ))}
+
+    {/* Friends list rendered after the Add Friends button */}
+    {friends.slice(0, 3).map((friend, index) => (
+      <TouchableOpacity key={index} style={[styles.friendButton]}>
+        <Image source={friendAvatar} style={{ resizeMode: 'contain', width: 35, height: 35 }}/>
+        <Text style={[styles.friendText]}>{friend}</Text>
+      </TouchableOpacity>
+    ))}
+         
         </View>
 
         <View style={{display:'flex', flexDirection:'row', justifyContent:'flex-end', marginVertical: 10}}>
@@ -264,30 +274,38 @@ const styles = StyleSheet.create({
       fontWeight: 600
     },
 
-    friendContainer:{
-      display:'flex',
-      flexDirection:'row',
-      justifyContent:'space-between',
-      alignItems:'center',
+    friendContainer: {
+      display: 'flex',
+      flexDirection: 'row',
+      justifyContent: 'flex-start', // Align items to the left
+      alignItems: 'center',
       marginTop: 20,
+      flexWrap: 'wrap', // Ensure the items wrap if they don't fit in a single line
     },
 
-    friendButton:{
-      display:'flex',
-      justifyContent:'center',
-      alignItems:'center',
-      textAlign:'center',
-      backgroundColor:'#85E5CA',
+    friendButton: {
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      textAlign: 'center',
+      backgroundColor: '#85E5CA',
       borderRadius: 15,
-      width: 71,
+      width: 85,
       height: 90,
-      gap: 10
+      gap: 10,
+      marginRight: 10, // Add space to the right of each button
     },
 
+    addFriend:{
+      color:'black',
+      textAlign:'center',
+      fontSize: 14,
+      fontWeight: 400
+    },
     friendText:{
       color:'black',
       textAlign:'center',
-      fontSize: 13,
+      fontSize: 11,
       fontWeight: 400
     },
 
