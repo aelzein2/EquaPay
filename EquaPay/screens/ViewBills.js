@@ -263,7 +263,6 @@ const ViewBills = () => {
   const hideImageModal = () => {
     if (modalImageVisible){
       setModalImageVisible(false);
-      setImage(null)
     }
   }
 
@@ -342,9 +341,11 @@ const ViewBills = () => {
     if (ownerModalVisible){
       setModalBillInfo({})
       setOwnerModalVisible(false)
+      setImage(null)
     }else if(modalVisible){
       setModalBillInfo({})
       setModalVisible(false);
+      setImage(null)
     }
   }
  
