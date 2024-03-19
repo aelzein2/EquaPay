@@ -44,85 +44,136 @@ export default function Reauthentication({navigation, route}){
     }
 
     return(
-        <View style={styles.container}>
-        <Text style = {styles.screenTitle} >Settings</Text>
-        <TouchableOpacity onPress={backToPreviousScreen} style={styles.backButton}>
-          <AntDesign name="arrowleft" size={24} color="black" />
-      </TouchableOpacity>
-        <KeyboardAwareScrollView
-        contentContainerStyle={[
-          styles.contentContainer,
-          { marginBottom: headerHeight },
-        ]}
-      >
-      <TouchableWithoutFeedback
-          onPress={() => {
-            Keyboard.dismiss();
-          }}
-        >
-        <View>
-        <Text>Input password</Text>
-          <TextInput
-              placeholder={"Enter your password"}
+      //   <View style={styles.container}>
+      //   <Text style = {styles.screenTitle} >Settings</Text>
+      //   <TouchableOpacity onPress={backToPreviousScreen} style={styles.backButton}>
+      //     <AntDesign name="arrowleft" size={24} color="black" />
+      // </TouchableOpacity>
+      //   <KeyboardAwareScrollView
+      //   contentContainerStyle={[
+      //     styles.contentContainer,
+      //     { marginBottom: headerHeight },
+      //   ]}
+      // >
+      // <TouchableWithoutFeedback
+      //     onPress={() => {
+      //       Keyboard.dismiss();
+      //     }}
+      //   >
+      //   <View>
+      //   <Text>Input password</Text>
+      //     <TextInput
+      //         placeholder={"Enter your password"}
+      //         onChangeText={(password) => setPassword(password)}
+      //         value={password}
+      //         autoCapitalize="none"
+      //         secureTextEntry={!isPeeking}
+      //         canPeek={password.length > 0}
+      //         togglePeek={togglePeek}
+      //         style={styles.textBox}
+      //       />
+      //             <View style={styles.buttonContainer}>
+      //   <TouchableOpacity onPress={reauthenticateUser} style={styles.button}>
+      //     <Text style={styles.buttonText}>Authenticate</Text>
+      //   </TouchableOpacity>
+      // </View>
+      //   </View>
+      //   </TouchableWithoutFeedback>
+      //   </KeyboardAwareScrollView>
+      //   </View>
+
+      <KeyboardAwareScrollView style={{backgroundColor:'#153A59'}}>
+        <View style={[styles.container]}>
+          <TouchableOpacity onPress={backToPreviousScreen} style={[styles.backButton]}>
+            <AntDesign name="arrowleft" size={24} color="white" />
+          </TouchableOpacity>
+          <Text style = {[styles.titleText]} >Authentication</Text>
+          <View style={[styles.bodyContainer]}>
+            <TextInput
+              placeholder="Password"
+              placeholderTextColor="white"
               onChangeText={(password) => setPassword(password)}
               value={password}
               autoCapitalize="none"
               secureTextEntry={!isPeeking}
               canPeek={password.length > 0}
               togglePeek={togglePeek}
-              style={styles.textBox}
+              style={[styles.input]}
             />
-                  <View style={styles.buttonContainer}>
-        <TouchableOpacity onPress={reauthenticateUser} style={styles.button}>
-          <Text style={styles.buttonText}>Authenticate</Text>
-        </TouchableOpacity>
-      </View>
+            <Text style={[styles.subtitle]}>Please enter your password for authentication</Text>
+          </View>
+
+          <View style={{flexDirection:'row', justifyContent:'flex-end'}}>
+            <TouchableOpacity onPress={reauthenticateUser} style={styles.submitButton}>
+              <Text style={[styles.submitButtonText]}>Submit</Text>
+            </TouchableOpacity> 
+          </View>
+          
         </View>
-        </TouchableWithoutFeedback>
-        </KeyboardAwareScrollView>
-        </View>
+      </KeyboardAwareScrollView>
     )
 }
 
 //same css as forgot password
 const styles = StyleSheet.create({
-      screenTitle: {
-        fontSize: 30,
-        fontWeight: 'bold',
-        color: '#355070', 
-        marginTop: 70,
-        marginBottom: 20,
-        fontFamily: 'Helvetica Neue', 
-      },
-      container: {
-        flex: 1,
-        justifyContent: 'flex-start', 
-        alignItems: 'center',
-        backgroundColor: '#e0f4f1',
-      },
-      backButton: {
-        position: 'absolute',
-        top: 80, 
-        left: 20, // Safe area padding
-        zIndex: 10, // Ensures that the touchable is clickable above all other elements
-      },
-      buttonContainer: {
-        width: width * 0.6,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginTop: 40,
-      },
-      button: {
-        backgroundColor: '#40a7c3',
-        width: '100%',
-        padding: 15,
-        borderRadius: 15,
-        alignItems: 'center',
-        marginTop: 10,
-      },
-      buttonText: {
-        color: 'white',
-        fontWeight: 'bold',
-        fontSize: 18,
-      },
-  });
+
+  container: {
+    backgroundColor:'#153A59',
+    flex: 1,
+    paddingTop:"20%",
+    paddingHorizontal:'5%',
+    gap: 12
+  },
+
+  titleText:{
+    color:"white",
+    fontSize: 30,
+    fontWeight: "600",
+  },
+
+  backButton: {
+    justifyContent:'center',
+    alignItems:'center',
+    backgroundColor:"#366B7C",
+    borderRadius:"100%",
+    width: 35,
+    height: 35
+  },
+
+  bodyContainer:{
+    justifyContent:'center',
+    alignItems:'flex-start',
+    marginTop: 20,
+    gap:10
+  },
+
+  input: { 
+    paddingVertical: 10,
+    borderBottomColor:"white",
+    borderBottomWidth: 1,
+    fontSize: 20,
+    width: '100%',
+    color:"white",
+  },
+
+  subtitle: {
+    color: 'white',
+    fontSize: 12,
+  },
+
+  submitButton: {
+    backgroundColor: '#85E5CA', 
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 30,
+    marginBottom: 40,
+    width: 150
+  },
+
+  submitButtonText: {
+    color: '#153A59',
+    fontWeight: 'bold',
+    fontSize: 18,
+  },
+});

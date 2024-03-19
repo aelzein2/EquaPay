@@ -61,7 +61,7 @@ export default function Setting(){
   }
 
   const handleChangeEmail = () =>{
-    navigation.navigate("Reauthentication", { id: 1 })
+    navigation.navigate("Reauthentication", { id: 2 })
   }
 
   const settingOptions =[
@@ -71,11 +71,6 @@ export default function Setting(){
 
 
   return(
-      // <View style={styles.container}>
-      // <Text style = {styles.screenTitle} >Settings</Text>
-         
-      // </View>
-
     <KeyboardAwareScrollView style={{backgroundColor:'#153A59'}}>
       <View style={[styles.container]}>
         
@@ -165,56 +160,5 @@ const styles = StyleSheet.create({
       color:'white',
       fontSize: 16,
       fontWeight: 400
-    },
-
-    accountSection: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingVertical: 12,
-      paddingHorizontal: 15,
-      backgroundColor: 'rgba(190, 234, 241, 0.9)', 
-      marginTop: 40, 
-      width: width * 0.9, 
-      borderRadius: 20, 
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.25,
-      shadowRadius: 3.84,
-      elevation: 5,
-    },
-    avatarPlaceholder: {
-      width: 50,
-      height: 50,
-      borderRadius: 25,
-      backgroundColor: '#d0d0d0', 
-      marginRight: 10,
-    },
-    accountText: {
-      fontSize: 18,
-      color: '#000',
-    },
-
-    logoutButton: {
-      backgroundColor: '#40a7c3', // Light blue
-      padding: 15,
-      borderRadius: 15,
-      alignItems: "center",
-      marginTop: 550,
-      width: width * 0.8,
-      
-    },
-    buttonText: {
-      color: 'white',
-      fontWeight: 'bold',
-      fontSize: 18,
-    },
-
-    screenTitle: {
-      fontSize: 30,
-      fontWeight: 'bold',
-      color: '#355070', 
-      marginTop: 70,
-      marginBottom: 20,
-      fontFamily: 'Helvetica Neue', 
     },
 });
