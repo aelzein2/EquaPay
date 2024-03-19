@@ -5,6 +5,7 @@ import { auth, firestore } from '../firebase';
 import { doc, getDoc, collection, onSnapshot } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { pubSub } from './PubSub'; // Import PubSub
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const NotificationsPage = () => {
   const [userEmail, setUserEmail] = useState('');
@@ -103,80 +104,95 @@ const NotificationsPage = () => {
   const handleNotificationPress = () => {
     navigation.navigate("View Bills");
   };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Notifications</Text>
       <TouchableOpacity style={styles.clearButton} onPress={clearNotifications}>
-        <Text style={styles.clearButtonText}>Clear</Text>
+        <Text style={[styles.clearButtonText]}>Clear All</Text>
       </TouchableOpacity>
       <ScrollView style={styles.scrollView}>
-  {notifications.length > 0 ? notifications.map((notification, index) => (
-   <TouchableOpacity key={notification.id} style={styles.notificationContainer} onPress={handleNotificationPress}>
-   <Text style={styles.notificationText}>{notification.message}</Text>
-   <Text style={styles.notificationTimestamp}>{formatTimestamp(notification.timestamp)}</Text>
- </TouchableOpacity>
- 
-  )) : <Text style={styles.noNotificationsText}>You have no new notifications</Text>}
-</ScrollView>
+        {notifications.length > 0 ? notifications.map((notification, index) => (
+        <TouchableOpacity key={notification.id} style={[styles.notificationContainer]} onPress={handleNotificationPress}>
+        <MaterialCommunityIcons name="bell-check-outline" size={30} color="#EDEDED" />
+        <View style={[styles.notificationTextContainer]}>
+          <Text style={[styles.notificationText]}>{notification.message}</Text>
+          <Text style={styles.notificationTimestamp}>{formatTimestamp(notification.timestamp)}</Text>
+        </View>
+        
+      </TouchableOpacity>
+      
+        )) : <Text style={styles.noNotificationsText}>You have no new notifications</Text>}
+      </ScrollView>
 
     </View>
   );
 };
 const styles = StyleSheet.create({
   container: {
+    backgroundColor:'#153A59',
     flex: 1,
-    backgroundColor: "#153A59", 
-    paddingTop: 50, 
+    paddingTop:"20%",
+    paddingHorizontal:'5%',
+    gap: 12
   },
+
   scrollView: {
-    marginTop: 10,
+    borderTopWidth:1,
+    borderTopColor:'#85E5CA'
+
   },
+
   title:{
     color:"white",
     fontSize: 30,
     fontWeight: "600",
-    // move it to the right a bit
-    marginLeft: 22,
-    paddingTop: 30,
   },
   notificationContainer: {
-    backgroundColor: "#fff",
+    flexDirection:'row',
+    justifyContent:'flex-start',
+    alignItems:'center',
     padding: 20,
-    borderRadius: 10, // Rounded corners for notifications
-    marginHorizontal: 20,
-    marginTop: 10,
-    shadowOpacity: 0.1, // Added shadow for a nicer look
-    shadowRadius: 5,
-    shadowOffset: { height: 3, width: 0 },
+    gap: 10,
+    borderBottomWidth: 1,
+    borderBottomColor:'#85E5CA'
   },
+
+  notificationTextContainer:{
+    flex: 1,
+    gap:5
+  },
+  
   notificationText: {
+    color:'#EDEDED',
     fontSize: 16,
+    fontWeight: 600
   },
+
   clearButton: {
-    margin: 20,
-    backgroundColor: "#40a7c3",
-    padding: 10,
-    borderRadius: 5,
+    backgroundColor: "#366B7C",
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderRadius: 10,
     alignSelf: "flex-end", // Aligns the button to the right of its container
-    width: 100, // Ensures the button is not too wide
     alignItems: "center", // Centers the text within the button
-}
-,
+},
+
   clearButtonText: {
     color: "white",
     fontSize: 16,
-    
+    fontWeight:600
   },
+  
   noNotificationsText: {
-    color: "white",
-    fontSize: 18,
+    color: "#EDEDED",
+    fontSize: 16,
     textAlign: "center",
     marginTop: 20,
   },
   notificationTimestamp: {
     fontSize: 12, 
-    color: '#A9A9A9', 
-    marginTop: 4, 
+    color: '#85E5CA', 
   },
 });
 

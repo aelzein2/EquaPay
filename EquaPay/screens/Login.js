@@ -127,7 +127,7 @@ const Login = () => {
                 <View style={[styles.inputContainer]}>
                     <TextInput
                         placeholder="Email Address"
-                        placeholderTextColor="white"
+                        placeholderTextColor="#EDEDED"
                         value={email}
                         onChangeText={text => setEmail(text)}
                         style={[styles.input]}
@@ -135,7 +135,7 @@ const Login = () => {
 
                     <TextInput
                         placeholder="Password"
-                        placeholderTextColor="white"
+                        placeholderTextColor="#EDEDED"
                         value={password}
                         onChangeText={text => setPassword(text)}
                         style={[styles.input]}
@@ -152,17 +152,16 @@ const Login = () => {
                 <Modal isVisible={isModalVisible} style={styles.modal}>
                     <View style={styles.modalContainer}>
                         <TouchableOpacity style={styles.iconButton} onPress={() => setModalVisible(false)}>
-                            <Ionicons name="close" size={24} color="black" />
+                            <Ionicons name="close" size={24} color="#EDEDED" />
                         </TouchableOpacity>
 
-                        <Text style={styles.modalTitle}>Forgot Password</Text>
-                        <Text style={styles.forgotText}>Enter your email to reset your password. We'll send a link if the account is currently registered.</Text>
+                        <Text style={[styles.modalTitle]}>Forgot Password</Text>
+                        <Text style={[styles.forgotText]}>Enter your email to reset your password. We'll send a link if the account is currently registered.</Text>
 
                         <TextInput
                             value={resetEmail}
                             onChangeText={setResetEmail}
                             style={[styles.modalInput]}
-                            
                         />
                         <TouchableOpacity onPress={sendResetEmail} style={styles.sendButton}>
                             <Text style={[styles.buttonText]}>Send</Text>
@@ -235,10 +234,11 @@ const styles = StyleSheet.create({
     },
 
     modalInput:{
-        borderBottomColor:"black",
+        borderBottomColor:"#EDEDED",
         borderBottomWidth: 1,
         width:'100%',
         fontSize: 15,
+        color:'#EDEDED'
     },
 
     buttonContainer: {
@@ -301,7 +301,7 @@ const styles = StyleSheet.create({
         margin: 0,
     },
     modalContainer: {
-        backgroundColor: 'white',
+        backgroundColor: '#225982',
         paddingTop: 22,
         paddingHorizontal: 22,
         paddingBottom: 22,
@@ -318,6 +318,7 @@ const styles = StyleSheet.create({
     },
 
     modalTitle: {
+        color:'white',
         fontWeight: 'bold',
         fontSize: 20,
         marginBottom: 15,
@@ -325,6 +326,7 @@ const styles = StyleSheet.create({
     },
 
     forgotText: {
+        color:'white',
         fontSize: 16,
         marginBottom: 15,
         textAlign: 'center',
