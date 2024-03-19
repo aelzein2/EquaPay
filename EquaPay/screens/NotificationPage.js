@@ -111,7 +111,7 @@ const NotificationsPage = () => {
       <TouchableOpacity style={styles.clearButton} onPress={clearNotifications}>
         <Text style={[styles.clearButtonText]}>Clear All</Text>
       </TouchableOpacity>
-      <ScrollView style={styles.scrollView}>
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {notifications.length > 0 ? notifications.map((notification, index) => (
         <TouchableOpacity key={notification.id} style={[styles.notificationContainer]} onPress={handleNotificationPress}>
         <MaterialCommunityIcons name="bell-check-outline" size={30} color="#EDEDED" />
