@@ -93,7 +93,7 @@ const Signup = () => {
         <View style={[styles.inputContainer]}>
           <TextInput
               placeholder="Full Name"
-              placeholderTextColor="white"
+              placeholderTextColor="#EDEDED"
               value={fullName}
               onChangeText={setFullName}
               style={[styles.input]}
@@ -101,7 +101,7 @@ const Signup = () => {
             
             <TextInput
               placeholder="Email"
-              placeholderTextColor="white"
+              placeholderTextColor="#EDEDED"
               value={email}
               onChangeText={setEmail}
               style={[styles.input]}
@@ -110,7 +110,7 @@ const Signup = () => {
 
             <TextInput
               placeholder="Password"
-              placeholderTextColor="white"
+              placeholderTextColor="#EDEDED"
               value={password}
               onChangeText={setPassword}
               style={[styles.input]}
@@ -120,7 +120,7 @@ const Signup = () => {
     
         <View style={styles.buttonContainer}>
           <TouchableOpacity onPress={handleSignup} style={styles.button}>
-            <Text style={styles.buttonText}>Sign Up</Text>
+            <Text style={[styles.buttonText]}>Sign Up</Text>
           </TouchableOpacity>
         </View>
       </View>

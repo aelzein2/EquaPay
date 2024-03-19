@@ -115,10 +115,34 @@ async function addFriends(friend) {
   }
 }
 
-  // back button redirects back to the homepage
-//   const backToPreviousScreen = () => {
-//     navigation.navigate("Home");
-// }
+const handleLogout = () => {
+  Alert.alert(
+    "Logout",
+    "Are you sure you want to log out?",
+    [
+      {
+      /* User given two options to confirm logging out */
+        text: "No",
+        onPress: () => console.log("Logout Cancelled"),
+        style: "cancel"
+      },
+      { 
+        text: "Yes", onPress: () => {
+          console.log("Logging out");
+          auth.signOut()
+            .then(() => {
+              console.log("User has signed out");
+              navigation.navigate("LoadingScreen")
+            })
+            .catch((error) => {
+              console.log("An error occurred while signing out");
+            });
+        }
+      }
+    ],
+    { cancelable: false }
+  );
+}
 
 const handleSettingPage = () => {
   navigation.navigate("Settings");
@@ -127,20 +151,12 @@ const handleSettingPage = () => {
 const userOptions=[
   {id:'0', name:'Profile Settings', icon:<MaterialCommunityIcons name="account-settings-outline" size={30} color={'#EDEDED'}/>, onPress: handleSettingPage},
   {id:'1', name:'Activities History', icon:<MaterialIcons name="history" size={30} color={'#EDEDED'}/>},
-  // {id:'2', name:'Logout', icon:<MaterialIcons name="logout" size={28} color={'#EDEDED'}/>, onPress: handleLogout}
+  {id:'2', name:'Logout', icon:<MaterialIcons name="logout" size={28} color={'#EDEDED'}/>, onPress: handleLogout},
 ]
   return (
     
     <View style={[styles.container]}>
       <Text style = {[styles.titleText]}>Account</Text>
-
-      {/* <TouchableOpacity onPress={backToPreviousScreen} style={styles.backButton}>
-          <AntDesign name="arrowleft" size={24} color="black" />
-      </TouchableOpacity> */}
-
-      {/* <TouchableOpacity onPress={backToPreviousScreen} style={[styles.backButton]}>
-                <Ionicons name='chevron-back' size={24} color={'white'}/>
-      </TouchableOpacity> */}
       
       <View style={[styles.profilePictureContainer]}>
         <Image source={Avatar}
