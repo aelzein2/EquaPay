@@ -2,12 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Dimensions, Image, Alert, } from 'react-native';
 import { Divider } from '@rneui/themed';
 import { useNavigation } from '@react-navigation/native';
-import { AntDesign } from '@expo/vector-icons'; // used for the icons
+import { AntDesign, MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons'; // used for the icons
 import { auth, firestore } from '../firebase' // used for authentication
 import { doc, getDoc, getFirestore, query, where, collection, addDoc, getDocs, } from 'firebase/firestore';
 import Ionicons from 'react-native-vector-icons/Ionicons'; // used for the icons
-import { MaterialIcons } from '@expo/vector-icons';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { getAuth } from 'firebase/auth';
 
 
@@ -177,8 +175,8 @@ const userOptions=[
             <Ionicons name='add-circle-outline' size={30}/>
             <Text style={[styles.friendText]}>Add Friends</Text>
           </TouchableOpacity>
-          {friendsData.map((friend) => (
-            <TouchableOpacity key={friend.key} style={[styles.friendButton]}>
+          {friendsData.map((friend, index) => (
+            <TouchableOpacity key={index} style={[styles.friendButton]}>
               <Image source={friendAvatar} style={{ resizeMode:'contain', width: 35, height: 35 }}/>
               <Text style={[styles.friendText]}>{friend.name}</Text>
             </TouchableOpacity>
