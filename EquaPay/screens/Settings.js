@@ -11,12 +11,17 @@ import {
 } from "react-native";
 import { Divider } from '@rneui/themed';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
-import { auth, firestore } from '../firebase'
+import { auth } from '../firebase'
+import { getFirestore, collection, query, where, getDoc, updateDoc, doc, deleteDoc } from 'firebase/firestore';
+import { signInWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail, deleteUser } from 'firebase/auth' // used for authentication
 import { useNavigation } from '@react-navigation/native';
 import RowChevron from "../components/RowChevron";
 import { AntDesign, MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 const { width } = Dimensions.get('window');
+
+const db = getFirestore(); // gets the firestore database
+
 export default function Setting(){
 
   const navigation = useNavigation();
@@ -64,9 +69,41 @@ export default function Setting(){
     navigation.navigate("Reauthentication", { id: 2 })
   }
 
+  // deletes the account
+  const handleDeleteAccount = async () => {
+    if (auth.currentUser) { // If the user is logged in
+      const userDocRef = doc(db, 'users', auth.currentUser.uid); // Reference to the user stored in the database.
+
+      Alert.alert('CONFIRM', 'Are you sure you want to delete your account?', [
+        {
+          text: 'Cancel',
+          onPress: () => console.log('Cancel Pressed'),
+          style: 'cancel',
+        },
+        {text: 'OK', onPress: () => {
+          deleteDoc(userDocRef);
+          deleteUser(auth.currentUser).then(() => {
+            console.log("Auth Deleted");
+          }).catch((error) => {
+            console.log(error);
+          })
+          navigation.navigate("LoadingScreen");
+          console.log("Deleted Account");
+        
+        }},
+      ]);  
+      
+      
+    };
+
+  }
+
+  
+
   const settingOptions =[
     {id:'0', name: 'Change Password', icon:<MaterialIcons name="lock-outline" size={30} color="#EDEDED" />, onPress: handleChangePassword},
     {id:'1', name: 'Change Email', icon: <MaterialCommunityIcons name="email-edit-outline" size={30} color="#EDEDED" />, onPress: handleChangeEmail},
+    {id:'2', name: 'Delete Account', icon: <MaterialCommunityIcons name="account-remove-outline" size={30} color="#EDEDED" />, onPress: handleDeleteAccount},
   ]
 
 
