@@ -20,6 +20,7 @@ import AddBillsPage from './screens/AddBillsPage';
 import BillDetails from './screens/BillDetails';
 import { StripeProvider } from '@stripe/stripe-react-native';
 import NotificationsPage from './screens/NotificationPage';
+import { LogBox } from 'react-native';
 
 
 
@@ -28,7 +29,7 @@ const stripePublishableKey = 'pk_test_51OsL50LoVnwBJvv3xXEPKGByLPCSwEnQqvzUiOMMB
 
 
 export default function App() {
-
+  LogBox.ignoreAllLogs();
 
   return (
     <StripeProvider publishableKey={stripePublishableKey}>
