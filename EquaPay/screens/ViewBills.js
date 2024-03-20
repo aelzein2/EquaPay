@@ -477,9 +477,11 @@ const ViewBills = () => {
               animationType="fade"
               transparent
             >
-              <View style = {[styles.modalImage]}>
-                <Button title="Hide" onPress={hideImageModal}/>
-                <Image source={{ uri: image }} style={{ width: 300, height: 300 }} />
+              <Image source={{ uri: image }} style={{ width:'100%', height:'100%' }} />
+              <View style={{paddingHorizontal: '13.5%', paddingVertical: '55%', position:'absolute'}}>
+                <TouchableOpacity style={[styles.closeButton]} onPress={hideImageModal}>
+                  <MaterialIcons name="close" size={24} color="white" />
+                </TouchableOpacity>
               </View>
             </Modal>
           </KeyboardAwareScrollView>
@@ -607,11 +609,12 @@ const ViewBills = () => {
             animationType="fade"
             transparent
           >
-            <View style = {[styles.modalImage]}>
-              <Button title="Hide" onPress={hideImageModal}/>
-              <Image source={{ uri: image }} style={{ width: 300, height: 300 }} />
+            <Image source={{ uri: image }} style={{ width:'100%', height:'100%' }} />
+            <View style={{paddingHorizontal: '13.5%', paddingVertical: '55%', position:'absolute'}}>
+              <TouchableOpacity style={[styles.closeButton]} onPress={hideImageModal}>
+                <MaterialIcons name="close" size={24} color="white" />
+              </TouchableOpacity>
             </View>
-             
           </Modal>
         </KeyboardAwareScrollView>
           
