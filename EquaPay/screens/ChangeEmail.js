@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { useHeaderHeight } from "@react-navigation/elements";
-import { getAuth, updateEmail } from "firebase/auth"
+import { getAuth, updateEmail, verifyBeforeUpdateEmail } from "firebase/auth"
 import { AntDesign } from '@expo/vector-icons'
 
 const { width } = Dimensions.get('window');
@@ -23,7 +23,7 @@ export default function ChangeEmail({ navigation }) {
   const auth = getAuth();
   const handleChangeEmail = async () => {
     try {
-      updateEmail(auth.currentUser, email).then(() => {
+      verifyBeforeUpdateEmail(auth.currentUser, email).then(() => {
         console.log("changed email");
         Alert.alert("Email has been changed");
         navigation.navigate("Settings");
@@ -76,7 +76,7 @@ export default function ChangeEmail({ navigation }) {
       <TouchableOpacity onPress={backToPreviousScreen} style={[styles.backButton]}>
         <AntDesign name="arrowleft" size={24} color="white" />
       </TouchableOpacity>
-      <Text style = {[styles.titleText]} >Change Password</Text>
+      <Text style = {[styles.titleText]} >Change Email</Text>
       <View style={[styles.bodyContainer]}>
         <TextInput
           placeholder="Email"
