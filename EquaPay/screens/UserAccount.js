@@ -177,7 +177,7 @@ const userOptions=[
 
             {/* Friends list rendered after the Add Friends button */}
             
-            {friends.slice(0, 3).map((friend, index) => (
+            {friends.slice(0, 4).map((friend, index) => (
               <TouchableOpacity key={index} style={[styles.friendButton]}>
                 <Image source={friendAvatar} style={{ resizeMode: 'contain', width: 35, height: 35 }}/>
                 <Text style={[styles.friendText]}>{friend}</Text>

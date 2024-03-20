@@ -21,9 +21,7 @@ const currencyOptions=[
   {id:'0', currency:'GBP', name:'British Pound', icon: <Gb style={{width:40, height:40}}/>},
   {id:'1', currency:'CAD', name:'Canadian Dollar', icon: <Ca style={{width:40, height:40}}/>},
   {id:'2', currency:'EUR', name:'Euro', icon: <Eu style={{width:40, height:40}}/>},
-  {id:'3', currency:'JPY', name:'Japanese Yen', icon: <Jp style={{width:40, height:40}}/>},
-  {id:'4', currency:'USD', name:'United State Dollar', icon: <Us style={{width:40, height:40}}/>},
-  {id:'5', currency:'VND', name:'Vietnamese Dong', icon: <Vn style={{width:40, height:40}}/>} 
+  {id:'3', currency:'USD', name:'United State Dollar', icon: <Us style={{width:40, height:40}}/>},
 ]
 
 const CurrencyModal = (props) => {
