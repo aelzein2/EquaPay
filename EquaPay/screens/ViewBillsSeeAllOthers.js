@@ -7,7 +7,7 @@ import { Divider } from '@rneui/themed';
 import { auth, firestore, functions } from '../firebase' // used for authentication
 import { httpsCallable } from 'firebase/functions';
 import { CardField, useStripe } from '@stripe/stripe-react-native';
-import { doc, getDoc, updateDoc, getFirestore, collection, getDocs, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, getFirestore, collection, getDocs, onSnapshot, addDoc } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -112,6 +112,14 @@ const ViewBillsSeeAllOthers = () => {
       Alert.alert('Success', 'Payment succeeded!');
       setPaymentModalVisible(false); // Close the modal on successful payment
       setModalVisible(false);
+
+      await addDoc(collection(db, 'mail'), {
+        to: [email],
+        message: {
+          subject: 'Successful Payment',
+          text: 'This is the plaintext section of the email body.',
+          html: 'Hello, you have submitted a payment for your bill'
+      }});
     }
   };
 
@@ -162,8 +170,10 @@ const ViewBillsSeeAllOthers = () => {
             }
           });
         });
+
+        let sortedBills = newBillInfo.sort((p1, p2) => (p1.date > p2.date) ? 1 : (p1.date < p2.date) ? -1 : 0);
   
-        setOtherBillInfo(newBillInfo);
+        setOtherBillInfo(sortedBills);
       });
   
       // Unsubscribe from the listener when the component unmounts
@@ -361,7 +371,7 @@ const ViewBillsSeeAllOthers = () => {
                 <View style={[styles.modalContainer]}>
                   <View style={styles.paymentContent}>
                     <Text style={styles.modalTitle}>Enter Payment Details</Text>
-                    <TextInput style={styles.input} placeholder="Email" textColor={'#153A59'} placeholderTextColor={'#153A59'} value={email} onChangeText={setEmail} keyboardType="email-address" />
+                    <TextInput style={styles.input} placeholder="Email" textColor={'#153A59'} placeholderTextColor={'#153A59'} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize='none' />
                     <TextInput style={styles.input} placeholder="Name on Card" textColor={'#153A59'} placeholderTextColor={'#153A59'} value={name} onChangeText={setName} />
                     <Text>Amount Due: {amount} </Text>
                     <CardField style={styles.cardField} onCardChange={(cardDetails) => {}} cardStyle={{textColor:'#153A59'}} />
