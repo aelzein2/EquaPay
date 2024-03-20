@@ -15,6 +15,8 @@ import {
     Dimensions, 
 }from 'react-native';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
+import { AntDesign, FontAwesome } from "@expo/vector-icons";
+
 
 
 const { width } = Dimensions.get('window');
@@ -27,6 +29,7 @@ const Signup = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigation = useNavigation(); // used to navigate between screens
+  const [isPeekingPassword, setIsPeekingPassword] = useState(false);
    
     useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, user => {
@@ -40,6 +43,12 @@ const Signup = () => {
 
 
     const handleSignup = () => {
+
+      if (password.length < 6) {
+        alert('Password must be at least 6 characters long.');
+        return; 
+      }
+
       createUserWithEmailAndPassword(auth, email, password)
         .then((userCredentials) => {
           const user = userCredentials.user;
@@ -98,6 +107,8 @@ const Signup = () => {
               onChangeText={setFullName}
               style={[styles.input]}
             />
+            <Text style={styles.subtitle}>Please enter your full name*</Text>
+
             
             <TextInput
               placeholder="Email"
@@ -108,15 +119,29 @@ const Signup = () => {
               keyboardType="email-address"
               autoCapitalize='none'
             />
+            <Text style={styles.subtitle}>Please enter your email*</Text>
 
+
+          <View style={styles.passwordContainer}>
             <TextInput
               placeholder="Password"
               placeholderTextColor="#EDEDED"
               value={password}
               onChangeText={setPassword}
-              style={[styles.input]}
-              secureTextEntry
+              style={[styles.input, { paddingRight: 40 }]} // Add paddingRight to make space for the icon
+              secureTextEntry={!isPeekingPassword}
             />
+          <FontAwesome
+            name={isPeekingPassword ? "eye-slash" : "eye"}
+            size={20}
+            color="white"
+            style={styles.icon}
+            onPress={() => setIsPeekingPassword(!isPeekingPassword)}
+            />
+        </View>
+        <Text style={styles.subtitle}>Please create a password*</Text>
+
+
         </View>
     
         <View style={styles.buttonContainer}>
@@ -156,17 +181,17 @@ const styles = StyleSheet.create({
   },
 
   inputContainer: {
-    marginTop: "35%",
-    gap: 51  
+    marginTop: "35%",  
   },
 
   input: {
     paddingVertical: 10,
-    borderBottomColor:"white",
+    borderBottomColor: "white",
     borderBottomWidth: 1,
     fontSize: 20,
     width: '100%',
-    color:"white",
+    color: "white",
+    marginBottom: 5, // Small space between the input and its subtitle
   },
 
   buttonContainer: {
@@ -200,6 +225,18 @@ const styles = StyleSheet.create({
     width: 35,
     height: 35
   },
+
+   subtitle: {
+    color: 'white',
+    fontSize: 14,
+    marginTop: 0, // No space above the subtitle
+    marginBottom: 40, // Adjust this value to control the space before the next input field
+  },
+  icon: {
+    position: 'absolute',
+    right: 10,
+    top: 15, 
+},
 
 });
 
