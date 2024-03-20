@@ -527,7 +527,7 @@ useEffect(() => {
         description: description,
         userEmail: userEmail,
         billName: billName,
-        billTotalAmount: parseFloat(billTotalAmount),
+        billTotalAmount: parseFloat(billTotalAmount).toFixed(2),
         currency: currency,
         participants: participantsWithAmounts, // stores selected participants with their amounts
         billOwner: selectedParticipant,

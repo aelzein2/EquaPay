@@ -2,18 +2,17 @@ import { StyleSheet, Text, View, Alert, TouchableOpacity, Modal, Button, SafeAre
 import { useState, useEffect } from "react";
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useNavigation } from '@react-navigation/native' // used to navigate between screens
-import { MaterialIcons } from '@expo/vector-icons';
+import { AntDesign, MaterialIcons } from '@expo/vector-icons';
 import { Divider } from '@rneui/themed';
 import { auth, firestore, functions } from '../firebase' // used for authentication
 import { httpsCallable } from 'firebase/functions';
 import { CardField, useStripe } from '@stripe/stripe-react-native';
 import { doc, getDoc, updateDoc, getFirestore, collection, getDocs, onSnapshot } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const db = getFirestore();
 
-const ViewBills = () => {
+const ViewBillsSeeAll = () => {
   const { confirmPayment } = useStripe();
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
@@ -33,17 +32,8 @@ const ViewBills = () => {
   const [image, setImage] = useState(null);
   const [billInfoData, setBillInfoData] = useState([])
   const [otherBillInfoData, setOhterBillInfoData] = useState([])
-  const [isShow, setIsShow] = useState(true)
   
   const navigation = useNavigation(); // used to navigate between screens
-
-
-  const handleSeeAll = () => {
-    navigation.navigate('ViewBillsSeeAll');
-  }
-  const handleSeeAllOthers = () => {
-    navigation.navigate('ViewBillsSeeAllOthers');
-  }
 
   const fetchImage = async (data) => {
     const storage = getStorage()
@@ -153,8 +143,6 @@ const ViewBills = () => {
     if (auth.currentUser) {
       const unsubscribe = onSnapshot(collection(db, "billsCreated"), (querySnapshot) => {
         const newBillInfo = [];
-        let firstThreeBillInfo = [];
-  
         querySnapshot.forEach((doc) => {
           if (doc.data().billOwner === userEmail) {
             newBillInfo.push({
@@ -167,62 +155,14 @@ const ViewBills = () => {
             });
           }
         });
-
-        firstThreeBillInfo = [...newBillInfo]
-        firstThreeBillInfo.length = 3;
-
-        console.log(firstThreeBillInfo)
   
-        setBillInfo(firstThreeBillInfo);
-        setBillInfoData(newBillInfo);
+        setBillInfo(newBillInfo);
       });
   
       // Unsubscribe from the listener when the component unmounts
       return () => unsubscribe();
     }
   }, [auth.currentUser, userEmail]); // Dependencies array
-
-  useEffect(() => {
-    if (auth.currentUser) {
-      const unsubscribe = onSnapshot(collection(db, "billsCreated"), (querySnapshot) => {
-        const newBillInfo = [];
-        let firstThreeBillInfo = [];
-  
-        querySnapshot.forEach((doc) => {
-          doc.data().participants.forEach((participant) => {
-            if (participant.id === userEmail && doc.data().billOwner !== userEmail) {
-              newBillInfo.push({
-                id: doc.id, 
-                name: doc.data().billName,
-                creator: doc.data().billOwner,
-                date: doc.data().billDeadline.toDate().toDateString().split(' ').slice(1).join(' '),
-                amount: participant.amount,
-                currency: doc.data().currency,
-                icon: <MaterialIcons name="payments" size={30} color={'#EDEDED'}/>
-              });
-            }
-          });
-        });
-
-        firstThreeBillInfo = [...newBillInfo]
-        firstThreeBillInfo.length = 3;
-
-        console.log(firstThreeBillInfo)
-  
-        setOtherBillInfo(firstThreeBillInfo);
-        setOhterBillInfoData(newBillInfo)
-      });
-  
-      // Unsubscribe from the listener when the component unmounts
-      return () => unsubscribe();
-    }
-  }, [auth.currentUser, userEmail]); // Dependencies array
-  
-
-// temporary function to redirect to account detail page for testing purposes.
-  const redirectAccountDetail = () => {
-    navigation.navigate("Account")
-  }
 
   const showOwnerModal = (data) => {
     console.log(data);
@@ -373,248 +313,118 @@ const ViewBills = () => {
       setImage(null)
     }
   }
+
+  // navigate back to the previous screen
+  const backToPreviousScreen = () => {
+    navigation.navigate("View Bills");
+  }
  
   return (
-    <KeyboardAwareScrollView style={[styles.container]}>
-      <Text style = {[styles.titleText]} >View Bills</Text>
+    <KeyboardAwareScrollView style={{backgroundColor:'#153A59'}}>
+      <View style={[styles.container]}>
+        <TouchableOpacity onPress={backToPreviousScreen} style={[styles.backButton]}>
+          <AntDesign name="arrowleft" size={24} color="white" />
+        </TouchableOpacity>
+        <Text style = {[styles.titleText]} >Your Bills</Text>
 
-      <View style={[styles.bodyContainer]}>
-        <View style={[styles.headingContainer]}>
-          <Text style = {[styles.headingText]} >Your Bills</Text>
-          <TouchableOpacity onPress={() => {handleSeeAll()}}>
-            <Text style={[styles.seeAllText]}>See all</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={[styles.yourBillsContainer]}>
-          {billInfo.map((option, index)=> (
-            <TouchableOpacity style={[styles.billButton]} key={index} onPress={() => {showOwnerModal(option.id)}}>
-                <View style={{display:'flex', flexDirection:'row', alignItems:'center', gap:15}}>
-                  <View style={[styles.iconContainer]}>
-                    {option.icon}
-                  </View>
-                  <View style={[styles.billInfoContainer]}>
-                    <Text style={[styles.optionText]}>{option.name}</Text>
-                    <Text style={[styles.deadlineText]}>Due on: {option.date}</Text>
-                  </View>
-                </View>
-                <Text style={[styles.optionText]}>{option.amount} {option.currency}</Text> 
-            </TouchableOpacity>
-          ))}
-        </View>
-        <Modal
-          visible={ownerModalVisible}
-          animationType="slide"
-        >
-          <KeyboardAwareScrollView style={{backgroundColor:'#153A59',}}>
-            <View style={[styles.container]}>
-              <TouchableOpacity style={[styles.closeButton]} onPress={hideModal}>
-                <MaterialIcons name="close" size={24} color="white" />
-              </TouchableOpacity>
-              <Text style={[styles.headingText]}>{modalBillInfo.name}</Text>
-              
-              <Text style={[styles.amountText]}>{modalBillInfo.currency} {modalBillInfo.amount}</Text>
-
-              <View style={[styles.bodyContainer]}>
-              <Divider color='#85E5CA'/>
-
-              <View style={[styles.modalContent]}>
-                <Text style={[styles.modalSubText]}>Description: </Text>
-                <Text style={[styles.modalText]}>{modalBillInfo.description}</Text>
-              </View>
-
-              <View style={[styles.modalContent]}>
-                <Text style={[styles.modalSubText]}>Deadline: </Text>
-                <Text style={[styles.modalText]}>{modalBillInfo.date}</Text>
-              </View>
-                
-              {ownerModalVisible && modalBillInfo && modalBillInfo.participants && (
-                <Text style={[styles.modalSubText]}>Participants: </Text>
-              )}
-              {ownerModalVisible && modalBillInfo && modalBillInfo.participants && modalBillInfo.participants.map((item) => (
-                <View style={[styles.participantContainer]}>
-                  <View>
-                    <View style={[styles.modalContent]}>
-                      <Text key={item.id} style={[styles.participantText]}>
-                        {item.id}
-                      </Text>
-                      
-                      <Text style={[styles.modalText]}>
-                        {modalBillInfo.currency} {item.amount}  
-                      </Text>
-                    </View>
-                    
-                    <Text style={[styles.statustext]}>
-                      {item.paidStatus ? 'PAID' : 'NOT PAID'}
-                    </Text>
-                  </View>
-                </View>
-              ))}
-                <Divider color='#85E5CA'/>
-
-                
-
-                <TouchableOpacity style={[styles.imageButton]} onPress={() => showImageModal()}>
-                  <MaterialIcons name="image" size={24} color="#153A59" />
-                  <Text style={[styles.imageText]}>Bill Image</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-            <Modal
-              visible={modalImageVisible}
-              animationType="fade"
-              transparent
-            >
-              <View style = {[styles.modalImage]}>
-                <Button title="Hide" onPress={hideImageModal}/>
-                <Image source={{ uri: image }} style={{ width: 300, height: 300 }} />
-              </View>
-            </Modal>
-          </KeyboardAwareScrollView>
-        </Modal>
-        <Divider color='#85E5CA'/>
-      </View>
-
-      <View style={[styles.bodyContainer]}>
-        <View style={[styles.headingContainer]}>
-          <Text style = {[styles.headingText]} >Others' Bills</Text>
-          <TouchableOpacity onPress={() => {handleSeeAllOthers()}}>
-            <Text style={[styles.seeAllText]}>See all</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={[styles.yourBillsContainer]}>
-          {otherBillInfo.map((option, index)=> (
-            <TouchableOpacity style={[styles.billButton]} key={index} onPress={() => showOtherModal(option.id)}>
-                <View style={{display:'flex', flexDirection:'row', alignItems:'center', gap:15}}>
-                  <View style={[styles.iconContainer]}>
-                    {option.icon}
-                  </View>
-                  <View style={[styles.billInfoContainer]}>
-                    <Text style={[styles.optionText]}>{option.name}</Text>
-                    <Text style={[styles.subOptionText]}>By {option.creator}</Text>
-                    <Text style={[styles.deadlineText]}>Due on: {option.date}</Text>
-                  </View>
-                </View>
-                <Text style={[styles.optionText]}>{option.amount} {option.currency}</Text> 
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <Modal
-          visible={modalVisible}
-          animationType="slide"
-          transparent
-        >
-        <KeyboardAwareScrollView style={{backgroundColor:'#153A59',}}>
-          <View style={[styles.container]}>
-            <TouchableOpacity style={[styles.closeButton]} onPress={hideModal}>
-              <MaterialIcons name="close" size={24} color="white" />
-            </TouchableOpacity>
-            <View style={{flexDirection:'row', gap: 10, alignItems:'center'}}>
-              <Text style={[styles.headingText]}>{modalBillInfo.name}</Text>
-              {paidStatus ? (
-                <MaterialIcons name="check-circle-outline" size={24} color="#85E5CA" />
-              ): null}
-            </View>
-           
-
-            <Text style={[styles.amountText]}>{modalBillInfo.currency} {modalBillInfo.amount}</Text>
-
-            <View style={[styles.bodyContainer]}>
-              <Divider color='#85E5CA'/>
-
-              <View style={[styles.modalContent]}>
-                <Text style={[styles.modalSubText]}>Created By: </Text>
-                <Text style={[styles.modalText]}>{modalBillInfo.billOwner}</Text>
-              </View>
-
-              <View style={[styles.modalContent]}>
-                <Text style={[styles.modalSubText]}>Description: </Text>
-                <Text style={[styles.modalText]}>{modalBillInfo.description}</Text>
-              </View>
-
-              <View style={[styles.modalContent]}>
-                <Text style={[styles.modalSubText]}>Amount Due: </Text>
-                <Text style={[styles.modalText]}>{modalBillInfo.currency} {amount}</Text>
-              </View>
-
-              <View style={[styles.modalContent]}>
-                <Text style={[styles.modalSubText]}>Deadline: </Text>
-                <Text style={[styles.modalText]}>{modalBillInfo.date}</Text>
-              </View>
-            </View>
-            <View style={{marginBottom:20}}>
-              <Divider color='#85E5CA'/>
-            </View>
-            
-
-            <TouchableOpacity style={[styles.imageButton]} onPress={() => showImageModal()}>
-              <MaterialIcons name="image" size={24} color="#153A59" />
-              <Text style={[styles.imageText]}>Bill Image</Text>
-            </TouchableOpacity>
-
-            {isShow && 
-              <>
-                {paidStatus ? (
-                  <TouchableOpacity disabled style={[styles.paidButton]}> 
-                    <Text style={[styles.paidText]}>Paid</Text>
-                  </TouchableOpacity>
-                ) : (
-                  <TouchableOpacity style={[styles.payButton]} onPress={() => setPaymentModalVisible(true)}> 
-                    <Text style={[styles.payText]}>Pay Now</Text>
-                  </TouchableOpacity>
-                )}
-              </>
-            }
-            <Modal visible={paymentModalVisible} animationType="slide" transparent>
-              <View style={[styles.modalContainer]}>
-                <View style={styles.paymentContent}>
-                  <Text style={styles.modalTitle}>Enter Payment Details</Text>
-                  <TextInput style={styles.input} placeholder="Email" textColor={'#153A59'} placeholderTextColor={'#153A59'} value={email} onChangeText={setEmail} keyboardType="email-address" />
-                  <TextInput style={styles.input} placeholder="Name on Card" textColor={'#153A59'} placeholderTextColor={'#153A59'} value={name} onChangeText={setName} />
-                  <Text>Amount Due: {amount} </Text>
-                  <CardField style={styles.cardField} onCardChange={(cardDetails) => {}} cardStyle={{textColor:'#153A59'}} />
-                  {isLoading ? (
-                    <ActivityIndicator size="small" color="#0000ff" />
-                  ) : (
-                    <TouchableOpacity style={styles.confirmButton} onPress={handlePayment}>
-                      <Text style={[styles.buttonText]}>Confirm</Text>
-                    </TouchableOpacity>
-                  )}
-                  <TouchableOpacity style={styles.cancelButton} onPress={() => setPaymentModalVisible(false)}>
-                    <Text style={[styles.buttonText]}>Cancel</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </Modal>
-          </View>
-
-          <Modal
-            visible={modalImageVisible}
-            animationType="fade"
-            transparent
-          >
-            <View style = {[styles.modalImage]}>
-              <Button title="Hide" onPress={hideImageModal}/>
-              <Image source={{ uri: image }} style={{ width: 300, height: 300 }} />
-            </View>
-             
-          </Modal>
-        </KeyboardAwareScrollView>
+        <View style={[styles.bodyContainer]}>
           
 
-         
+          <View style={[styles.yourBillsContainer]}>
+            {billInfo.map((option, index)=> (
+              <TouchableOpacity style={[styles.billButton]} key={index} onPress={() => {showOwnerModal(option.id)}}>
+                  <View style={{display:'flex', flexDirection:'row', alignItems:'center', gap:15}}>
+                    <View style={[styles.iconContainer]}>
+                      {option.icon}
+                    </View>
+                    <View style={[styles.billInfoContainer]}>
+                      <Text style={[styles.optionText]}>{option.name}</Text>
+                      <Text style={[styles.deadlineText]}>Due on: {option.date}</Text>
+                    </View>
+                  </View>
+                  <Text style={[styles.optionText]}>{option.amount} {option.currency}</Text> 
+              </TouchableOpacity>
+            ))}
+          </View>
+          <Modal
+            visible={ownerModalVisible}
+            animationType="slide"
+          >
+            <KeyboardAwareScrollView style={{backgroundColor:'#153A59',}}>
+              <View style={[styles.container]}>
+                <TouchableOpacity style={[styles.closeButton]} onPress={hideModal}>
+                  <MaterialIcons name="close" size={24} color="white" />
+                </TouchableOpacity>
+                <Text style={[styles.headingText]}>{modalBillInfo.name}</Text>
+                
+                <Text style={[styles.amountText]}>{modalBillInfo.currency} {modalBillInfo.amount}</Text>
 
-        </Modal>
+                <View style={[styles.bodyContainer]}>
+                <Divider color='#85E5CA'/>
 
-        <Divider color='#85E5CA'/>
+                <View style={[styles.modalContent]}>
+                  <Text style={[styles.modalSubText]}>Description: </Text>
+                  <Text style={[styles.modalText]}>{modalBillInfo.description}</Text>
+                </View>
+
+                <View style={[styles.modalContent]}>
+                  <Text style={[styles.modalSubText]}>Deadline: </Text>
+                  <Text style={[styles.modalText]}>{modalBillInfo.date}</Text>
+                </View>
+                  
+                {ownerModalVisible && modalBillInfo && modalBillInfo.participants && (
+                  <Text style={[styles.modalSubText]}>Participants: </Text>
+                )}
+                {ownerModalVisible && modalBillInfo && modalBillInfo.participants && modalBillInfo.participants.map((item) => (
+                  <View style={[styles.participantContainer]}>
+                    <View>
+                      <View style={[styles.modalContent]}>
+                        <Text key={item.id} style={[styles.participantText]}>
+                          {item.id}
+                        </Text>
+                        
+                        <Text style={[styles.modalText]}>
+                          {modalBillInfo.currency} {item.amount}  
+                        </Text>
+                      </View>
+                      
+                      <Text style={[styles.statustext]}>
+                        {item.paidStatus ? 'PAID' : 'NOT PAID'}
+                      </Text>
+                    </View>
+                  </View>
+                ))}
+                  <Divider color='#85E5CA'/>
+
+                  
+
+                  <TouchableOpacity style={[styles.imageButton]} onPress={() => showImageModal()}>
+                    <MaterialIcons name="image" size={24} color="#153A59" />
+                    <Text style={[styles.imageText]}>Bill Image</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+              <Modal
+                visible={modalImageVisible}
+                animationType="fade"
+                transparent
+              >
+                <View style = {[styles.modalImage]}>
+                  <Button title="Hide" onPress={hideImageModal}/>
+                  <Image source={{ uri: image }} style={{ width: 300, height: 300 }} />
+                </View>
+              </Modal>
+            </KeyboardAwareScrollView>
+          </Modal>
+          <Divider color='#85E5CA'/>
+        </View>
       </View>
+      
     </KeyboardAwareScrollView>
   );
 };
 
-export default ViewBills;
+export default ViewBillsSeeAll;
 
 const styles = StyleSheet.create({
   container:{
@@ -622,6 +432,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop:"20%",
     paddingHorizontal:'5%',
+    gap: 12
   },
 
   titleText:{
@@ -629,7 +440,14 @@ const styles = StyleSheet.create({
     fontSize: 30,
     fontWeight: "600",
   },
-
+  backButton: {
+    justifyContent:'center',
+    alignItems:'center',
+    backgroundColor:"#366B7C",
+    borderRadius:"100%",
+    width: 35,
+    height: 35
+  },
   bodyContainer:{
     flex: 1,
     gap:15,
@@ -733,54 +551,6 @@ const styles = StyleSheet.create({
 
 
   },
-  payButton: {
-    flex:1,
-    justifyContent:'center',
-    alignSelf:'center',
-    alignItems:'center',
-    backgroundColor: '#40a7c3',
-    padding: 15,
-    borderRadius: 10,
-  },
-
-  payText:{
-    color:'#153A59',
-    fontSize: 18,
-    fontWeight: 600,
-    textTransform:'uppercase'
-  },
-
-  paidButton:{
-    flex:1,
-    justifyContent:'center',
-    alignSelf:'center',
-    alignItems:'center',
-  },
-
-  paidText:{
-    color:'#85E5CA',
-    fontSize: 18,
-    fontWeight: 600,
-    textTransform:'uppercase'
-  },
-
-  confirmButton:{
-    backgroundColor: '#40a7c3',
-    padding: 15,
-    borderRadius: 10,
-    marginTop: 10,
-    width: '100%',
-    alignItems: 'center',
-  },
-
-  cancelButton: {
-    backgroundColor: '#999',
-    padding: 15,
-    borderRadius: 10,
-    marginTop: 10,
-    width: '100%',
-    alignItems: 'center',
-  },
   
   closeButton: {
     justifyContent:'center',
@@ -872,10 +642,5 @@ const styles = StyleSheet.create({
   width: '90%',
   borderRadius: 10,
  },
-
- placeholder:{
-  color:'#153A59', 
-  fontSize:17
-},
 
 });
