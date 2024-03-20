@@ -27,15 +27,15 @@ const FriendsPage = () => {
 
   useEffect(() => {
     const fetchUserData = async () => {
-      if (auth.currentUser) { // If the user is logged in
-        const userDocRef = doc(db, 'users', auth.currentUser.uid); // Reference to the user stored in the database.
+      if (auth.currentUser) {
+        const userDocRef = doc(db, 'users', auth.currentUser.uid);
 
         try {
-          const docSnap = await getDoc(userDocRef); // fetches the user's data from the database
+          const docSnap = await getDoc(userDocRef);
           if (docSnap.exists()) {
-            const userData = docSnap.data(); // Get the user's data
-            setUserFullName(userData.fullName); // Set the user's full name state
-            setUserEmail(userData.email); // Set the user's email state
+            const userData = docSnap.data();
+            setUserFullName(userData.fullName);
+            setUserEmail(userData.email);
           } else {
             console.log("User record not found");
             setUserFullName("Name not found");
@@ -44,122 +44,116 @@ const FriendsPage = () => {
           
         } catch (error) {
           console.error("Error fetching user data: ", error);
-          setUserFullName("Error Loading Name"); 
+          setUserFullName("Error Loading Name");
         }
       }
     };
 
     fetchUserData();
-  }, []);
+  }, [auth.currentUser]);
 
-  function handleAddFriend(){
-    Alert.prompt("Add Friend",
-    "",[
-      {
-        text: "Cancel",
-        onPress: () => console.log("Cancel Pressed"),
-        style: "cancel"
-      },
-      {
-        text: "Ok",
-        onPress: friend => addFriends(friend),
-      }
-    ],)
-    
-}
+  async function addFriends(friend) {
+    if (!friend) {
+      Alert.alert('Error', 'Please enter an email.');
+      return;
+    }
 
-async function addFriends(friend) {
-  if (friend) {
-    console.log(friend); // Log the email being added
+    if (friend === userEmail) {
+      Alert.alert('Error', 'You cannot add yourself as a friend.');
+      return;
+    }
 
-    // Reference to the users collection
+    // Check if already friends
+    const alreadyFriendsQuery = query(
+      collection(db, 'friends'),
+      where("befriender", "==", userEmail),
+      where("befriended", "==", friend)
+    );
+
+    const alreadyFriendsSnapshot = await getDocs(alreadyFriendsQuery);
+
+    if (!alreadyFriendsSnapshot.empty) {
+      Alert.alert('Error', 'This user is already your friend.');
+      return;
+    }
+
+    // Proceed to add friend since they are not already added
     const usersRef = collection(db, 'users');
-
-    // Query to find user by email
-    const queryDatabase = query(usersRef, where("email", "==", friend)); // need this to be if the email is found capitalized or uncapitalized
-
-    // Execute query
+    const queryDatabase = query(usersRef, where("email", "==", friend));
     const querySnapshot = await getDocs(queryDatabase);
 
-    // Check if user with the given email exists
     if (!querySnapshot.empty) {
-      // Get the first document (user) from the results
       const userDoc = querySnapshot.docs[0];
-
-      // Retrieve user's fullName from the document
       const fullName = userDoc.data().fullName;
-      console.log(`Adding friend: ${fullName}`); // to actually see if friend is being added and name is being fetched
+      console.log(`Adding friend: ${fullName}`);
 
-      // Add a new document in the 'friends' collection
       const docRef = await addDoc(collection(db, 'friends'), {
-        befriender: userEmail, // userEmail should be the email of the current user
+        befriender: userEmail,
         befriended: friend,
       });
 
       console.log(`Friend added with ID: ${docRef.id}`);
-    } else if (friend !== userEmail) {
+    } else {
       Alert.alert('Error', 'User not found. Please try again.');
     }
-  } else if (friend == ''){
-    Alert.alert('Error', 'Please enter a correct email.');
   }
-}
+
+  function handleAddFriend() {
+    Alert.prompt("Add Friend",
+      "", [
+        {
+          text: "Cancel",
+          onPress: () => console.log("Cancel Pressed"),
+          style: "cancel"
+        },
+        {
+          text: "Ok",
+          onPress: friend => addFriends(friend),
+        }
+      ],
+    );
+  }
 
   useEffect(() => {
     if (auth.currentUser) {
       const userDocRef = doc(db, "users", auth.currentUser.uid);
 
-      getDoc(userDocRef)
-        .then((docSnap) => {
-          if (docSnap.exists()) {
-            const userData = docSnap.data();
-            const q = query(
-              collection(db, "friends"),
-              where("befriender", "==", userData.email)
-            );
+      getDoc(userDocRef).then((docSnap) => {
+        if (docSnap.exists()) {
+          const userData = docSnap.data();
+          const q = query(collection(db, "friends"), where("befriender", "==", userData.email));
 
-            // Setup a real-time listener using onSnapshot
-            const unsubscribe = onSnapshot(q, (querySnapshot) => {
-              // Use Promise.all to wait for all friend details to be fetched
-              const friendPromises = querySnapshot.docs.map(
-                async (friendDoc) => {
-                  const friendData = friendDoc.data();
-                  const friendEmail = friendData.befriended;
-                  const friendQuery = query(
-                    collection(db, "users"),
-                    where("email", "==", friendEmail)
-                  );
+          const unsubscribe = onSnapshot(q, (querySnapshot) => {
+            const friendPromises = querySnapshot.docs.map(async (friendDoc) => {
+              const friendData = friendDoc.data();
+              const friendEmail = friendData.befriended;
+              const friendQuery = query(collection(db, "users"), where("email", "==", friendEmail));
 
-                  // Await the query results for each friend
-                  const friendSnapshot = await getDocs(friendQuery);
-                  if (!friendSnapshot.empty) {
-                    const friendUser = friendSnapshot.docs[0].data();
-                    return {
-                      name: friendUser.fullName,
-                      docid: friendDoc.id,
-                      email: friendEmail
-                    };
-                  }
-                  return null; // In case the friend doesn't exist in users collection
-                }
-              );
-
-              // Resolve all promises and update state
-              Promise.all(friendPromises).then((friendsList) => {
-                // Filter out any null values if a friend wasn't found
-                setFriends(friendsList.filter((friend) => friend !== null));
-              });
+              const friendSnapshot = await getDocs(friendQuery);
+              if (!friendSnapshot.empty) {
+                const friendUser = friendSnapshot.docs[0].data();
+                return {
+                  name: friendUser.fullName,
+                  docid: friendDoc.id,
+                  email: friendEmail
+                };
+              }
+              return null;
             });
 
-            // Cleanup function to unsubscribe from the listener when the component unmounts
-            return () => unsubscribe();
-          }
-        })
-        .catch((error) => {
-          console.error("Error fetching friends: ", error);
-        });
+            Promise.all(friendPromises).then((friendsList) => {
+              setFriends(friendsList.filter((friend) => friend !== null));
+            });
+          });
+
+          return () => unsubscribe();
+        }
+      }).catch((error) => {
+        console.error("Error fetching friends: ", error);
+      });
     }
   }, [auth.currentUser, db]);
+
 
   return (
     <View style={styles.container}>
