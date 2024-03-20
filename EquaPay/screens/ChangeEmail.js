@@ -91,7 +91,7 @@ export default function ChangeEmail({ navigation }) {
 
       <View style={{flexDirection:'row', justifyContent:'flex-end'}}>
         <TouchableOpacity onPress={handleChangeEmail} style={styles.submitButton}>
-          <Text style={[styles.submitButtonText]}>Submit</Text>
+          <Text style={[styles.submitButtonText]}>Change Email</Text>
         </TouchableOpacity> 
       </View>
     </View>

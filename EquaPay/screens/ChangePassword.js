@@ -1,138 +1,175 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
   Alert,
   StyleSheet,
-  TouchableWithoutFeedback,
-  Keyboard,
   TouchableOpacity,
   TextInput,
-  Dimensions,
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import { useHeaderHeight } from "@react-navigation/elements";
 import { getAuth, updatePassword } from "firebase/auth";
-import { AntDesign } from "@expo/vector-icons";
-
-const { width } = Dimensions.get("window");
+import { AntDesign, FontAwesome } from "@expo/vector-icons";
 
 export default function ChangePassword({ navigation }) {
   const [password, setPassword] = useState("");
-  const [isPeeking, setIsPeeking] = useState(false);
-  const headerHeight = useHeaderHeight();
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isPeekingPassword, setIsPeekingPassword] = useState(false);
+  const [isPeekingConfirmPassword, setIsPeekingConfirmPassword] = useState(false);
   const auth = getAuth();
-  //Changes password in firebase
+
   const handleChangePassword = () => {
+    // Check if passwords match
+    if (password !== confirmPassword) {
+      Alert.alert("Passwords do not match");
+      return;
+    }
+
+    // Check if password length is less than 6 characters
+    if (password.length < 6) {
+      Alert.alert("Password must be at least 6 characters");
+      return;
+    }
+
+    // Attempt to update the password
     try {
       updatePassword(auth.currentUser, password).then(() => {
-        console.log("changed password");
         Alert.alert("Password has been changed");
         navigation.navigate("Settings");
       });
     } catch (err) {
-      console.log(err);
       Alert.alert("Error changing password");
     }
   };
 
-  const togglePeek = () => {
-    setIsPeeking((currentlyPeeking) => !currentlyPeeking); //toggle peeking variable
-  };
   const backToPreviousScreen = () => {
     navigation.navigate("Settings");
-}
-  return(
-    <KeyboardAwareScrollView style={{backgroundColor:'#153A59'}}>
-      <View style={[styles.container]}>
-        <TouchableOpacity onPress={backToPreviousScreen} style={[styles.backButton]}>
+  };
+
+
+  return (
+    <KeyboardAwareScrollView style={{ backgroundColor: "#153A59" }}>
+      <View style={styles.container}>
+        <TouchableOpacity onPress={backToPreviousScreen} style={styles.backButton}>
           <AntDesign name="arrowleft" size={24} color="white" />
         </TouchableOpacity>
-        <Text style = {[styles.titleText]} >Change Password</Text>
-        <View style={[styles.bodyContainer]}>
+        <Text style={styles.titleText}>Change Password</Text>
+        <View style={styles.inputContainer}>
           <TextInput
-            placeholder="Password"
+            placeholder="New Password"
             placeholderTextColor="#EDEDED"
-            onChangeText={(password) => setPassword(password)}
+            onChangeText={setPassword}
             value={password}
             autoCapitalize="none"
-            secureTextEntry={!isPeeking}
-            canPeek={password.length > 0}
-            togglePeek={togglePeek}
-            style={[styles.input]}
+            secureTextEntry={!isPeekingPassword}
+            style={styles.input}
           />
-          <Text style={[styles.subtitle]}>Please enter new password</Text>
+          <FontAwesome
+            name={isPeekingPassword ? "eye-slash" : "eye"}
+            size={20}
+            color="white"
+            style={styles.icon}
+            onPress={() => setIsPeekingPassword(!isPeekingPassword)}
+          />
+          <Text style={styles.subtitle}>Please enter your new password</Text>
         </View>
-
-        <View style={{flexDirection:'row', justifyContent:'flex-end'}}>
+        <View style={styles.inputContainer}>
+          <TextInput
+            placeholder="Confirm New Password"
+            placeholderTextColor="#EDEDED"
+            onChangeText={setConfirmPassword}
+            value={confirmPassword}
+            autoCapitalize="none"
+            secureTextEntry={!isPeekingConfirmPassword}
+            style={styles.input}
+          />
+          <FontAwesome
+            name={isPeekingConfirmPassword ? "eye-slash" : "eye"}
+            size={20}
+            color="white"
+            style={styles.icon}
+            onPress={() => setIsPeekingConfirmPassword(!isPeekingConfirmPassword)}
+          />
+          <Text style={styles.subtitle}>Please confirm your new password</Text>
+        </View>
+        {password !== confirmPassword && confirmPassword !== "" && (
+          <Text style={styles.errorText}>Passwords do not match</Text>
+        )}
+        <View style={styles.submitButtonContainer}>
           <TouchableOpacity onPress={handleChangePassword} style={styles.submitButton}>
-            <Text style={[styles.submitButtonText]}>Submit</Text>
-          </TouchableOpacity> 
+            <Text style={styles.submitButtonText}>Change Password</Text>
+          </TouchableOpacity>
         </View>
       </View>
     </KeyboardAwareScrollView>
-  )
+  );
 }
 
-//same css as forgot password
 const styles = StyleSheet.create({
   container: {
-    backgroundColor:'#153A59',
     flex: 1,
-    paddingTop:"20%",
-    paddingHorizontal:'5%',
-    gap: 12
+    paddingTop: "20%",
+    paddingHorizontal: '5%',
+    backgroundColor: '#153A59',
   },
-
-  titleText:{
-    color:"white",
+  titleText: {
+    color: "white",
     fontSize: 30,
     fontWeight: "600",
+    marginBottom: 20,
   },
-
   backButton: {
-    justifyContent:'center',
-    alignItems:'center',
-    backgroundColor:"#366B7C",
-    borderRadius:"100%",
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: "#366B7C",
+    borderRadius: 100,
     width: 35,
-    height: 35
+    height: 35,
+    marginBottom: 20,
   },
-
-  bodyContainer:{
-    justifyContent:'center',
-    alignItems:'flex-start',
-    marginTop: 20,
-    gap:10
+  inputContainer: {
+    position: 'relative',
+    marginBottom: 40,
   },
-
-  input: { 
+  input: {
     paddingVertical: 10,
-    borderBottomColor:"white",
+    paddingRight: 40, 
+    paddingLeft: 10,
+    borderBottomColor: "white",
     borderBottomWidth: 1,
     fontSize: 20,
-    width: '100%',
-    color:"white",
+    color: "white",
   },
-
-  subtitle: {
-    color: 'white',
-    fontSize: 12,
-  },
-
-  submitButton: {
-    backgroundColor: '#85E5CA', 
-    padding: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginTop: 30,
-    marginBottom: 40,
-    width: 150
-  },
-
-  submitButtonText: {
-    color: '#153A59',
-    fontWeight: 'bold',
-    fontSize: 18,
-  },
+  icon: {
+    position: 'absolute',
+    right: 10,
+    top: 10, 
+},
+subtitle: {
+color: 'white',
+fontSize: 14,
+marginTop: 5, 
+},
+errorText: {
+color: 'red',
+fontSize: 14,
+marginBottom: 10,
+},
+submitButtonContainer: {
+flexDirection: 'row',
+justifyContent: 'flex-end',
+marginTop: 20,
+},
+submitButton: {
+backgroundColor: '#85E5CA',
+padding: 15,
+borderRadius: 10,
+alignItems: 'center',
+width: 200,
+},
+submitButtonText: {
+color: '#153A59',
+fontWeight: 'bold',
+fontSize: 18,
+},
 });
