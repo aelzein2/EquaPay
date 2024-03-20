@@ -398,7 +398,6 @@ const ViewBillsSeeAll = () => {
                 ))}
                   <Divider color='#85E5CA'/>
 
-                  
 
                   <TouchableOpacity style={[styles.imageButton]} onPress={() => showImageModal()}>
                     <MaterialIcons name="image" size={24} color="#153A59" />
@@ -411,10 +410,12 @@ const ViewBillsSeeAll = () => {
                 animationType="fade"
                 transparent
               >
-                <View style = {[styles.modalImage]}>
-                  <Button title="Hide" onPress={hideImageModal}/>
-                  <Image source={{ uri: image }} style={{ width: 300, height: 300 }} />
-                </View>
+              <Image source={{ uri: image }} style={{ width:'100%', height:'100%' }} />
+              <View style={{paddingHorizontal: '13.5%', paddingVertical: '55%', position:'absolute'}}>
+                <TouchableOpacity style={[styles.closeButton]} onPress={hideImageModal}>
+                  <MaterialIcons name="close" size={24} color="white" />
+                </TouchableOpacity>
+              </View>  
               </Modal>
             </KeyboardAwareScrollView>
           </Modal>
@@ -594,7 +595,7 @@ const styles = StyleSheet.create({
   modalImage: {
     flex: 1, 
     justifyContent: 'center', 
-    padding: 80
+    alignItems:'center'
   },
 
   modalText:{
