@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Dimensions, Image, Alert } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Dimensions, Image, Alert, ScrollView } from 'react-native';
 import { Divider } from '@rneui/themed';
 import { useNavigation } from '@react-navigation/native';
 import { AntDesign, Ionicons, MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -179,23 +179,24 @@ const userOptions=[
 
       <View style={[styles.bodyContainer]}>
         <Text style={[styles.headingText]}>Friends</Text>
+          <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
+            <View style={[styles.friendContainer]}>
+              <TouchableOpacity style={[styles.friendButton]} onPress={handleAddFriend}>
+                <Ionicons name='add-circle-outline' size={30}/>
+                <Text style={[styles.addFriend]}>Add{'\n'}Friends</Text>
 
-          <View style={[styles.friendContainer]}>
-            <TouchableOpacity style={[styles.friendButton]} onPress={handleAddFriend}>
-              <Ionicons name='add-circle-outline' size={30}/>
-               <Text style={[styles.addFriend]}>Add{'\n'}Friends</Text>
+              </TouchableOpacity>
 
-            </TouchableOpacity>
-
-    {/* Friends list rendered after the Add Friends button */}
-    {friends.slice(0, 3).map((friend, index) => (
-      <TouchableOpacity key={index} style={[styles.friendButton]}>
-        <Image source={friendAvatar} style={{ resizeMode: 'contain', width: 35, height: 35 }}/>
-        <Text style={[styles.friendText]}>{friend}</Text>
-      </TouchableOpacity>
-    ))}
-         
-        </View>
+            {/* Friends list rendered after the Add Friends button */}
+            
+            {friends.slice(0, 3).map((friend, index) => (
+              <TouchableOpacity key={index} style={[styles.friendButton]}>
+                <Image source={friendAvatar} style={{ resizeMode: 'contain', width: 35, height: 35 }}/>
+                <Text style={[styles.friendText]}>{friend}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </ScrollView>
 
         <View style={{display:'flex', flexDirection:'row', justifyContent:'flex-end', marginVertical: 10}}>
           <Text style={[styles.showAllText]}  onPress={()=>navigation.navigate('Friends')}>Show all</Text>
@@ -279,10 +280,10 @@ const styles = StyleSheet.create({
     friendContainer: {
       display: 'flex',
       flexDirection: 'row',
-      justifyContent: 'flex-start', // Align items to the left
+      justifyContent: 'space-between',
       alignItems: 'center',
       marginTop: 20,
-      flexWrap: 'wrap', // Ensure the items wrap if they don't fit in a single line
+      gap: 10,
     },
 
     friendButton: {
@@ -292,10 +293,8 @@ const styles = StyleSheet.create({
       textAlign: 'center',
       backgroundColor: '#85E5CA',
       borderRadius: 15,
-      width: 85,
+      width: 80,
       height: 90,
-      gap: 10,
-      marginRight: 10, // Add space to the right of each button
     },
 
     addFriend:{

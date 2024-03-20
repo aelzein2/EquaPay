@@ -33,6 +33,7 @@ const ViewBills = () => {
   const [image, setImage] = useState(null);
   const [billInfoData, setBillInfoData] = useState([])
   const [otherBillInfoData, setOhterBillInfoData] = useState([])
+  const [isShow, setIsShow] = useState(true)
   
   const navigation = useNavigation(); // used to navigate between screens
 
@@ -377,7 +378,7 @@ const ViewBills = () => {
     <KeyboardAwareScrollView style={[styles.container]}>
       <Text style = {[styles.titleText]} >View Bills</Text>
 
-      <View style={[styles.bodyContainer, styles.fill]}>
+      <View style={[styles.bodyContainer]}>
         <View style={[styles.headingContainer]}>
           <Text style = {[styles.headingText]} >Your Bills</Text>
           <TouchableOpacity onPress={() => {handleSeeAll()}}>
@@ -394,7 +395,7 @@ const ViewBills = () => {
                   </View>
                   <View style={[styles.billInfoContainer]}>
                     <Text style={[styles.optionText]}>{option.name}</Text>
-                    <Text style={[styles.subOptionText]}>Deadline: {option.date}</Text>
+                    <Text style={[styles.deadlineText]}>Due on: {option.date}</Text>
                   </View>
                 </View>
                 <Text style={[styles.optionText]}>{option.amount} {option.currency}</Text> 
@@ -404,41 +405,73 @@ const ViewBills = () => {
         <Modal
           visible={ownerModalVisible}
           animationType="slide"
-          transparent
         >
-          <View style={[styles.lower]}>
-            <Button title="Hide" onPress={hideModal}/>
-            <Text style={[styles.modalText]}>Bill Name: {modalBillInfo.name}</Text>
-            <Text style={[styles.modalText]}>Description: {modalBillInfo.description}</Text>
-            <Text style={[styles.modalText]}>Total Amount: {modalBillInfo.amount}</Text>
-            {ownerModalVisible && modalBillInfo && modalBillInfo.participants && (
-              <Text style={[styles.modalText]}>Participants: </Text>
-            )}
-            {ownerModalVisible && modalBillInfo && modalBillInfo.participants && modalBillInfo.participants.map((item) => (
-              <Text key={item.id} style={[styles.modalText]}>
-                {item.id} : {item.amount} {modalBillInfo.currency} {item.paidStatus ? 'PAID' : 'NOT PAID'}
-              </Text>
-            ))}
-            <Text style={[styles.modalText]}>Deadline: {modalBillInfo.date}</Text>
+          <KeyboardAwareScrollView style={{backgroundColor:'#153A59',}}>
+            <View style={[styles.container]}>
+              <TouchableOpacity style={[styles.closeButton]} onPress={hideModal}>
+                <MaterialIcons name="close" size={24} color="white" />
+              </TouchableOpacity>
+              <Text style={[styles.headingText]}>{modalBillInfo.name}</Text>
+              
+              <Text style={[styles.amountText]}>{modalBillInfo.currency} {modalBillInfo.amount}</Text>
 
-            <TouchableOpacity onPress={() => showImageModal()}>
-              <Text>SHOW IMAGE</Text>
-            </TouchableOpacity>
-            
-          </View>
+              <View style={[styles.bodyContainer]}>
+              <Divider color='#85E5CA'/>
 
-          <Modal
-          visible={modalImageVisible}
-          animationType="fade"
-          transparent>
-            <View style = {[styles.modalImage]}>
-              <Button title="Hide" onPress={hideImageModal}/>
-              <Image source={{ uri: image }} style={{ width: 300, height: 300 }} />
+              <View style={[styles.modalContent]}>
+                <Text style={[styles.modalSubText]}>Description: </Text>
+                <Text style={[styles.modalText]}>{modalBillInfo.description}</Text>
+              </View>
+
+              <View style={[styles.modalContent]}>
+                <Text style={[styles.modalSubText]}>Deadline: </Text>
+                <Text style={[styles.modalText]}>{modalBillInfo.date}</Text>
+              </View>
+                
+              {ownerModalVisible && modalBillInfo && modalBillInfo.participants && (
+                <Text style={[styles.modalSubText]}>Participants: </Text>
+              )}
+              {ownerModalVisible && modalBillInfo && modalBillInfo.participants && modalBillInfo.participants.map((item) => (
+                <View style={[styles.participantContainer]}>
+                  <View>
+                    <View style={[styles.modalContent]}>
+                      <Text key={item.id} style={[styles.participantText]}>
+                        {item.id}
+                      </Text>
+                      
+                      <Text style={[styles.modalText]}>
+                        {modalBillInfo.currency} {item.amount}  
+                      </Text>
+                    </View>
+                    
+                    <Text style={[styles.statustext]}>
+                      {item.paidStatus ? 'PAID' : 'NOT PAID'}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+                <Divider color='#85E5CA'/>
+
+                
+
+                <TouchableOpacity style={[styles.imageButton]} onPress={() => showImageModal()}>
+                  <MaterialIcons name="image" size={24} color="#153A59" />
+                  <Text style={[styles.imageText]}>Bill Image</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-             
-          </Modal>
+            <Modal
+              visible={modalImageVisible}
+              animationType="fade"
+              transparent
+            >
+              <View style = {[styles.modalImage]}>
+                <Button title="Hide" onPress={hideImageModal}/>
+                <Image source={{ uri: image }} style={{ width: 300, height: 300 }} />
+              </View>
+            </Modal>
+          </KeyboardAwareScrollView>
         </Modal>
-
         <Divider color='#85E5CA'/>
       </View>
 
@@ -459,7 +492,8 @@ const ViewBills = () => {
                   </View>
                   <View style={[styles.billInfoContainer]}>
                     <Text style={[styles.optionText]}>{option.name}</Text>
-                    <Text style={[styles.subOptionText]}>By {option.creator}, Deadline: {option.date}</Text>
+                    <Text style={[styles.subOptionText]}>By {option.creator}</Text>
+                    <Text style={[styles.deadlineText]}>Due on: {option.date}</Text>
                   </View>
                 </View>
                 <Text style={[styles.optionText]}>{option.amount} {option.currency}</Text> 
@@ -472,38 +506,84 @@ const ViewBills = () => {
           animationType="slide"
           transparent
         >
-          <View style={[styles.lower]}>
-            <Button title="Hide" onPress={hideModal}/>
-            <Text style={[styles.modalText]}>Bill Name: {modalBillInfo.name}</Text>
-            <Text style={[styles.modalText]}>Created By: {modalBillInfo.billOwner}</Text>
-            <Text style={[styles.modalText]}>Description: {modalBillInfo.description}</Text>
-            <Text style={[styles.modalText]}>Total Amount: {modalBillInfo.amount} {modalBillInfo.currency}</Text>
-            <Text style={[styles.modalText]}>Amount Due: {amount} {modalBillInfo.currency}</Text>
-            <Text style={[styles.modalText]}>Deadline: {modalBillInfo.date}</Text>
+        <KeyboardAwareScrollView style={{backgroundColor:'#153A59',}}>
+          <View style={[styles.container]}>
+            <TouchableOpacity style={[styles.closeButton]} onPress={hideModal}>
+              <MaterialIcons name="close" size={24} color="white" />
+            </TouchableOpacity>
+            <View style={{flexDirection:'row', gap: 10, alignItems:'center'}}>
+              <Text style={[styles.headingText]}>{modalBillInfo.name}</Text>
+              {paidStatus ? (
+                <MaterialIcons name="check-circle-outline" size={24} color="#85E5CA" />
+              ): null}
+            </View>
+           
 
-            <TouchableOpacity onPress={() => showImageModal()}>
-              <Text>SHOW IMAGE</Text>
+            <Text style={[styles.amountText]}>{modalBillInfo.currency} {modalBillInfo.amount}</Text>
+
+            <View style={[styles.bodyContainer]}>
+              <Divider color='#85E5CA'/>
+
+              <View style={[styles.modalContent]}>
+                <Text style={[styles.modalSubText]}>Created By: </Text>
+                <Text style={[styles.modalText]}>{modalBillInfo.billOwner}</Text>
+              </View>
+
+              <View style={[styles.modalContent]}>
+                <Text style={[styles.modalSubText]}>Description: </Text>
+                <Text style={[styles.modalText]}>{modalBillInfo.description}</Text>
+              </View>
+
+              <View style={[styles.modalContent]}>
+                <Text style={[styles.modalSubText]}>Amount Due: </Text>
+                <Text style={[styles.modalText]}>{modalBillInfo.currency} {amount}</Text>
+              </View>
+
+              <View style={[styles.modalContent]}>
+                <Text style={[styles.modalSubText]}>Deadline: </Text>
+                <Text style={[styles.modalText]}>{modalBillInfo.date}</Text>
+              </View>
+            </View>
+            <View style={{marginBottom:20}}>
+              <Divider color='#85E5CA'/>
+            </View>
+            
+
+            <TouchableOpacity style={[styles.imageButton]} onPress={() => showImageModal()}>
+              <MaterialIcons name="image" size={24} color="#153A59" />
+              <Text style={[styles.imageText]}>Bill Image</Text>
             </TouchableOpacity>
 
-            <Button title="PAY NOW" disabled={paidStatus ? true : false} onPress={() => setPaymentModalVisible(true)}/>
-
+            {isShow && 
+              <>
+                {paidStatus ? (
+                  <TouchableOpacity disabled style={[styles.paidButton]}> 
+                    <Text style={[styles.paidText]}>Paid</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity style={[styles.payButton]} onPress={() => setPaymentModalVisible(true)}> 
+                    <Text style={[styles.payText]}>Pay Now</Text>
+                  </TouchableOpacity>
+                )}
+              </>
+            }
             <Modal visible={paymentModalVisible} animationType="slide" transparent>
-              <View style={styles.modalContainer}>
-                <View style={styles.modalContent}>
+              <View style={[styles.modalContainer]}>
+                <View style={styles.paymentContent}>
                   <Text style={styles.modalTitle}>Enter Payment Details</Text>
-                  <TextInput style={styles.input} placeholder="Email" value={email} onChangeText={setEmail} keyboardType="email-address" />
-                  <TextInput style={styles.input} placeholder="Name on Card" value={name} onChangeText={setName} />
+                  <TextInput style={styles.input} placeholder="Email" textColor={'#153A59'} placeholderTextColor={'#153A59'} value={email} onChangeText={setEmail} keyboardType="email-address" />
+                  <TextInput style={styles.input} placeholder="Name on Card" textColor={'#153A59'} placeholderTextColor={'#153A59'} value={name} onChangeText={setName} />
                   <Text>Amount Due: {amount} </Text>
-                  <CardField style={styles.cardField} onCardChange={(cardDetails) => {}} />
+                  <CardField style={styles.cardField} onCardChange={(cardDetails) => {}} cardStyle={{textColor:'#153A59'}} />
                   {isLoading ? (
                     <ActivityIndicator size="small" color="#0000ff" />
                   ) : (
-                    <TouchableOpacity style={styles.payButton} onPress={handlePayment}>
-                      <Text style={styles.buttonText}>Confirm</Text>
+                    <TouchableOpacity style={styles.confirmButton} onPress={handlePayment}>
+                      <Text style={[styles.buttonText]}>Confirm</Text>
                     </TouchableOpacity>
                   )}
                   <TouchableOpacity style={styles.cancelButton} onPress={() => setPaymentModalVisible(false)}>
-                    <Text style={styles.buttonText}>Cancel</Text>
+                    <Text style={[styles.buttonText]}>Cancel</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -511,26 +591,25 @@ const ViewBills = () => {
           </View>
 
           <Modal
-          visible={modalImageVisible}
-          animationType="fade"
-          transparent>
+            visible={modalImageVisible}
+            animationType="fade"
+            transparent
+          >
             <View style = {[styles.modalImage]}>
               <Button title="Hide" onPress={hideImageModal}/>
               <Image source={{ uri: image }} style={{ width: 300, height: 300 }} />
             </View>
              
           </Modal>
+        </KeyboardAwareScrollView>
+          
+
+         
 
         </Modal>
 
         <Divider color='#85E5CA'/>
       </View>
-
-
-        {/* <TouchableOpacity style={styles.button} onPress={redirectAccountDetail}>
-          <Text style={styles.buttonText}>Account Details</Text>
-        </TouchableOpacity>
-       */}
     </KeyboardAwareScrollView>
   );
 };
@@ -538,36 +617,29 @@ const ViewBills = () => {
 export default ViewBills;
 
 const styles = StyleSheet.create({
-  modalImage: {flex: 1, justifyContent: 'center', padding: 80},
-
-  modalText:{
-    fontSize: 17,
-    fontWeight: 600
-  },
-
-  fill: { flex: 1 },
-  lower: { flex: 1, padding: 50, backgroundColor: 'white'},
-
   container:{
     backgroundColor:'#153A59',
     flex: 1,
     paddingTop:"20%",
-    paddingLeft: "5%",
-    paddingRight:"5%",
+    paddingHorizontal:'5%',
   },
 
   titleText:{
-    color:"white",
+    color:"#EDEDED",
     fontSize: 30,
     fontWeight: "600",
   },
 
   bodyContainer:{
-    marginTop: "15%"
+    flex: 1,
+    gap:15,
+    marginTop: 20,
+    marginBottom: 10
+
   },
 
   headingText:{
-    color: 'white',
+    color: '#EDEDED',
     fontSize: 23,
     fontWeight: 600
   },
@@ -586,7 +658,7 @@ const styles = StyleSheet.create({
   
   yourBillsContainer:{
     display:'flex',
-    justifyContent:'space-evenly',
+    justifyContent:'space-between',
     marginTop: 15,
     marginBottom: 15,
     gap: 10
@@ -595,7 +667,6 @@ const styles = StyleSheet.create({
   billInfoContainer:{
     display:'flex',
     justifyContent:'flex-start', 
-    
   },
 
   billButton:{
@@ -616,15 +687,19 @@ const styles = StyleSheet.create({
   },
 
   optionText:{
-    color:'white',
-    fontSize: 16,
+    color:'#EDEDED',
+    fontSize: 18,
     fontWeight: 600
   },
 
   subOptionText:{
-    color:'white',
+    color:'#EDEDED',
     fontSize: 11,
-    fontWeight: 400
+  },
+
+  deadlineText:{
+    fontSize: 10, 
+    color: '#85E5CA',
   },
 
   button: {
@@ -634,55 +709,173 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 500,
   },
+
   buttonText: {
     color: 'white',
     fontWeight: 'bold',
     fontSize: 18,
   },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    backgroundColor: '#fff',
-    padding: 20,
-    width: '90%',
-    borderRadius: 10,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
+  
   input: {
     backgroundColor: '#fff',
     borderColor: '#ddd',
     borderWidth: 1,
-    borderRadius: 5,
+    borderRadius: 10,
     padding: 10,
     marginBottom: 10,
     width: '100%',
   },
   cardField: {
     width: '100%',
-    height: 50,
-    marginBottom: 20,
+    height: 30,
+    marginVertical: 20,
+    color:'black', 
+
+
   },
   payButton: {
+    flex:1,
+    justifyContent:'center',
+    alignSelf:'center',
+    alignItems:'center',
     backgroundColor: '#40a7c3',
     padding: 15,
-    borderRadius: 5,
-    width: '100%',
-    alignItems: 'center',
+    borderRadius: 10,
   },
-  cancelButton: {
-    backgroundColor: '#999',
+
+  payText:{
+    color:'#153A59',
+    fontSize: 18,
+    fontWeight: 600,
+    textTransform:'uppercase'
+  },
+
+  paidButton:{
+    flex:1,
+    justifyContent:'center',
+    alignSelf:'center',
+    alignItems:'center',
+  },
+
+  paidText:{
+    color:'#85E5CA',
+    fontSize: 18,
+    fontWeight: 600,
+    textTransform:'uppercase'
+  },
+
+  confirmButton:{
+    backgroundColor: '#40a7c3',
     padding: 15,
-    borderRadius: 5,
+    borderRadius: 10,
     marginTop: 10,
     width: '100%',
     alignItems: 'center',
   },
+
+  cancelButton: {
+    backgroundColor: '#999',
+    padding: 15,
+    borderRadius: 10,
+    marginTop: 10,
+    width: '100%',
+    alignItems: 'center',
+  },
+  
+  closeButton: {
+    justifyContent:'center',
+    alignItems:'center',
+    marginBottom: 20,
+    backgroundColor:"#366B7C",
+    borderRadius:"100%",
+    width: 35,
+    height: 35
+  },
+
+  amountText:{
+    color:"#EDEDED",
+    fontSize: 30,
+    fontWeight: "600",
+    alignSelf:'center'
+  },
+
+  modalContainer: {
+    flex: 1,
+    flexDirection:'column',
+    justifyContent:'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+
+  modalContent: {
+    flex: 1,
+    flexDirection:'row',
+    justifyContent:'space-between',
+    alignItems:'center'
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+
+  modalImage: {
+    flex: 1, 
+    justifyContent: 'center', 
+    padding: 80
+  },
+
+  modalText:{
+    color:'#EDEDED',
+    fontSize: 17,
+    fontWeight: 700
+  },
+
+  modalSubText:{
+    color:'#BDB3B3',
+    fontSize: 15,
+  },
+
+  participantContainer:{
+    flex: 1,
+    gap:10
+  },
+
+  participantText:{
+    color:'#EDEDED',
+    fontSize: 15,
+    
+  },
+
+  statustext:{
+    color:'#EDEDED',
+    alignSelf:'flex-end'
+  },
+
+  imageButton:{
+    backgroundColor:'#85E5CA',
+    flex:1,
+    justifyContent:'center',
+    alignSelf:'flex-start',
+    alignItems:'center',
+    padding: 10,
+    borderRadius: 10,
+  },
+
+  imageText:{
+    color: '#153A59',
+  },
+
+ paymentContent:{
+  backgroundColor: '#fff',
+  padding: 20,
+  width: '90%',
+  borderRadius: 10,
+ },
+
+ placeholder:{
+  color:'#153A59', 
+  fontSize:17
+},
+
 });
