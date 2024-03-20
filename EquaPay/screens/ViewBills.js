@@ -168,13 +168,15 @@ const ViewBills = () => {
           }
         });
 
-        firstThreeBillInfo = [...newBillInfo]
+        let sortedBills = newBillInfo.sort((p1, p2) => (p1.date > p2.date) ? 1 : (p1.date < p2.date) ? -1 : 0);
+
+        firstThreeBillInfo = [...sortedBills]
         firstThreeBillInfo.length = 3;
 
-        console.log(firstThreeBillInfo)
+        // console.log(firstThreeBillInfo)
   
         setBillInfo(firstThreeBillInfo);
-        setBillInfoData(newBillInfo);
+        setBillInfoData(sortedBills);
       });
   
       // Unsubscribe from the listener when the component unmounts
@@ -204,13 +206,15 @@ const ViewBills = () => {
           });
         });
 
-        firstThreeBillInfo = [...newBillInfo]
+        let sortedBills = newBillInfo.sort((p1, p2) => (p1.date > p2.date) ? 1 : (p1.date < p2.date) ? -1 : 0);
+
+        firstThreeBillInfo = [...sortedBills]
         firstThreeBillInfo.length = 3;
 
-        console.log(firstThreeBillInfo)
+        // console.log(firstThreeBillInfo)
   
         setOtherBillInfo(firstThreeBillInfo);
-        setOhterBillInfoData(newBillInfo)
+        setOhterBillInfoData(sortedBills);
       });
   
       // Unsubscribe from the listener when the component unmounts
