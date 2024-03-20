@@ -162,8 +162,10 @@ const ViewBillsSeeAllOthers = () => {
             }
           });
         });
+
+        let sortedBills = newBillInfo.sort((p1, p2) => (p1.date > p2.date) ? 1 : (p1.date < p2.date) ? -1 : 0);
   
-        setOtherBillInfo(newBillInfo);
+        setOtherBillInfo(sortedBills);
       });
   
       // Unsubscribe from the listener when the component unmounts
