@@ -811,7 +811,8 @@ const styles = StyleSheet.create({
     color:"#EDEDED",
     fontSize: 30,
     fontWeight: "600",
-    alignSelf:'center'
+    alignSelf:'center',
+    marginTop: 10
   },
 
   modalContainer: {
