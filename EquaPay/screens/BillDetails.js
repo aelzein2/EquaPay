@@ -711,7 +711,7 @@ useEffect(() => {
             <Text style={[styles.splitOptionsText]}>Split Options</Text>
             {isOpenSplit && (
               <Dropdown
-                  style={[styles.input]}
+                  style={[styles.dropDownInput]}
                   containerStyle={[styles.dropdown]}
                   itemContainerStyle={[styles.dropdown]}
                   selectedTextStyle={[styles.dropdown]}
@@ -803,6 +803,15 @@ const styles = StyleSheet.create({
   input: {
     backgroundColor: lightBlue[50],
     padding: 15,
+    borderRadius: 10,
+    fontSize: 18,
+    marginBottom: 10,
+    flex: 1
+  },
+
+  dropDownInput: {
+    backgroundColor: lightBlue[50],
+    padding: 10,
     borderRadius: 10,
     fontSize: 18,
     marginBottom: 10,

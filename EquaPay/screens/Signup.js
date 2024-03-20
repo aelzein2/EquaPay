@@ -106,6 +106,7 @@ const Signup = () => {
               onChangeText={setEmail}
               style={[styles.input]}
               keyboardType="email-address"
+              autoCapitalize='none'
             />
 
             <TextInput
