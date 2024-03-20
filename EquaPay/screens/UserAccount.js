@@ -7,29 +7,19 @@ import { auth, firestore } from '../firebase';
 import { doc, getDoc, getFirestore, query, where, collection, addDoc, getDocs, onSnapshot } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 
-
-//profile picture
-import Avatar from "../assets/img/avatar.png";
-import friendAvatar from "../assets/img/friendAvatar.png";
+import Avatar from "../assets/img/avatar.png"; // Your default avatar
+import friendAvatar from "../assets/img/friendAvatar.png"; // Your friend's avatar
 
 const { width } = Dimensions.get('window');
 const db = getFirestore();
 
-const friendsData=[
-  {id:'0', name: 'Friend A'},
-  {id: '1', name: 'Friend B'},
-  {id: '2', name: 'Friend C'}  
-]
-
-
 const UserAccount = () => {
   const auth = getAuth();
-  const [addFriend, setAddFriend] = useState("");
-  const navigation = useNavigation();
-  const [userFullName, setUserFullName] = useState('Loading...'); // State to store the user's full name
-  const [userEmail, setUserEmail] = useState('Loading...'); // State to store users email
+  const [userFullName, setUserFullName] = useState('Loading...');
+  const [userEmail, setUserEmail] = useState('Loading...');
   const [friends, setFriends] = useState([]);
-  
+  const navigation = useNavigation();
+
   useEffect(() => {
     const fetchUserData = async () => {
       if (auth.currentUser) {
@@ -42,7 +32,6 @@ const UserAccount = () => {
             setUserFullName(userData.fullName);
             setUserEmail(userData.email);
 
-            // Fetch friends data
             const q = query(collection(db, "friends"), where("befriender", "==", userData.email));
             const unsubscribe = onSnapshot(q, (querySnapshot) => {
               const friendPromises = querySnapshot.docs.map(async (friendDoc) => {
@@ -66,61 +55,61 @@ const UserAccount = () => {
     };
 
     fetchUserData();
-  }, []);
+  }, [auth.currentUser, db]);
 
+  async function addFriends(friend) {
+    if (!friend) {
+      Alert.alert('Error', 'Please enter an email.');
+      return;
+    }
 
-  function handleAddFriend(){
-    Alert.prompt("Add Friend",
-    "",[
+    if (friend === userEmail) {
+      Alert.alert('Error', 'You cannot add yourself as a friend.');
+      return;
+    }
+
+    const alreadyFriendsQuery = query(
+      collection(db, 'friends'),
+      where("befriender", "==", userEmail),
+      where("befriended", "==", friend)
+    );
+
+    const alreadyFriendsSnapshot = await getDocs(alreadyFriendsQuery);
+    if (!alreadyFriendsSnapshot.empty) {
+      Alert.alert('Error', 'This user is already your friend.');
+      return;
+    }
+
+    const usersRef = collection(db, 'users');
+    const queryDatabase = query(usersRef, where("email", "==", friend));
+    const querySnapshot = await getDocs(queryDatabase);
+
+    if (!querySnapshot.empty) {
+      const userDoc = querySnapshot.docs[0];
+      const fullName = userDoc.data().fullName;
+
+      await addDoc(collection(db, 'friends'), {
+        befriender: userEmail,
+        befriended: friend,
+      });
+    } else {
+      Alert.alert('Error', 'User not found. Please try again.');
+    }
+  }
+
+  function handleAddFriend() {
+    Alert.prompt("Add Friend", "", [
       {
         text: "Cancel",
         onPress: () => console.log("Cancel Pressed"),
         style: "cancel"
       },
       {
-        text: "Ok",
+        text: "OK",
         onPress: friend => addFriends(friend),
       }
-    ],)
-    
-}
-
-async function addFriends(friend) {
-  if (friend) {
-    console.log(friend); // Log the email being added
-
-    // Reference to the users collection
-    const usersRef = collection(db, 'users');
-
-    // Query to find user by email
-    const queryDatabase = query(usersRef, where("email", "==", friend)); // need this to be if the email is found capitalized or uncapitalized
-
-    // Execute query
-    const querySnapshot = await getDocs(queryDatabase);
-
-    // Check if user with the given email exists
-    if (!querySnapshot.empty) {
-      // Get the first document (user) from the results
-      const userDoc = querySnapshot.docs[0];
-
-      // Retrieve user's fullName from the document
-      const fullName = userDoc.data().fullName;
-      console.log(`Adding friend: ${fullName}`); // to actually see if friend is being added and name is being fetched
-
-      // Add a new document in the 'friends' collection
-      const docRef = await addDoc(collection(db, 'friends'), {
-        befriender: userEmail, // userEmail should be the email of the current user
-        befriended: friend,
-      });
-
-      console.log(`Friend added with ID: ${docRef.id}`);
-    } else if (friend !== userEmail) {
-      Alert.alert('Error', 'User not found. Please try again.');
-    }
-  } else if (friend == ''){
-    Alert.alert('Error', 'Please enter a correct email.');
+    ]);
   }
-}
 
 const handleLogout = () => {
   Alert.alert(
