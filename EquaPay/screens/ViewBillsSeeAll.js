@@ -148,7 +148,7 @@ const ViewBillsSeeAll = () => {
             newBillInfo.push({
               id: doc.id,
               name: doc.data().billName,
-              date: doc.data().billDeadline.toDate().toDateString().split(' ').slice(1).join(' '),
+              date: doc.data().billDeadline.toDate().toDateString().split(' ').slice(1).join(', ').replace(/,/, ''),
               amount: doc.data().billTotalAmount,
               currency: doc.data().currency,
               icon: <MaterialIcons name="payments" size={30} color={'#EDEDED'}/>
@@ -197,7 +197,7 @@ const ViewBillsSeeAll = () => {
                   id: docSnap.id,
                   name: docSnap.data().billName,
                   description: docSnap.data().description,
-                  date: docSnap.data().billDeadline.toDate().toDateString().split(' ').slice(1).join(' '),
+                  date: docSnap.data().billDeadline.toDate().toDateString().split(' ').slice(1).join(', ').replace(/,/, ''),
                   amount: docSnap.data().billTotalAmount,
                   ownerParticipantAmount:  participantAmount,
                   currency: docSnap.data().currency,
