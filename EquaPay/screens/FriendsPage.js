@@ -99,18 +99,20 @@ const FriendsPage = () => {
   }
 
   function handleAddFriend() {
-    Alert.prompt("Add Friend",
-      "", [
+    Alert.prompt(
+      "Add Friend", 
+      "Please enter your friend's email to add them. The email must be linked to an EquaPay-registered account.", 
+      [
         {
           text: "Cancel",
           onPress: () => console.log("Cancel Pressed"),
           style: "cancel"
         },
         {
-          text: "Ok",
+          text: "OK",
           onPress: friend => addFriends(friend),
         }
-      ],
+      ]
     );
   }
 
