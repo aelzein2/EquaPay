@@ -17,7 +17,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons'; // used for the icons
 import { auth } from '../firebase' // used for authentication
 import { signInWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail } from 'firebase/auth' // used for authentication
 import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore';
-import { AntDesign, FontAwesome } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 
 const { width } = Dimensions.get('window'); // gets the width of the screen
@@ -137,7 +137,7 @@ const Login = () => {
           style={[styles.input]}
           autoCapitalize='none'
         />
-        <Text style={styles.subtitle}>Please enter your email</Text>
+        <Text style={[styles.subtitle]}>Please enter your email</Text>
 
         <View style={styles.passwordContainer}>
           <TextInput
@@ -148,15 +148,15 @@ const Login = () => {
             style={[styles.input, { paddingRight: 40 }]} // paddingRight to make space for the icon
             secureTextEntry={!isPeekingPassword}
           />
-          <FontAwesome
-            name={isPeekingPassword ? "eye-slash" : "eye"}
-            size={20}
+          <MaterialCommunityIcons
+            name={isPeekingPassword ? "eye-off-outline" : "eye-outline"}
+            size={22}
             color="white"
             style={styles.icon}
             onPress={() => setIsPeekingPassword(!isPeekingPassword)}
           />
         </View>
-        <Text style={styles.subtitle}>Please enter your password</Text>
+        <Text style={[styles.subtitle]}>Please enter your password</Text>
       </View>
 
       <View style={[styles.forgotPasswordContainer]}>
@@ -166,40 +166,40 @@ const Login = () => {
       </View>
 
       <Modal isVisible={isModalVisible} style={styles.modal}>
-                    <View style={styles.modalContainer}>
-                        <TouchableOpacity style={styles.iconButton} onPress={() => setModalVisible(false)}>
-                            <Ionicons name="close" size={24} color="#EDEDED" />
-                        </TouchableOpacity>
+        <View style={styles.modalContainer}>
+            <TouchableOpacity style={styles.iconButton} onPress={() => setModalVisible(false)}>
+                <Ionicons name="close" size={24} color="#EDEDED" />
+            </TouchableOpacity>
 
-                        <Text style={[styles.modalTitle]}>Forgot Password</Text>
-                        <Text style={[styles.forgotText]}>Enter your email to reset your password. We'll send a link if the account is currently registered.</Text>
+            <Text style={[styles.modalTitle]}>Forgot Password</Text>
+            <Text style={[styles.forgotText]}>Enter your email to reset your password. We'll send a link if the account is currently registered.</Text>
 
-                        <TextInput
-                            value={resetEmail}
-                            onChangeText={setResetEmail}
-                            style={[styles.modalInput]}
-                        />
-                        <TouchableOpacity onPress={sendResetEmail} style={styles.sendButton}>
-                            <Text style={[styles.buttonText]}>Send</Text>
-                        </TouchableOpacity>
+            <TextInput
+                value={resetEmail}
+                onChangeText={setResetEmail}
+                style={[styles.modalInput]}
+            />
+            <TouchableOpacity onPress={sendResetEmail} style={styles.sendButton}>
+                <Text style={[styles.buttonText]}>Send</Text>
+            </TouchableOpacity>
 
-                    </View>
-                </Modal>
+        </View>
+        </Modal>
 
-                <View style={styles.buttonContainer}>
-                    <TouchableOpacity
-                    onPress={handleLogin}
-                    style={styles.button}
-                >
-                    <Text style={[styles.buttonText]}>Login</Text>
-                    </TouchableOpacity>
-                    <View style={{display:"flex", flexDirection:"row",gap:"3%"}}>
-                        <Text style={{color:"white", fontSize: 15, marginTop: 10}}>Don't have an account?</Text>
-                        <Text style={{color:"#85E5CA", fontSize: 15, marginTop: 10}} onPress={()=> navigation.navigate('Signup')}>Sign up</Text>
-                    </View>
-                       
+            <View style={styles.buttonContainer}>
+                <TouchableOpacity
+                onPress={handleLogin}
+                style={styles.button}
+            >
+                <Text style={[styles.buttonText]}>Login</Text>
+                </TouchableOpacity>
+                <View style={{display:"flex", flexDirection:"row",gap:"3%"}}>
+                    <Text style={{color:"white", fontSize: 15, marginTop: 10}}>Don't have an account?</Text>
+                    <Text style={{color:"#85E5CA", fontSize: 15, marginTop: 10}} onPress={()=> navigation.navigate('Signup')}>Sign up</Text>
                 </View>
+                    
             </View>
+        </View>
         </KeyboardAwareScrollView>
     )
 }
@@ -373,7 +373,7 @@ const styles = StyleSheet.create({
     
       subtitle: {
         color: 'white',
-        fontSize: 14,
+        fontSize: 11,
         marginBottom: 40, // Space after the subtitle, before the next input field
       },
     

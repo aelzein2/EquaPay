@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { getAuth, updatePassword } from "firebase/auth";
-import { AntDesign, FontAwesome } from "@expo/vector-icons";
+import { AntDesign, FontAwesome, MaterialCommunityIcons } from "@expo/vector-icons";
 
 export default function ChangePassword({ navigation }) {
   const [password, setPassword] = useState("");
@@ -64,9 +64,9 @@ export default function ChangePassword({ navigation }) {
             secureTextEntry={!isPeekingPassword}
             style={styles.input}
           />
-          <FontAwesome
-            name={isPeekingPassword ? "eye-slash" : "eye"}
-            size={20}
+          <MaterialCommunityIcons
+            name={isPeekingPassword ? "eye-off-outline" : "eye-outline"}
+            size={22}
             color="white"
             style={styles.icon}
             onPress={() => setIsPeekingPassword(!isPeekingPassword)}
@@ -83,12 +83,12 @@ export default function ChangePassword({ navigation }) {
             secureTextEntry={!isPeekingConfirmPassword}
             style={styles.input}
           />
-          <FontAwesome
-            name={isPeekingConfirmPassword ? "eye-slash" : "eye"}
-            size={20}
+          <MaterialCommunityIcons
+            name={isPeekingPassword ? "eye-off-outline" : "eye-outline"}
+            size={22}
             color="white"
             style={styles.icon}
-            onPress={() => setIsPeekingConfirmPassword(!isPeekingConfirmPassword)}
+            onPress={() => setIsPeekingPassword(!isPeekingPassword)}
           />
           <Text style={styles.subtitle}>Please confirm your new password*</Text>
         </View>

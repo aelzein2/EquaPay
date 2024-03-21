@@ -15,7 +15,7 @@ import {
     Dimensions, 
 }from 'react-native';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
-import { AntDesign, FontAwesome } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 
 
@@ -131,13 +131,13 @@ const Signup = () => {
               style={[styles.input, { paddingRight: 40 }]} // Add paddingRight to make space for the icon
               secureTextEntry={!isPeekingPassword}
             />
-          <FontAwesome
-            name={isPeekingPassword ? "eye-slash" : "eye"}
-            size={20}
+          <MaterialCommunityIcons
+            name={isPeekingPassword ? "eye-off-outline" : "eye-outline"}
+            size={22}
             color="white"
             style={styles.icon}
             onPress={() => setIsPeekingPassword(!isPeekingPassword)}
-            />
+          />
         </View>
         <Text style={styles.subtitle}>Please create a password*</Text>
 
@@ -228,8 +228,7 @@ const styles = StyleSheet.create({
 
    subtitle: {
     color: 'white',
-    fontSize: 14,
-    marginTop: 0, // No space above the subtitle
+    fontSize: 11,
     marginBottom: 40, // Adjust this value to control the space before the next input field
   },
   icon: {
