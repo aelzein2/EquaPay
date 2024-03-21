@@ -17,7 +17,7 @@ import {
   reauthenticateWithCredential,
   EmailAuthProvider,
 } from "firebase/auth";
-import { AntDesign } from "@expo/vector-icons";
+import { AntDesign, MaterialCommunityIcons } from "@expo/vector-icons";
 
 const { width } = Dimensions.get("window");
 
@@ -66,17 +66,27 @@ export default function Reauthentication({ navigation, route }) {
           </TouchableOpacity>
           <Text style = {[styles.titleText]} >Authentication</Text>
           <View style={[styles.bodyContainer]}>
-            <TextInput
-              placeholder="Password"
-              placeholderTextColor="#EDEDED"
-              onChangeText={(password) => setPassword(password)}
-              value={password}
-              autoCapitalize="none"
-              secureTextEntry={!isPeeking}
-              canPeek={password.length > 0}
-              togglePeek={togglePeek}
-              style={[styles.input]}
-            />
+            <View style={{flex: 1, flexDirection:'row', alignItems:'center'}}>
+              <TextInput
+                  placeholder="Password"
+                  placeholderTextColor="#EDEDED"
+                  onChangeText={(password) => setPassword(password)}
+                  value={password}
+                  autoCapitalize="none"
+                  secureTextEntry={!isPeeking}
+                  canPeek={password.length > 0}
+                  togglePeek={togglePeek}
+                  style={[styles.input]}
+                />
+              <MaterialCommunityIcons
+                name={isPeeking ? "eye-off-outline" : "eye-outline"}
+                size={22}
+                color="white"
+                style={styles.icon}
+                onPress={() => setIsPeeking(!isPeeking)}
+              />
+            </View>
+           
             <Text style={[styles.subtitle]}>Please enter your password for re-authentication*</Text>
           </View>
 
@@ -134,7 +144,7 @@ const styles = StyleSheet.create({
 
   subtitle: {
     color: 'white',
-    fontSize: 12,
+    fontSize: 11,
   },
 
   submitButton: {
@@ -152,4 +162,10 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 18,
   },
+
+  icon: {
+    position: 'absolute',
+    right: 10,
+    top: 12, 
+},
 });
