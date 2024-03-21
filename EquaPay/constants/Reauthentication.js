@@ -77,7 +77,7 @@ export default function Reauthentication({ navigation, route }) {
               togglePeek={togglePeek}
               style={[styles.input]}
             />
-            <Text style={[styles.subtitle]}>Please enter your password for reauthentication</Text>
+            <Text style={[styles.subtitle]}>Please enter your password for re-authentication*</Text>
           </View>
 
           <View style={{flexDirection:'row', justifyContent:'flex-end'}}>

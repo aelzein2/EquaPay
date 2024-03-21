@@ -86,7 +86,7 @@ export default function ChangeEmail({ navigation }) {
           autoCapitalize="none"
           style={[styles.input]}
         />
-        <Text style={[styles.subtitle]}>Please enter new email</Text>
+        <Text style={[styles.subtitle]}>Please enter a new email*</Text>
       </View>
 
       <View style={{flexDirection:'row', justifyContent:'flex-end'}}>

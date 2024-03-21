@@ -71,7 +71,7 @@ export default function ChangePassword({ navigation }) {
             style={styles.icon}
             onPress={() => setIsPeekingPassword(!isPeekingPassword)}
           />
-          <Text style={styles.subtitle}>Please enter your new password</Text>
+          <Text style={styles.subtitle}>Please enter your new password*</Text>
         </View>
         <View style={styles.inputContainer}>
           <TextInput
@@ -90,7 +90,7 @@ export default function ChangePassword({ navigation }) {
             style={styles.icon}
             onPress={() => setIsPeekingConfirmPassword(!isPeekingConfirmPassword)}
           />
-          <Text style={styles.subtitle}>Please confirm your new password</Text>
+          <Text style={styles.subtitle}>Please confirm your new password*</Text>
         </View>
         {password !== confirmPassword && confirmPassword !== "" && (
           <Text style={styles.errorText}>Passwords do not match</Text>

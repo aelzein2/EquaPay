@@ -17,6 +17,8 @@ import Ionicons from 'react-native-vector-icons/Ionicons'; // used for the icons
 import { auth } from '../firebase' // used for authentication
 import { signInWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail } from 'firebase/auth' // used for authentication
 import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore';
+import { AntDesign, FontAwesome } from "@expo/vector-icons";
+
 
 const { width } = Dimensions.get('window'); // gets the width of the screen
 const db = getFirestore(); // gets the firestore database
@@ -30,6 +32,8 @@ const Login = () => {
     const navigation = useNavigation(); // used to navigate between screens
     const [isModalVisible, setModalVisible] = useState(false); // used to show the modal for forgot password
     const [resetEmail, setResetEmail] = useState(''); // used for the reset email
+    const [isPeekingPassword, setIsPeekingPassword] = useState(false);
+
 
     // navigation to the homepage
     useEffect(() => {
@@ -119,38 +123,49 @@ const Login = () => {
                 <Ionicons name='chevron-back' size={24} color={'white'}/>
             </TouchableOpacity>
             <View>
-                <Text style={[styles.titleText]}>Welcome Back</Text>
-                <Text style={[styles.headingText]}>Please Login to Continue</Text>
-            </View>
+      <Text style={[styles.titleText]}>Welcome Back</Text>
+      <Text style={[styles.headingText]}>Please Login to Continue</Text>
+    </View>
 
-            <View style={[styles.bodyContainer]}>
-                <View style={[styles.inputContainer]}>
-                    <TextInput
-                        placeholder="Email Address"
-                        placeholderTextColor="#EDEDED"
-                        value={email}
-                        onChangeText={text => setEmail(text)}
-                        style={[styles.input]}
-                        autoCapitalize='none'
-                    />
+    <View style={[styles.bodyContainer]}>
+      <View style={[styles.inputContainer]}>
+        <TextInput
+          placeholder="Email Address"
+          placeholderTextColor="#EDEDED"
+          value={email}
+          onChangeText={text => setEmail(text)}
+          style={[styles.input]}
+          autoCapitalize='none'
+        />
+        <Text style={styles.subtitle}>Please enter your email</Text>
 
-                    <TextInput
-                        placeholder="Password"
-                        placeholderTextColor="#EDEDED"
-                        value={password}
-                        onChangeText={text => setPassword(text)}
-                        style={[styles.input]}
-                        secureTextEntry
-                    />
-                </View>
+        <View style={styles.passwordContainer}>
+          <TextInput
+            placeholder="Password"
+            placeholderTextColor="#EDEDED"
+            value={password}
+            onChangeText={text => setPassword(text)}
+            style={[styles.input, { paddingRight: 40 }]} // paddingRight to make space for the icon
+            secureTextEntry={!isPeekingPassword}
+          />
+          <FontAwesome
+            name={isPeekingPassword ? "eye-slash" : "eye"}
+            size={20}
+            color="white"
+            style={styles.icon}
+            onPress={() => setIsPeekingPassword(!isPeekingPassword)}
+          />
+        </View>
+        <Text style={styles.subtitle}>Please enter your password</Text>
+      </View>
 
-                <View style={[styles.forgotPasswordContainer]}>
-                    <TouchableOpacity onPress={handleForgotPassword}>
-                        <Text style={[styles.forgotPasswordText]}>Forgot password</Text>
-                    </TouchableOpacity>
-                </View>
+      <View style={[styles.forgotPasswordContainer]}>
+        <TouchableOpacity onPress={handleForgotPassword}>
+          <Text style={[styles.forgotPasswordText]}>Forgot password?</Text>
+        </TouchableOpacity>
+      </View>
 
-                <Modal isVisible={isModalVisible} style={styles.modal}>
+      <Modal isVisible={isModalVisible} style={styles.modal}>
                     <View style={styles.modalContainer}>
                         <TouchableOpacity style={styles.iconButton} onPress={() => setModalVisible(false)}>
                             <Ionicons name="close" size={24} color="#EDEDED" />
@@ -179,8 +194,8 @@ const Login = () => {
                     <Text style={[styles.buttonText]}>Login</Text>
                     </TouchableOpacity>
                     <View style={{display:"flex", flexDirection:"row",gap:"3%"}}>
-                        <Text style={{color:"white", fontSize: 15}}>Don't have an account?</Text>
-                        <Text style={{color:"#85E5CA", fontSize: 15}} onPress={()=> navigation.navigate('Signup')}>Sign up</Text>
+                        <Text style={{color:"white", fontSize: 15, marginTop: 10}}>Don't have an account?</Text>
+                        <Text style={{color:"#85E5CA", fontSize: 15, marginTop: 10}} onPress={()=> navigation.navigate('Signup')}>Sign up</Text>
                     </View>
                        
                 </View>
@@ -196,43 +211,42 @@ export default Login
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        paddingTop:"20%",
+        paddingTop: "20%",
         paddingLeft: "10%",
-        paddingRight:"10%",
+        paddingRight: "10%",
         backgroundColor: '#153A59',
-        overflow:'scroll'
-    },
-
-    titleText:{
-        color:"white",
+      },
+    
+      titleText: {
+        color: "white",
         fontSize: 40,
-        fontWeight: 400
-    },
-
-    headingText:{
-        color:"white",
+        fontWeight: "400",
+      },
+    
+      headingText: {
+        color: "white",
         fontSize: 15,
-        fontWeight: 400
-    },
-
-    bodyContainer:{
-        paddingLeft:"2.5%",
-        paddingRight:"2.5%",
-    },
-
-    inputContainer: {
+        fontWeight: "400",
+      },
+    
+      bodyContainer: {
+        paddingLeft: "2.5%",
+        paddingRight: "2.5%",
+      },
+    
+      inputContainer: {
         marginTop: "35%",
-        gap: 51  
-    },
-
-    input: { 
+      },
+    
+      input: {
         paddingVertical: 10,
-        borderBottomColor:"white",
+        borderBottomColor: "white",
         borderBottomWidth: 1,
         fontSize: 20,
         width: '100%',
-        color:"white",
-    },
+        color: "white",
+        marginBottom: 5, // Space between the input field and its subtitle
+      },
 
     modalInput:{
         borderBottomColor:"#EDEDED",
@@ -345,6 +359,54 @@ const styles = StyleSheet.create({
         width: 35,
         height: 35
       
+      },
+      passwordContainer: {
+        position: 'relative',
+        marginBottom: 5, // Adjust based on your layout
+      },
+    
+      icon: {
+        position: 'absolute',
+        right: 10,
+        top: 12, // Center the icon vertically within the input field
+      },
+    
+      subtitle: {
+        color: 'white',
+        fontSize: 14,
+        marginBottom: 40, // Space after the subtitle, before the next input field
+      },
+    
+      buttonContainer: {
+        justifyContent: "center",
+        alignItems: "center",
+        marginTop: 30,
+      },
+    
+      button: {
+        backgroundColor: '#85E5CA',
+        width: '100%',
+        padding: 15,
+        borderRadius: 10,
+        alignItems: "center",
+        marginTop: 5,
+      },
+    
+      buttonText: {
+        color: "#153A59",
+        fontSize: 25,
+        fontWeight: "600",
+      },
+    
+      forgotPasswordContainer: {
+        justifyContent: "flex-end",
+        alignItems: 'flex-end',
+        marginBottom: 20, // Adjust as needed
+      },
+    
+      forgotPasswordText: {
+        color: '#40a7c3',
+        fontSize: 15,
       },
 });
 
