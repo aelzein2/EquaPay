@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
   icon: {
     position: 'absolute',
     right: 10,
-    top: 15, 
+    top: 12, 
 },
 
 });
