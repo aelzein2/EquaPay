@@ -126,7 +126,7 @@ const ViewBills = () => {
         message: {
           subject: 'Successful Payment',
           text: 'This is the plaintext section of the email body.',
-          html: 'Hello, you have submitted a payment for your bill'
+          html: 'Hello, you have submitted a payment for your bill!'
       }});
     }
   };
