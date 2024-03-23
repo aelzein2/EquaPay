@@ -28,8 +28,15 @@
     },
     "extra": {
       "eas": {
+        "projectId": "fc895cdd-6e3c-4c66-a6be-f949763cb410"
       }
     },
-    "owner": "ahmad.elzein"
+    "owner": "ahmad.elzein",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/fc895cdd-6e3c-4c66-a6be-f949763cb410"
+    }
   }
 }
